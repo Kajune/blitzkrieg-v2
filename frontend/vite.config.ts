@@ -9,6 +9,12 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       }
-    }
+    },
+    hmr: {
+      overlay: true,
+    },
+    watch: {
+      usePolling: true,
+    },
   }
 })
