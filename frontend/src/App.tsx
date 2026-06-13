@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import { useMapEditor } from './components/MapEditor';
@@ -15,7 +15,6 @@ function App() {
     
 	const { 
 		mapRef,
-		mapInstance, 
 		elements, 
 		setElements, 
 		pendingElement, 

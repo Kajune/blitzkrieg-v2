@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-interface CommonModalProps {
+export interface CommonModalProps {
 	show: boolean;
 	title: string;
 	message: string;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Unit } from '../config/unitTypes';
 import ms from 'milsymbol';
 
 export type UnitColumn = 'type' | 'personnel' | 'equipments';

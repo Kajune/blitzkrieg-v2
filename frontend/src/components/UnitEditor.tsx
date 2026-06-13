@@ -1,19 +1,8 @@
 import { useState } from 'react';
-import ms from 'milsymbol';
 import { UNIT_TEMPLATES } from '../config/unitTypes';
+import type { Unit } from '../config/unitTypes';
 import { UnitTree } from './UnitTree';
 import './UnitEditor.css';
-
-interface Unit {
-	id: string;
-	templateId: string;
-	name: string;
-	sidc: string;
-	type: string;
-	personnel: number;
-	equipments: { [key: string]: number };
-	children: Unit[];
-}
 
 const createUnitStructure = (templateId: string, color: 'red' | 'blue'): Unit => {
 	const template = UNIT_TEMPLATES.find(t => t.id === templateId);
@@ -48,6 +37,10 @@ const UnitTable = ({
 	const [selectedTemplateId, setSelectedTemplateId] = useState(UNIT_TEMPLATES[0]?.id || '');
 	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
+	const filteredTemplates = UNIT_TEMPLATES.filter(
+		t => t.id.includes(searchText) || t.name.includes(searchText)
+	);
+
 	const exportUnitData = () => {
 		const data = JSON.stringify(units, null, 2);
 		const blob = new Blob([data], { type: 'application/json' });
@@ -78,7 +71,6 @@ const UnitTable = ({
 		};
 		reader.readAsText(file);
 
-		// ★重要：同じファイルを連続でインポートできるようにリセットする
 		e.target.value = '';
 	};
 
@@ -87,7 +79,6 @@ const UnitTable = ({
 		
 		return tree.map(u => {
 			if (u.id === parentId) {
-				// ★確実にリストの最後に追加する
 				return { ...u, children: [...u.children, newUnit] };
 			}
 			return { ...u, children: addUnitToTree(u.children, parentId, newUnit) };
@@ -95,9 +86,15 @@ const UnitTable = ({
 	};
 
 	const addUnit = () => {
-		const template = UNIT_TEMPLATES.find(t => t.id === selectedTemplateId);
-		if (!template) return;
-		const newUnit = createUnitStructure(selectedTemplateId, color);
+		// 現在表示されている選択肢の中から、現在のIDが存在するか確認
+		const isVisible = filteredTemplates.some(t => t.id === selectedTemplateId);
+		
+		// 表示されていない場合は、リストの先頭を強制的に使用（リストが空なら何もしない）
+		const targetId = isVisible ? selectedTemplateId : (filteredTemplates[0]?.id);
+
+		if (!targetId) return; // 候補がない場合は終了
+
+		const newUnit = createUnitStructure(targetId, color);
 		setUnits(prev => addUnitToTree(prev, selectedUnitId, newUnit));
 	};
 

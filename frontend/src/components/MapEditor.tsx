@@ -12,10 +12,13 @@ L.Marker.prototype.options.icon = L.icon({
 	iconAnchor: [12, 41],
 });
 
+export type ElementType = 'operation' | 'fortification' | 'obstacle' | 'red' | 'blue';
+export type GeometryType = 'polygon' | 'polyline' | 'point';
+
 export interface MapElement {
 	id: string;
-	type: 'operation' | 'base' | 'obstacle' | 'red' | 'blue';
-	geometry: 'polygon' | 'polyline' | 'point';
+	type: ElementType;
+	geometry: GeometryType;
 	name: string;
 	layer?: L.Layer;
 }
@@ -25,7 +28,7 @@ const getTypeColor = (type: string): string => {
 		case 'red': return 'red';
 		case 'blue': return 'blue';
 		case 'operation': return 'gray';
-		case 'base': return 'green';
+		case 'fortification': return 'green';
 		case 'obstacle': return 'brown';
 		default: return 'black';
 	}
@@ -89,13 +92,12 @@ export const useMapEditor = (showLabels: boolean) => {
 		}
 
 		if (layer) {
-			const tooltip = layer.bindTooltip(pendingRef.current.name ?? '', { 
+			layer.bindTooltip(pendingRef.current.name ?? '', { 
 				permanent: true, 
 				direction: 'center',
-				className: 'my-custom-tooltip' // CSSで背景を消すためにクラスを割り当てる
+				className: 'my-custom-tooltip'
 			});
 			
-			// showLabels が false なら最初から閉じておく
 			if (!showLabels) {
 				layer.closeTooltip();
 			}
@@ -113,7 +115,7 @@ export const useMapEditor = (showLabels: boolean) => {
 		if (!mapInstance.current || !pendingElement) return;
 
 		const handleMouseMove = (e: L.LeafletMouseEvent) => {
-			if (points.length === 0) return;
+			if (points.length === 0 || !mapInstance.current) return;
 
 			// 共通化した関数で色を取得
 			const color = getTypeColor(pendingElement.type || '');
@@ -183,7 +185,6 @@ export const useMapEditor = (showLabels: boolean) => {
 
 	return {
 		mapRef,
-		mapInstance,
 		elements,
 		setElements,
 		pendingElement,

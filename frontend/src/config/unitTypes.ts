@@ -2,9 +2,21 @@ export interface UnitTemplate {
 	id: string;
 	name: string;
 	sidc: { [key in 'BLUFOR' | 'REDFOR']: string };
+	type: string;
 	personnel: number;
 	equipments: { [key: string]: number };
 	lower_units: { [key: string]: number };
+}
+
+export interface Unit {
+	id: string;
+	templateId: string;
+	name: string;
+	sidc: string;
+	type: string;
+	personnel: number;
+	equipments: { [key: string]: number };
+	children: Unit[];
 }
 
 export const UNIT_TEMPLATES: UnitTemplate[] = [

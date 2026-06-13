@@ -1,15 +1,7 @@
 import { useState } from 'react';
+import type { CommonModalProps } from './CommonModal';
 import { CommonModal, InputModal } from './CommonModal';
-
-type ElementType = 'operation' | 'fortification' | 'obstacle' | 'red' | 'blue';
-type GeometryType = 'polygon' | 'polyline' | 'point';
-
-interface MapElement {
-	id: string;
-	type: ElementType;
-	geometry: GeometryType;
-	name: string;
-}
+import type { MapElement, ElementType, GeometryType } from './MapEditor';
 
 export const RegionSettings = ({ 
 	isOpen, 
@@ -31,7 +23,14 @@ export const RegionSettings = ({
 	if (!isOpen) return null;
 
 	const hasOperationArea = elements.some((el) => el.type === 'operation');
-	const [modal, setModal] = useState({ show: false, title: '', message: '', onConfirm: () => {}, onCancel: undefined as (() => void) | undefined });
+	const [modal, setModal] = useState<CommonModalProps>({ 
+		show: false, 
+		title: '', 
+		message: '', 
+		onConfirm: () => {}, 
+		onCancel: undefined,
+		confirmText: 'OK'
+	});
 	const [inputModal, setInputModal] = useState<{show: boolean, type: ElementType | null, geometry: GeometryType | null}>({ show: false, type: null, geometry: null });
 
 	const isActive = (type: ElementType, geometry: GeometryType) => 
@@ -39,15 +38,19 @@ export const RegionSettings = ({
 
 	const addElement = (type: ElementType, geometry: GeometryType, requiresName: boolean) => {
 		if (type !== 'operation' && !hasOperationArea) {
-			setModal({ title: 'エラー', message: '作戦地域を先に配置してください。', show: true, onConfirm: () => setModal(prev => ({...prev, show: false})) });
+			setModal({ 
+				title: 'エラー', 
+				message: '作戦地域を先に配置してください。', 
+				show: true, 
+				onConfirm: () => setModal(prev => ({...prev, show: false})),
+				onCancel: undefined
+			});
 			return;
 		}
 
 		if (requiresName) {
-			// 名前が必要ならモーダルを開く
 			setInputModal({ show: true, type, geometry });
 		} else {
-			// 不要ならそのまま実行
 			executeAddElement(type, geometry, type === 'operation' ? '作戦地域' : '陣地');
 		}
 	};
@@ -59,7 +62,6 @@ export const RegionSettings = ({
 
 	const removeElement = (id: string, isOperation: boolean) => {
 		if (isOperation) {
-			// 削除確認モーダルを表示
 			setModal({
 				title: '削除の確認',
 				message: '作戦地域を削除すると、すべての要素が削除されます。本当によろしいですか？',
@@ -68,12 +70,11 @@ export const RegionSettings = ({
 				onConfirm: () => {
 					elements.forEach((el) => el.layer?.remove());
 					setElements([]);
-					setModal(prev => ({ ...prev, show: false })); // モーダルを閉じる
+					setModal(prev => ({ ...prev, show: false }));
 				},
 				onCancel: () => setModal(prev => ({ ...prev, show: false }))
 			});
 		} else {
-			// 通常の要素削除（確認なし、または別の確認モーダルで）
 			setElements((prev) => {
 				const target = prev.find((el) => el.id === id);
 				if (target && target.layer) {
