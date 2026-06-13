@@ -4,26 +4,40 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
+import { UnitPlacement } from './components/UnitPlacement';
+
+import type { Unit } from './config/unitTypes';
 
 import './App.module.css';
 
 function App() {
 	const [showMenu, setShowMenu] = useState(false);
-	const [isEditorOpen, setIsEditorOpen] = useState(false);
-	const [isRegionOpen, setIsRegionOpen] = useState(false);
+	const [isUnitEditorOpen, setIsUnitEditorOpen] = useState(false);
+	const [isRegionEditorOpen, setIsRegionEditorOpen] = useState(false);
+	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
+	const [redUnits, setRedUnits] = useState<Unit[]>([]);
+	const [blueUnits, setBlueUnits] = useState<Unit[]>([]);
 	const [showLabels, setShowLabels] = useState(true);
-    
+	
 	const { 
 		mapRef,
-		elements, 
-		setElements, 
-		pendingElement, 
-		startDrawing 
+		elements,
+		setElements,
+		placedUnits,
+		pendingElement,
+		startDrawing,
+		handleDragOver,
+		handleDrop,
+		removeUnitFromMap,
 	} = useMapEditor(showLabels);
 
 	return (
 		<div data-bs-theme="dark" style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', backgroundColor: '#212529', color: '#fff' }}>
-			<div ref={mapRef} style={{ width: '100%', height: '100%', zIndex: 1 }} />
+			<div ref={mapRef} 
+				style={{ width: '100%', height: '100%', zIndex: 1 }} 
+				onDragOver={handleDragOver} 
+				onDrop={handleDrop}
+			/>
 
 			<button 
 				className="btn btn-secondary position-absolute"
@@ -67,8 +81,9 @@ function App() {
 					<h4 className="mb-4">blitzkrieg-v2</h4>
 					<hr />
 					<div className="d-grid gap-2">
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsEditorOpen(true); setShowMenu(false); }}>部隊編成</button>
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionOpen(true); setShowMenu(false); }}>地域設定</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitEditorOpen(true); setShowMenu(false); }}>部隊編成</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionEditorOpen(true); setShowMenu(false); }}>地域設定</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitPlacementOpen(true); setShowMenu(false); }}>部隊配置</button>
 						<button className="btn btn-outline-light text-start">シミュレーション設定</button>
 						<button className="btn btn-outline-light text-start">インポート</button>
 						<button className="btn btn-outline-light text-start">エクスポート</button>
@@ -78,15 +93,30 @@ function App() {
 
 			{showMenu && <div className="offcanvas-backdrop fade show" onClick={() => setShowMenu(false)} style={{ zIndex: 1040 }} />}
 
-			<UnitEditor isOpen={isEditorOpen} onClose={() => setIsEditorOpen(false)} />
+			<UnitEditor 
+				isOpen={isUnitEditorOpen} 
+				onClose={() => setIsUnitEditorOpen(false)}
+				redUnits={redUnits}
+				setRedUnits={setRedUnits}
+				blueUnits={blueUnits}
+				setBlueUnits={setBlueUnits}
+				removeUnitFromMap={removeUnitFromMap}
+			/>
 			<RegionSettings 
-				isOpen={isRegionOpen} 
-				onClose={() => setIsRegionOpen(false)}
+				isOpen={isRegionEditorOpen} 
+				onClose={() => setIsRegionEditorOpen(false)}
 				elements={elements}
 				setElements={setElements}
 				onStartDrawing={startDrawing}
 				drawingType={pendingElement?.type || null}
 				drawingGeometry={pendingElement?.geometry || null}
+			/>
+			<UnitPlacement 
+				isOpen={isUnitPlacementOpen} 
+				onClose={() => setIsUnitPlacementOpen(false)}
+				redUnits={redUnits}
+				blueUnits={blueUnits}
+				placedUnits={placedUnits}
 			/>
 		</div>
 	);

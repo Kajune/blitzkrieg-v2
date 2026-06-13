@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { UNIT_TEMPLATES } from '../config/unitTypes';
 import type { Unit } from '../config/unitTypes';
+import { getAllUnitIds } from '../config/unitTypes';
 import { UnitTree } from './UnitTree';
-import './UnitEditor.css';
 
 const createUnitStructure = (templateId: string, color: 'red' | 'blue'): Unit => {
 	const template = UNIT_TEMPLATES.find(t => t.id === templateId);
@@ -26,16 +26,19 @@ const UnitTable = ({
 	units, 
 	setUnits, 
 	color, 
+	onUnitDeleted,
 	visibleColumns = ['type', 'personnel', 'equipments'] // デフォルト値を指定
 }: { 
 	units: Unit[], 
 	setUnits: React.Dispatch<React.SetStateAction<Unit[]>>, 
 	color: 'red' | 'blue',
+	onUnitDeleted: (unitId: string) => void,
 	visibleColumns?: ('type' | 'personnel' | 'equipments')[] // 型定義を追加
 }) => {
 	const [searchText, setSearchText] = useState('');
 	const [selectedTemplateId, setSelectedTemplateId] = useState(UNIT_TEMPLATES[0]?.id || '');
 	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
 	const filteredTemplates = UNIT_TEMPLATES.filter(
 		t => t.id.includes(searchText) || t.name.includes(searchText)
@@ -86,13 +89,10 @@ const UnitTable = ({
 	};
 
 	const addUnit = () => {
-		// 現在表示されている選択肢の中から、現在のIDが存在するか確認
 		const isVisible = filteredTemplates.some(t => t.id === selectedTemplateId);
-		
-		// 表示されていない場合は、リストの先頭を強制的に使用（リストが空なら何もしない）
 		const targetId = isVisible ? selectedTemplateId : (filteredTemplates[0]?.id);
 
-		if (!targetId) return; // 候補がない場合は終了
+		if (!targetId) return;
 
 		const newUnit = createUnitStructure(targetId, color);
 		setUnits(prev => addUnitToTree(prev, selectedUnitId, newUnit));
@@ -100,17 +100,42 @@ const UnitTable = ({
 
 	const deleteUnitFromTree = (tree: Unit[], idToDelete: string): Unit[] => {
 		return tree
-			.filter(u => u.id !== idToDelete) // 自分自身を消す
+			.filter(u => u.id !== idToDelete)
 			.map(u => ({
 				...u,
-				children: deleteUnitFromTree(u.children, idToDelete) // 子供の中からさらに探して消す
+				children: deleteUnitFromTree(u.children, idToDelete)
 			}));
 	};
 
 	const deleteUnit = () => {
 		if (!selectedUnitId) return;
+
+		const findUnit = (tree: Unit[], id: string): Unit | null => {
+			for (const u of tree) {
+				if (u.id === id) return u;
+				const found = findUnit(u.children, id);
+				if (found) return found;
+			}
+			return null;
+		};
+
+		const unitToDelete = findUnit(units, selectedUnitId);
+		if (!unitToDelete) return;
+
+		const idsToDelete = getAllUnitIds(unitToDelete);
+
 		setUnits(prev => deleteUnitFromTree(prev, selectedUnitId));
-		setSelectedUnitId(null); // 選択解除
+
+		idsToDelete.forEach(id => onUnitDeleted(id));
+
+		setSelectedUnitId(null);
+	};
+
+	const toggleExpand = (id: string) => {
+		const next = new Set(expandedIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		setExpandedIds(next);
 	};
 
 	return (
@@ -154,6 +179,8 @@ const UnitTable = ({
 								onSelect={(id) => setSelectedUnitId(id === selectedUnitId ? null : id)} 
 								selectedId={selectedUnitId} 
 								visibleColumns={visibleColumns} 
+								expandedIds={expandedIds}
+								onToggle={(id) => toggleExpand(id)}
 							/>
 						))}
 					</tbody>
@@ -162,9 +189,24 @@ const UnitTable = ({
 	);
 };
 
-export const UnitEditor = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-	const [redUnits, setRedUnits] = useState<Unit[]>([]);
-	const [blueUnits, setBlueUnits] = useState<Unit[]>([]);
+export const UnitEditor = ({ 
+	isOpen, 
+	onClose,
+	redUnits,
+	setRedUnits,
+	blueUnits,
+	setBlueUnits,
+	removeUnitFromMap,
+}: { 
+	isOpen: boolean; 
+	onClose: () => void;
+	redUnits: Unit[];
+	setRedUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
+	blueUnits: Unit[];
+	setBlueUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
+	removeUnitFromMap: (unitId: string) => void;
+}) => {
+
 	if (!isOpen) return null;
 	return (
 		<div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 2000 }}>
@@ -175,9 +217,9 @@ export const UnitEditor = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 						<button className="btn-close btn-close-white" onClick={onClose}></button>
 					</div>
 					<div className="modal-body d-flex" style={{ height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
-						<UnitTable units={redUnits} setUnits={setRedUnits} color="red" />
+						<UnitTable units={redUnits} setUnits={setRedUnits} color="red" onUnitDeleted={removeUnitFromMap} />
 						<div className="vr bg-secondary" style={{ width: '2px' }}></div>
-						<UnitTable units={blueUnits} setUnits={setBlueUnits} color="blue" />
+						<UnitTable units={blueUnits} setUnits={setBlueUnits} color="blue" onUnitDeleted={removeUnitFromMap} />
 					</div>
 				</div>
 			</div>

@@ -4,6 +4,12 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import ms from 'milsymbol';
+
+import type { MapElement } from '../config/mapElement'
+import { getTypeColor } from '../config/mapElement'
+import type { Unit, PlacedUnit } from '../config/unitTypes';
+import { getTotalPersonnel, getSymbolSize } from '../config/unitTypes';
 
 L.Marker.prototype.options.icon = L.icon({
 	iconUrl: icon,
@@ -12,38 +18,30 @@ L.Marker.prototype.options.icon = L.icon({
 	iconAnchor: [12, 41],
 });
 
-export type ElementType = 'operation' | 'fortification' | 'obstacle' | 'red' | 'blue';
-export type GeometryType = 'polygon' | 'polyline' | 'point';
-
-export interface MapElement {
-	id: string;
-	type: ElementType;
-	geometry: GeometryType;
-	name: string;
-	layer?: L.Layer;
-}
-
-const getTypeColor = (type: string): string => {
-	switch (type) {
-		case 'red': return 'red';
-		case 'blue': return 'blue';
-		case 'operation': return 'gray';
-		case 'fortification': return 'green';
-		case 'obstacle': return 'brown';
-		default: return 'black';
-	}
-};
-
 export const useMapEditor = (showLabels: boolean) => {
 	const mapInstance = useRef<L.Map | null>(null);
 	const mapRef = useRef<HTMLDivElement | null>(null);
 	const [elements, setElements] = useState<MapElement[]>([]);
 	const [pendingElement, setPendingElement] = useState<Partial<MapElement> | null>(null);
 	const [points, setPoints] = useState<L.LatLng[]>([]);
-	
+	const [placedUnits, setPlacedUnits] = useState<PlacedUnit[]>([]);
+
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
+	const unitLayerMap = useRef<Map<string, L.Layer>>(new Map());
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+	};
+
+	const removeUnitFromMap = (unitId: string) => {
+		const layer = unitLayerMap.current.get(unitId);
+		if (layer && mapInstance.current) {
+			mapInstance.current.removeLayer(layer);
+			unitLayerMap.current.delete(unitId);
+		}
+	};
 
 	useEffect(() => {
 		pendingRef.current = pendingElement;
@@ -64,7 +62,7 @@ export const useMapEditor = (showLabels: boolean) => {
 			tempLayerRef.current = null;
 		}
 		let layer: L.Layer | null = null;
-		const color = getTypeColor(pendingRef.current.type || ''); // ここも共通化！
+		const color = getTypeColor(pendingRef.current.type || '');
 
 		if (pendingRef.current.geometry === 'polygon' && finalPoints.length >= 3) {
 			layer = L.polygon(finalPoints, { color }).addTo(mapInstance.current);
@@ -75,7 +73,7 @@ export const useMapEditor = (showLabels: boolean) => {
 			const color = isRed ? 'red' : 'blue';
 
 			const icon = L.divIcon({
-				className: '', // クラスを空にしてLeafletの介入を防ぐ
+				className: '',
 				html: `<div style="
 					color: ${color}; 
 					font-size: 28px; 
@@ -109,6 +107,69 @@ export const useMapEditor = (showLabels: boolean) => {
 		setPoints([]);
 	};
 
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		const unitData: Unit = JSON.parse(e.dataTransfer.getData('application/json'));
+		
+		const isAlreadyPlaced = placedUnits.some((u) => u.id === unitData.id);
+		if (isAlreadyPlaced) {
+			console.warn("この部隊は既に配置済みです:", unitData.templateId);
+			return;
+		}
+
+		if (!unitData || !mapInstance.current) return;
+
+		const rect = mapRef.current?.getBoundingClientRect();
+		if (!rect) return;
+		
+		const x = e.clientX - rect.left;
+		const y = e.clientY - rect.top;
+		const latLng = mapInstance.current.containerPointToLatLng([x, y]);
+
+		const totalPersonnel = getTotalPersonnel(unitData);
+		const symbolSize = getSymbolSize(totalPersonnel);
+
+		const symbol = new ms.Symbol(unitData.sidc, { size: symbolSize });
+		const icon = L.divIcon({
+			className: '',
+			html: symbol.asSVG(),
+			iconSize: [symbolSize, symbolSize],
+			iconAnchor: [symbolSize / 2, symbolSize / 2]
+		});
+
+		const layer = L.marker(latLng, {
+			icon,
+			draggable: true
+		}).addTo(mapInstance.current);
+
+		layer.on('dragend', (e) => {
+			const marker = e.target as L.Marker;
+			const newPos = marker.getLatLng();
+			
+			setPlacedUnits((prev) => 
+				prev.map(u => u.id === unitData.id 
+					? { ...u, position: { x: newPos.lat, y: newPos.lng } } 
+					: u
+				)
+			);
+		});
+
+		layer.on('contextmenu', () => {
+			removeUnitFromMap(unitData.id);
+			setPlacedUnits((prev) => prev.filter(u => u.id !== unitData.id));
+		});
+
+		layer.bindTooltip(unitData.templateId);
+		unitLayerMap.current.set(unitData.id, layer);
+
+		const newPlacedUnit: PlacedUnit = {
+			...unitData,
+			position: { x: latLng.lat, y: latLng.lng }
+		};
+
+		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
+	};
+
 	const tempLayerRef = useRef<L.Polyline | null>(null);
 
 	useEffect(() => {
@@ -117,7 +178,6 @@ export const useMapEditor = (showLabels: boolean) => {
 		const handleMouseMove = (e: L.LeafletMouseEvent) => {
 			if (points.length === 0 || !mapInstance.current) return;
 
-			// 共通化した関数で色を取得
 			const color = getTypeColor(pendingElement.type || '');
 			const currentPoints = [...points, e.latlng];
 
@@ -187,10 +247,12 @@ export const useMapEditor = (showLabels: boolean) => {
 		mapRef,
 		elements,
 		setElements,
+		placedUnits,
 		pendingElement,
-		points,
-		setPoints,
-		startDrawing
+		startDrawing,
+		handleDragOver,
+		handleDrop,
+		removeUnitFromMap,
 	};
 };
 

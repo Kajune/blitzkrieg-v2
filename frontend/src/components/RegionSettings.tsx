@@ -1,7 +1,29 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { CommonModalProps } from './CommonModal';
 import { CommonModal, InputModal } from './CommonModal';
-import type { MapElement, ElementType, GeometryType } from './MapEditor';
+
+import type { MapElement, ElementType, GeometryType } from '../config/mapElement'
+import { ElementTypeName, GeometryTypeName } from '../config/mapElement'
+
+import '../App.module.css';
+
+const SIDES: { 
+	id: 'red' | 'blue'; 
+	name: string; 
+	active: string; 
+	outline: string 
+}[] = [
+	{ id: 'red', name: 'REDFOR', active: 'btn-danger', outline: 'btn-outline-danger' },
+	{ id: 'blue', name: 'BLUFOR', active: 'btn-info', outline: 'btn-outline-info' }
+];
+
+const COMMON_ELEMENTS: { type: ElementType; geometry: GeometryType; btnClass: string }[] = [
+	{ type: 'operation', geometry: 'polygon', btnClass: 'btn-light' },
+	{ type: 'fortification', geometry: 'polygon', btnClass: 'btn-light' },
+	{ type: 'obstacle', geometry: 'polygon', btnClass: 'btn-light' }
+];
+
+const GEOMETRY_TYPES = Object.keys(GeometryTypeName) as GeometryType[];
 
 export const RegionSettings = ({ 
 	isOpen, 
@@ -9,16 +31,16 @@ export const RegionSettings = ({
 	elements, 
 	setElements, 
 	onStartDrawing,
-	drawingType, // 追加
-	drawingGeometry // 追加
+	drawingType,
+	drawingGeometry,
 }: { 
 	isOpen: boolean; 
 	onClose: () => void; 
 	elements: MapElement[]; 
 	setElements: React.Dispatch<React.SetStateAction<MapElement[]>>;
 	onStartDrawing: (el: Partial<MapElement>) => void;
-	drawingType: ElementType | null; // 追加
-	drawingGeometry: GeometryType | null; // 追加
+	drawingType: ElementType | null;
+	drawingGeometry: GeometryType | null;
 }) => {
 	if (!isOpen) return null;
 
@@ -51,7 +73,7 @@ export const RegionSettings = ({
 		if (requiresName) {
 			setInputModal({ show: true, type, geometry });
 		} else {
-			executeAddElement(type, geometry, type === 'operation' ? '作戦地域' : '陣地');
+			executeAddElement(type, geometry, ElementTypeName[type]);
 		}
 	};
 
@@ -86,89 +108,47 @@ export const RegionSettings = ({
 	};
 
 	return (
-		<div className="offcanvas offcanvas-start show" style={{ visibility: 'visible', zIndex: 2000, backgroundColor: '#212529', color: '#fff', width: '280px' }}>
+		<div className="offcanvas offcanvas-start show">
 			<div className="offcanvas-header p-2 border-bottom border-secondary">
 				<h6 className="offcanvas-title">地域設定</h6>
 				<button className="btn-close btn-close-white btn-sm" onClick={onClose}></button>
 			</div>
 			<div className="offcanvas-body p-2" style={{ fontSize: '0.85rem' }}>
 				
-				<h6 className="small">共通要素</h6>
+				{/* 共通要素エリア */}
 				<div className="d-grid gap-1 mb-2">
-					<button 
-						className={`btn btn-sm ${isActive('operation', 'polygon') ? 'btn-light' : 'btn-outline-light'}`}
-						onClick={() => addElement('operation', 'polygon', false)}
-						disabled={!!drawingType}
-					>
-						作戦地域
-					</button>
-					<div className="btn-group">
-						<button 
-							className={`btn btn-sm ${isActive('fortification', 'polygon') ? 'btn-secondary' : 'btn-outline-secondary'}`}
-							onClick={() => addElement('fortification', 'polygon', false)}
-							disabled={!!drawingType}
-						>
-							陣地
-						</button>
-						<button 
-							className={`btn btn-sm ${isActive('obstacle', 'polygon') ? 'btn-secondary' : 'btn-outline-secondary'}`}
-							onClick={() => addElement('obstacle', 'polygon', false)}
-							disabled={!!drawingType}
-						>
-							障害
-						</button>
+					<div className="btn-group w-100 mb-2">
+						{COMMON_ELEMENTS.map(({ type, geometry, btnClass }) => (
+							<button
+								key={type}
+								className={`btn btn-sm ${isActive(type, geometry) ? btnClass : `btn-outline-${btnClass.replace('btn-', '')}`}`}
+								onClick={() => addElement(type, geometry, false)}
+								disabled={!!drawingType}
+							>
+								{ElementTypeName[type]}
+							</button>
+						))}
 					</div>
 				</div>
 
-				<h6 className="small">REDFOR</h6>
-				<div className="btn-group w-100 mb-2">
-					<button 
-						className={`btn btn-sm ${isActive('red', 'polygon') ? 'btn-danger' : 'btn-outline-danger'}`}
-						onClick={() => addElement('red', 'polygon', true)}
-						disabled={!!drawingType}
-					>
-						エリア
-					</button>
-					<button 
-						className={`btn btn-sm ${isActive('red', 'polyline') ? 'btn-danger' : 'btn-outline-danger'}`}
-						onClick={() => addElement('red', 'polyline', true)}
-						disabled={!!drawingType}
-					>
-						線
-					</button>
-					<button 
-						className={`btn btn-sm ${isActive('red', 'point') ? 'btn-danger' : 'btn-outline-danger'}`}
-						onClick={() => addElement('red', 'point', true)}
-						disabled={!!drawingType}
-					>
-						点
-					</button>
-				</div>
-
-				<h6 className="small">BLUFOR</h6>
-				<div className="btn-group w-100 mb-2">
-					<button 
-						className={`btn btn-sm ${isActive('blue', 'polygon') ? 'btn-info' : 'btn-outline-info'}`}
-						onClick={() => addElement('blue', 'polygon', true)}
-						disabled={!!drawingType}
-					>
-						エリア
-					</button>
-					<button 
-						className={`btn btn-sm ${isActive('blue', 'polyline') ? 'btn-info' : 'btn-outline-info'}`}
-						onClick={() => addElement('blue', 'polyline', true)}
-						disabled={!!drawingType}
-					>
-						線
-					</button>
-					<button 
-						className={`btn btn-sm ${isActive('blue', 'point') ? 'btn-info' : 'btn-outline-info'}`}
-						onClick={() => addElement('blue', 'point', true)}
-						disabled={!!drawingType}
-					>
-						点
-					</button>
-				</div>
+				{/* サイド別エリア */}
+				{SIDES.map((side) => (
+					<React.Fragment key={side.id}>
+						<h6 className="small">{side.name}</h6>
+						<div className="btn-group w-100 mb-2">
+							{GEOMETRY_TYPES.map((geo) => (
+								<button
+									key={geo}
+									className={`btn btn-sm ${isActive(side.id, geo) ? side.active : side.outline}`}
+									onClick={() => addElement(side.id, geo, true)}
+									disabled={!!drawingType}
+								>
+									{GeometryTypeName[geo]}
+								</button>
+							))}
+						</div>
+					</React.Fragment>
+				))}
 
 				<h6 className="small border-top pt-2 mt-2">配置済み</h6>
 				<ul className="list-group list-group-flush">

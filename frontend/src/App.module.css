@@ -21,3 +21,11 @@
     font-weight: bold;
     text-shadow: 1px 1px 2px black; /* 文字を見やすく */
 }
+
+.offcanvasContainer {
+    visibility: visible;
+    z-index: 2000;
+    background-color: #212529;
+    color: #fff;
+    width: 280px;
+}
