@@ -1,0 +1,23 @@
+/* 共通のマーカー基底 */
+.tactical-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.marker-cross::before { content: '＋'; }
+
+.colorRed { color: red !important; }
+.colorBlue { color: blue !important; }
+
+.my-custom-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: white !important;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black; /* 文字を見やすく */
+}
