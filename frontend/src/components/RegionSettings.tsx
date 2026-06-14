@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import type { CommonModalProps } from './CommonModal';
 import { CommonModal, InputModal } from './CommonModal';
-
+import { useAppStore } from '../contexts/AppContext';
+import type { Force } from '../config/unitTypes';
+import { FORCE_STYLES } from '../config/unitTypes';
 import type { MapElement, ElementType, GeometryType } from '../config/mapElement'
 import { ElementTypeName, GeometryTypeName } from '../config/mapElement'
 
 import '../App.module.css';
 
-const SIDES: { 
-	id: 'red' | 'blue'; 
-	name: string; 
-	active: string; 
-	outline: string 
-}[] = [
-	{ id: 'red', name: 'REDFOR', active: 'btn-danger', outline: 'btn-outline-danger' },
-	{ id: 'blue', name: 'BLUFOR', active: 'btn-info', outline: 'btn-outline-info' }
-];
 
 const COMMON_ELEMENTS: { type: ElementType; geometry: GeometryType; btnClass: string }[] = [
 	{ type: 'operation', geometry: 'polygon', btnClass: 'btn-light' },
@@ -28,23 +21,19 @@ const GEOMETRY_TYPES = Object.keys(GeometryTypeName) as GeometryType[];
 export const RegionSettings = ({ 
 	isOpen, 
 	onClose, 
-	elements, 
-	setElements, 
 	onStartDrawing,
-	drawingType,
-	drawingGeometry,
+	drawingElement,
 }: { 
 	isOpen: boolean; 
 	onClose: () => void; 
-	elements: MapElement[]; 
-	setElements: React.Dispatch<React.SetStateAction<MapElement[]>>;
-	onStartDrawing: (el: Partial<MapElement>) => void;
-	drawingType: ElementType | null;
-	drawingGeometry: GeometryType | null;
+	onStartDrawing: (el: MapElement) => void;
+	drawingElement: MapElement | null;
 }) => {
+	const { mapElements, setMapElements } = useAppStore();
+
 	if (!isOpen) return null;
 
-	const hasOperationArea = elements.some((el) => el.type === 'operation');
+	const hasOperationArea = mapElements.some((el) => el.type === 'operation');
 	const [modal, setModal] = useState<CommonModalProps>({ 
 		show: false, 
 		title: '', 
@@ -53,12 +42,16 @@ export const RegionSettings = ({
 		onCancel: undefined,
 		confirmText: 'OK'
 	});
-	const [inputModal, setInputModal] = useState<{show: boolean, type: ElementType | null, geometry: GeometryType | null}>({ show: false, type: null, geometry: null });
+	const [inputModal, setInputModal] = useState<{show: boolean, type: ElementType | null, geometry: GeometryType | null, force: Force | null}>({ show: false, type: null, geometry: null, force: null });
 
-	const isActive = (type: ElementType, geometry: GeometryType) => 
-		drawingType === type && drawingGeometry === geometry;
+	const isActive = (type: ElementType, geometry: GeometryType, force: Force | null) => {
+		if (!drawingElement) {
+			return false;
+		}
+		return drawingElement.type === type && drawingElement.geometry === geometry && drawingElement.force === force;
+	}
 
-	const addElement = (type: ElementType, geometry: GeometryType, requiresName: boolean) => {
+	const addElement = (type: ElementType, geometry: GeometryType, force: Force | null, requiresName: boolean) => {
 		if (type !== 'operation' && !hasOperationArea) {
 			setModal({ 
 				title: 'エラー', 
@@ -71,15 +64,15 @@ export const RegionSettings = ({
 		}
 
 		if (requiresName) {
-			setInputModal({ show: true, type, geometry });
+			setInputModal({ show: true, type, geometry, force });
 		} else {
-			executeAddElement(type, geometry, ElementTypeName[type]);
+			executeAddElement(type, geometry, force, ElementTypeName[type]);
 		}
 	};
 
-	const executeAddElement = (type: ElementType, geometry: GeometryType, name: string) => {
-		onStartDrawing({ id: Date.now().toString(), type, geometry, name });
-		setInputModal({ show: false, type: null, geometry: null });
+	const executeAddElement = (type: ElementType, geometry: GeometryType, force: Force | null, name: string) => {
+		onStartDrawing({ id: Date.now().toString(), type, force, geometry, name });
+		setInputModal({ show: false, type: null, geometry: null, force: null });
 	};
 
 	const removeElement = (id: string, isOperation: boolean) => {
@@ -90,14 +83,14 @@ export const RegionSettings = ({
 				show: true,
 				confirmText: '削除する',
 				onConfirm: () => {
-					elements.forEach((el) => el.layer?.remove());
-					setElements([]);
+					mapElements.forEach((el) => el.layer?.remove());
+					setMapElements([]);
 					setModal(prev => ({ ...prev, show: false }));
 				},
 				onCancel: () => setModal(prev => ({ ...prev, show: false }))
 			});
 		} else {
-			setElements((prev) => {
+			setMapElements((prev) => {
 				const target = prev.find((el) => el.id === id);
 				if (target && target.layer) {
 					target.layer.remove();
@@ -121,9 +114,9 @@ export const RegionSettings = ({
 						{COMMON_ELEMENTS.map(({ type, geometry, btnClass }) => (
 							<button
 								key={type}
-								className={`btn btn-sm ${isActive(type, geometry) ? btnClass : `btn-outline-${btnClass.replace('btn-', '')}`}`}
-								onClick={() => addElement(type, geometry, false)}
-								disabled={!!drawingType}
+								className={`btn btn-sm ${isActive(type, geometry, null) ? btnClass : `btn-outline-${btnClass.replace('btn-', '')}`}`}
+								onClick={() => addElement(type, geometry, null, false)}
+								disabled={!!drawingElement}
 							>
 								{ElementTypeName[type]}
 							</button>
@@ -132,16 +125,16 @@ export const RegionSettings = ({
 				</div>
 
 				{/* サイド別エリア */}
-				{SIDES.map((side) => (
-					<React.Fragment key={side.id}>
-						<h6 className="small">{side.name}</h6>
+				{Object.entries(FORCE_STYLES).map(([force, style]) => (
+					<React.Fragment key={force}>
+						<h6 className="small">{force}</h6>
 						<div className="btn-group w-100 mb-2">
 							{GEOMETRY_TYPES.map((geo) => (
 								<button
 									key={geo}
-									className={`btn btn-sm ${isActive(side.id, geo) ? side.active : side.outline}`}
-									onClick={() => addElement(side.id, geo, true)}
-									disabled={!!drawingType}
+									className={`btn btn-sm btn-${isActive("coa", geo, force as Force) ? "" : "outline-"}${style.class}`}
+									onClick={() => addElement("coa", geo, force as Force, true)}
+									disabled={!!drawingElement}
 								>
 									{GeometryTypeName[geo]}
 								</button>
@@ -152,7 +145,7 @@ export const RegionSettings = ({
 
 				<h6 className="small border-top pt-2 mt-2">配置済み</h6>
 				<ul className="list-group list-group-flush">
-					{elements.map((el) => (
+					{mapElements.map((el) => (
 						<li key={el.id} className="list-group-item bg-dark text-white p-1 d-flex justify-content-between align-items-center">
 							<span>{el.name}</span>
 							<button className="btn btn-link text-danger p-0" onClick={() => removeElement(el.id, el.type === 'operation')}>削除</button>
@@ -164,8 +157,8 @@ export const RegionSettings = ({
 			<InputModal 
 				show={inputModal.show} 
 				title="名前を入力" 
-				onConfirm={(name) => name && executeAddElement(inputModal.type!, inputModal.geometry!, name)} 
-				onCancel={() => setInputModal({ show: false, type: null, geometry: null })} 
+				onConfirm={(name) => name && executeAddElement(inputModal.type!, inputModal.geometry!, inputModal.force!, name)} 
+				onCancel={() => setInputModal({ show: false, type: null, force: null, geometry: null })} 
 			/>
 		</div>
 	);

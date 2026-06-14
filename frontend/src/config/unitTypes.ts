@@ -1,7 +1,26 @@
+export const FORCES = ['REDFOR', 'BLUFOR'] as const;
+export type Force = typeof FORCES[number];
+
+export type ForceStyle = {
+	color: string;
+	class: string;
+};
+
+export const FORCE_STYLES: Record<Force, ForceStyle> = {
+	REDFOR: {
+		color: 'red',
+		class: 'danger',
+	},
+	BLUFOR: {
+		color: 'blue',
+		class: 'primary',
+	},
+};
+
 export interface UnitTemplate {
 	id: string;
 	name: string;
-	sidc: { [key in 'BLUFOR' | 'REDFOR']: string };
+	sidc: Record<Force, string>;
 	type: string;
 	personnel: number;
 	equipments: { [key: string]: number };
@@ -11,6 +30,7 @@ export interface UnitTemplate {
 export interface Unit {
 	id: string;
 	templateId: string;
+	force: Force;
 	name: string;
 	sidc: string;
 	type: string;
@@ -20,6 +40,7 @@ export interface Unit {
 }
 
 export interface PlacedUnit extends Unit {
+	force: Force;
 	position: { x: number, y: number };
 }
 
@@ -44,6 +65,22 @@ export const getAllUnitIds = (unit: Unit): string[] => {
 export const getTotalPersonnel = (unit: Unit): number => {
 	const childrenTotal = unit.children.reduce((acc, child) => acc + getTotalPersonnel(child), 0);
 	return unit.personnel + childrenTotal;
+};
+
+export const getTotalEquipments = (unit: Unit) => {
+	const totals: Record<string, number> = { ...unit.equipments };
+	
+	const addChildrenEquipments = (u: Unit) => {
+		u.children?.forEach((child) => {
+			Object.entries(child.equipments || {}).forEach(([k, v]) => {
+				totals[k] = (totals[k] || 0) + (v as number);
+			});
+			addChildrenEquipments(child as Unit);
+		});
+	};
+	
+	addChildrenEquipments(unit);
+	return totals;
 };
 
 export const getSymbolSize = (

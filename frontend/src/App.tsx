@@ -1,30 +1,29 @@
 import { useState } from 'react';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+import { AppProvider } from './contexts/AppContext';
 import { useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
 import { UnitPlacement } from './components/UnitPlacement';
+import { SimSetting } from './components/SimSetting';
+import { UnitDetailPane } from './components/UnitDetailPane';
 
-import type { Unit } from './config/unitTypes';
-
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import './App.module.css';
 
-function App() {
+function AppContent() {
 	const [showMenu, setShowMenu] = useState(false);
 	const [isUnitEditorOpen, setIsUnitEditorOpen] = useState(false);
 	const [isRegionEditorOpen, setIsRegionEditorOpen] = useState(false);
 	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
-	const [redUnits, setRedUnits] = useState<Unit[]>([]);
-	const [blueUnits, setBlueUnits] = useState<Unit[]>([]);
+	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
 	const [showLabels, setShowLabels] = useState(true);
 	
 	const { 
 		mapRef,
-		elements,
-		setElements,
-		placedUnits,
 		pendingElement,
+		selectedUnit,
+		setSelectedUnit,
 		startDrawing,
 		handleDragOver,
 		handleDrop,
@@ -84,41 +83,52 @@ function App() {
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitEditorOpen(true); setShowMenu(false); }}>部隊編成</button>
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionEditorOpen(true); setShowMenu(false); }}>地域設定</button>
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitPlacementOpen(true); setShowMenu(false); }}>部隊配置</button>
-						<button className="btn btn-outline-light text-start">シミュレーション設定</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsSimSettingOpen(true); setShowMenu(false); }}>シミュレーション設定</button>
 						<button className="btn btn-outline-light text-start">インポート</button>
 						<button className="btn btn-outline-light text-start">エクスポート</button>
 					</div>
 				</div>
 			</div>
 
+			<UnitDetailPane 
+				unit={selectedUnit} 
+				onClose={() => setSelectedUnit(null)} 
+				onDelete={(unit) => {
+					removeUnitFromMap(unit.id);
+					setSelectedUnit(null);
+				}} 
+			/>
+
 			{showMenu && <div className="offcanvas-backdrop fade show" onClick={() => setShowMenu(false)} style={{ zIndex: 1040 }} />}
 
 			<UnitEditor 
 				isOpen={isUnitEditorOpen} 
 				onClose={() => setIsUnitEditorOpen(false)}
-				redUnits={redUnits}
-				setRedUnits={setRedUnits}
-				blueUnits={blueUnits}
-				setBlueUnits={setBlueUnits}
 				removeUnitFromMap={removeUnitFromMap}
 			/>
 			<RegionSettings 
 				isOpen={isRegionEditorOpen} 
 				onClose={() => setIsRegionEditorOpen(false)}
-				elements={elements}
-				setElements={setElements}
 				onStartDrawing={startDrawing}
-				drawingType={pendingElement?.type || null}
-				drawingGeometry={pendingElement?.geometry || null}
+				drawingElement={pendingElement}
 			/>
 			<UnitPlacement 
 				isOpen={isUnitPlacementOpen} 
 				onClose={() => setIsUnitPlacementOpen(false)}
-				redUnits={redUnits}
-				blueUnits={blueUnits}
-				placedUnits={placedUnits}
+			/>
+			<SimSetting 
+				isOpen={isSimSettingOpen} 
+				onClose={() => setIsSimSettingOpen(false)}
 			/>
 		</div>
+	);
+}
+
+function App() {
+	return (
+		<AppProvider>
+			<AppContent />
+		</AppProvider>
 	);
 }
 

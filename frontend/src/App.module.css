@@ -10,9 +10,6 @@
 
 .marker-cross::before { content: '＋'; }
 
-.colorRed { color: red !important; }
-.colorBlue { color: blue !important; }
-
 .my-custom-tooltip {
     background: transparent !important;
     border: none !important;

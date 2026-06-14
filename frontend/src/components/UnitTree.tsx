@@ -16,6 +16,30 @@ interface UnitTreeProps {
 	placedIds?: string[];
 }
 
+interface EqupmentBadgeProps {
+	equipments: Record<string, number>;
+	variant?: 'secondary' | 'primary';
+	className?: string;
+}
+
+export const EquipmentBadges = ({ equipments, variant = 'secondary', className = '' }: EqupmentBadgeProps) => {
+	const entries = Object.entries(equipments);
+	
+	if (entries.length === 0) {
+		return <span className="text-muted small">なし</span>;
+	}
+
+	return (
+		<div className={`d-flex flex-wrap gap-1 ${className}`}>
+			{entries.map(([k, v]) => (
+				<span key={k} className={`badge bg-${variant}`} style={{ fontSize: '0.7rem' }}>
+					{k}:{v}
+				</span>
+			))}
+		</div>
+	);
+};
+
 export const UnitTree = ({ 
 	unit, 
 	depth = 0, 
@@ -44,7 +68,7 @@ export const UnitTree = ({
 					height: '40px',
 					backgroundColor: isSelected ? 'rgba(255,255,255,0.1)' : 'transparent',
 					borderLeft: isSelected ? '4px solid #0d6efd' : '4px solid transparent',
-					opacity: isAlreadyPlaced ? 0.1 : 1,
+					opacity: isAlreadyPlaced ? 0.3 : 1,
 					cursor: isAlreadyPlaced ? 'not-allowed' : 'pointer'
 				}}
 				draggable={!isAlreadyPlaced}
@@ -75,9 +99,7 @@ export const UnitTree = ({
 				{visibleColumns.includes('personnel') && <td style={{ width: '10%', verticalAlign: 'middle' }}>{unit.personnel}</td>}
 				{visibleColumns.includes('equipments') && (
 					<td style={{ width: '40%', verticalAlign: 'middle', overflow: 'hidden' }}>
-						<div style={{ display: 'flex', flexWrap: 'wrap' }}>
-							{Object.entries(unit.equipments).map(([k, v]) => <span key={k} className="badge bg-secondary me-1" style={{ fontSize: '0.7rem' }}>{k}:{v}</span>)}
-						</div>
+						<EquipmentBadges equipments={unit.equipments} />
 					</td>
 				)}
 			</tr>

@@ -1,24 +1,20 @@
 import { useState } from 'react';
-import type { Unit, PlacedUnit } from '../config/unitTypes';
+import type { Force, Unit } from '../config/unitTypes';
+import { FORCES, FORCE_STYLES } from '../config/unitTypes';
 import { UnitTree } from './UnitTree';
-
+import { useAppStore } from '../contexts/AppContext';
 import '../App.module.css';
 
 
 export const UnitPlacement = ({ 
 	isOpen, 
 	onClose,
-	redUnits,
-	blueUnits,
-	placedUnits,
 }: { 
 	isOpen: boolean; 
 	onClose: () => void;
-	redUnits: Unit[];
-	blueUnits: Unit[];
-	placedUnits: PlacedUnit[];
 }) => {
-	const [activeTab, setActiveTab] = useState<'red' | 'blue'>('red');
+	const { units, placedUnits } = useAppStore();
+	const [activeTab, setActiveTab] = useState<Force>(FORCES[0]);
 	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
 	const handleDragStart = (e: React.DragEvent, unit: Unit) => {
@@ -35,7 +31,7 @@ export const UnitPlacement = ({
 
 	if (!isOpen) return null;
 
-	const currentUnits = activeTab === 'red' ? redUnits : blueUnits;
+	const currentUnits = units.filter(u => u.force === activeTab);
 
 	return (
 		<div className="offcanvas offcanvas-start show" style={{ width: '300px' }}>
@@ -45,18 +41,15 @@ export const UnitPlacement = ({
 			</div>
 
 			<div className="nav nav-tabs">
-				<button 
-					className={`nav-link ${activeTab === 'red' ? 'active text-danger' : 'text-secondary'}`} 
-					onClick={() => setActiveTab('red')}
-				>
-					REDFOR
-				</button>
-				<button 
-					className={`nav-link ${activeTab === 'blue' ? 'active text-primary' : 'text-secondary'}`} 
-					onClick={() => setActiveTab('blue')}
-				>
-					BLUFOR
-				</button>
+				{Object.entries(FORCE_STYLES).map(([force, style]) => (
+					<button 
+						key={force}
+						className={`nav-link ${activeTab === force ? 'active' : 'text-secondary'} ${activeTab === force ? 'text-' + style.class : ''}`} 
+						onClick={() => setActiveTab(force as Force)}
+					>
+						{force}
+					</button>
+				))}
 			</div>
 
 			<div className="offcanvas-body p-2" style={{ fontSize: '0.85rem' }}>

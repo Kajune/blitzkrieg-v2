@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
-import { UNIT_TEMPLATES } from '../config/unitTypes';
-import type { Unit } from '../config/unitTypes';
+import { UNIT_TEMPLATES, FORCE_STYLES, FORCES } from '../config/unitTypes';
+import type { Unit, Force } from '../config/unitTypes';
 import { getAllUnitIds } from '../config/unitTypes';
 import { UnitTree } from './UnitTree';
+import { useAppStore } from '../contexts/AppContext';
 
-const createUnitStructure = (templateId: string, color: 'red' | 'blue'): Unit => {
+const createUnitStructure = (templateId: string, force: Force): Unit => {
 	const template = UNIT_TEMPLATES.find(t => t.id === templateId);
-	if (!template) return { id: '', templateId: '不明', name: '不明', sidc: '', type: '不明', personnel: 0, equipments: {}, children: [] };
+	if (!template) return { id: '', templateId: '不明', name: '不明', force: FORCES[0], sidc: '', type: '不明', personnel: 0, equipments: {}, children: [] };
 
 	return {
 		id: Date.now().toString() + Math.random(),
 		templateId: template.id,
 		name: template.name,
-		sidc: color === 'red' ? template.sidc['REDFOR'] : template.sidc['BLUFOR'],
+		force: force,
+		sidc: template.sidc[force],
 		type: template.type,
 		personnel: template.personnel,
 		equipments: template.equipments,
 		children: Object.entries(template.lower_units).flatMap(([childId, count]) => 
-			Array.from({ length: count as number }).map(() => createUnitStructure(childId, color))
+			Array.from({ length: count as number }).map(() => createUnitStructure(childId, force))
 		)
 	};
 };
@@ -25,13 +27,13 @@ const createUnitStructure = (templateId: string, color: 'red' | 'blue'): Unit =>
 const UnitTable = ({ 
 	units, 
 	setUnits, 
-	color, 
+	force, 
 	onUnitDeleted,
 	visibleColumns = ['type', 'personnel', 'equipments'] // デフォルト値を指定
 }: { 
 	units: Unit[], 
 	setUnits: React.Dispatch<React.SetStateAction<Unit[]>>, 
-	color: 'red' | 'blue',
+	force: Force,
 	onUnitDeleted: (unitId: string) => void,
 	visibleColumns?: ('type' | 'personnel' | 'equipments')[] // 型定義を追加
 }) => {
@@ -50,7 +52,7 @@ const UnitTable = ({
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `${color}_units_${Date.now()}.json`;
+		a.download = `${force}_units_${Date.now()}.json`;
 		a.click();
 	};
 
@@ -94,7 +96,7 @@ const UnitTable = ({
 
 		if (!targetId) return;
 
-		const newUnit = createUnitStructure(targetId, color);
+		const newUnit = createUnitStructure(targetId, force);
 		setUnits(prev => addUnitToTree(prev, selectedUnitId, newUnit));
 	};
 
@@ -141,10 +143,10 @@ const UnitTable = ({
 	return (
 		<div style={{ flex: '1 1 50%', overflowY: 'auto', padding: '0 10px' }}>
 			<div className="d-flex justify-content-between align-items-center mb-2">
-				<h4 className={color === 'red' ? 'text-danger' : 'text-primary'}>{color === 'red' ? 'REDFOR' : 'BLUFOR'}</h4>
+				<h4 className={'text-' + FORCE_STYLES[force].class}>{force}</h4>
 				<div className="d-flex gap-1">
-					<input type="file" id={`import-${color}`} style={{ display: 'none' }} onChange={importUnitData} accept=".json" />
-					<label className="btn btn-xs btn-outline-secondary" htmlFor={`import-${color}`} style={{ fontSize: '0.7rem' }}>インポート</label>
+					<input type="file" id={`import-${force}`} style={{ display: 'none' }} onChange={importUnitData} accept=".json" />
+					<label className="btn btn-xs btn-outline-secondary" htmlFor={`import-${force}`} style={{ fontSize: '0.7rem' }}>インポート</label>
 					<button className="btn btn-xs btn-outline-secondary" onClick={exportUnitData} style={{ fontSize: '0.7rem' }}>エクスポート</button>
 				</div>
 			</div>
@@ -153,7 +155,7 @@ const UnitTable = ({
 				<select className="form-select form-select-sm" style={{ flexGrow: 1 }} value={selectedTemplateId} onChange={e => setSelectedTemplateId(e.target.value)}>
 					{UNIT_TEMPLATES.filter(t => t.id.includes(searchText) || t.name.includes(searchText)).map(t => <option key={t.id} value={t.id}>[{t.id}] {t.name}</option>)}
 				</select>
-				<button className={`btn btn-sm ${color === 'red' ? 'btn-danger' : 'btn-primary'}`} style={{ width: '120px' }} onClick={addUnit}>追加</button>
+				<button className={`btn btn-sm ${'btn-' + FORCE_STYLES[force].class}`} style={{ width: '120px' }} onClick={addUnit}>追加</button>
 				<button 
 					className="btn btn-sm btn-outline-light" 
 					onClick={deleteUnit}
@@ -192,20 +194,27 @@ const UnitTable = ({
 export const UnitEditor = ({ 
 	isOpen, 
 	onClose,
-	redUnits,
-	setRedUnits,
-	blueUnits,
-	setBlueUnits,
 	removeUnitFromMap,
 }: { 
 	isOpen: boolean; 
 	onClose: () => void;
-	redUnits: Unit[];
-	setRedUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
-	blueUnits: Unit[];
-	setBlueUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
 	removeUnitFromMap: (unitId: string) => void;
 }) => {
+	const { units, setUnits } = useAppStore();
+
+	const getForceSpecificSetUnits = (force: Force) => (
+		updater: React.SetStateAction<Unit[]>
+	) => {
+		setUnits((prevUnits) => {
+			const otherUnits = prevUnits.filter(u => u.force !== force);
+			const currentForceUnits = prevUnits.filter(u => u.force === force);
+			const updatedForceUnits = typeof updater === 'function' 
+				? updater(currentForceUnits) 
+				: updater;
+			
+			return [...otherUnits, ...updatedForceUnits];
+		});
+	};
 
 	if (!isOpen) return null;
 	return (
@@ -217,9 +226,20 @@ export const UnitEditor = ({
 						<button className="btn-close btn-close-white" onClick={onClose}></button>
 					</div>
 					<div className="modal-body d-flex" style={{ height: 'calc(100vh - 60px)', overflow: 'hidden' }}>
-						<UnitTable units={redUnits} setUnits={setRedUnits} color="red" onUnitDeleted={removeUnitFromMap} />
-						<div className="vr bg-secondary" style={{ width: '2px' }}></div>
-						<UnitTable units={blueUnits} setUnits={setBlueUnits} color="blue" onUnitDeleted={removeUnitFromMap} />
+						{FORCES.map((force, index) => (
+							<React.Fragment key={force}>
+								<UnitTable 
+									units={units.filter(u => u.force === force)} 
+									setUnits={getForceSpecificSetUnits(force)} 
+									force={force} 
+									onUnitDeleted={removeUnitFromMap} 
+								/>
+
+								{index < FORCES.length - 1 && (
+									<div className="vr bg-secondary" style={{ width: '2px' }}></div>
+								)}
+							</React.Fragment>
+						))}
 					</div>
 				</div>
 			</div>
