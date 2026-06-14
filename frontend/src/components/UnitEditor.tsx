@@ -7,7 +7,21 @@ import { useAppStore } from '../contexts/AppContext';
 
 const createUnitStructure = (templateId: string, force: Force): Unit => {
 	const template = UNIT_TEMPLATES.find(t => t.id === templateId);
-	if (!template) return { id: '', templateId: '不明', name: '不明', force: FORCES[0], sidc: '', type: '不明', personnel: 0, equipments: {}, children: [] };
+	if (!template) {
+		return { 
+			id: '', 
+			templateId: '不明', 
+			name: '不明', 
+			force: FORCES[0], 
+			sidc: '', 
+			type: '不明', 
+			full_personnel: 0, 
+			current_personnel: 0,
+			full_equipments: {}, 
+			current_equipments: {},
+			lower_units: []
+		};
+	}
 
 	return {
 		id: Date.now().toString() + Math.random(),
@@ -16,9 +30,11 @@ const createUnitStructure = (templateId: string, force: Force): Unit => {
 		force: force,
 		sidc: template.sidc[force],
 		type: template.type,
-		personnel: template.personnel,
-		equipments: template.equipments,
-		children: Object.entries(template.lower_units).flatMap(([childId, count]) => 
+		full_personnel: template.personnel,
+		current_personnel: template.personnel,
+		full_equipments: template.equipments,
+		current_equipments: template.equipments,
+		lower_units: Object.entries(template.lower_units).flatMap(([childId, count]) => 
 			Array.from({ length: count as number }).map(() => createUnitStructure(childId, force))
 		)
 	};
@@ -84,9 +100,9 @@ const UnitTable = ({
 		
 		return tree.map(u => {
 			if (u.id === parentId) {
-				return { ...u, children: [...u.children, newUnit] };
+				return { ...u, lower_units: [...u.lower_units, newUnit] };
 			}
-			return { ...u, children: addUnitToTree(u.children, parentId, newUnit) };
+			return { ...u, lower_units: addUnitToTree(u.lower_units, parentId, newUnit) };
 		});
 	};
 
@@ -105,7 +121,7 @@ const UnitTable = ({
 			.filter(u => u.id !== idToDelete)
 			.map(u => ({
 				...u,
-				children: deleteUnitFromTree(u.children, idToDelete)
+				lower_units: deleteUnitFromTree(u.lower_units, idToDelete)
 			}));
 	};
 
@@ -115,7 +131,7 @@ const UnitTable = ({
 		const findUnit = (tree: Unit[], id: string): Unit | null => {
 			for (const u of tree) {
 				if (u.id === id) return u;
-				const found = findUnit(u.children, id);
+				const found = findUnit(u.lower_units, id);
 				if (found) return found;
 			}
 			return null;

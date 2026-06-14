@@ -30,10 +30,6 @@ export const RegionSettings = ({
 	drawingElement: MapElement | null;
 }) => {
 	const { mapElements, setMapElements } = useAppStore();
-
-	if (!isOpen) return null;
-
-	const hasOperationArea = mapElements.some((el) => el.type === 'operation');
 	const [modal, setModal] = useState<CommonModalProps>({ 
 		show: false, 
 		title: '', 
@@ -43,6 +39,10 @@ export const RegionSettings = ({
 		confirmText: 'OK'
 	});
 	const [inputModal, setInputModal] = useState<{show: boolean, type: ElementType | null, geometry: GeometryType | null, force: Force | null}>({ show: false, type: null, geometry: null, force: null });
+
+	if (!isOpen) return null;
+
+	const hasOperationArea = mapElements.some((el) => el.type === 'operation');
 
 	const isActive = (type: ElementType, geometry: GeometryType, force: Force | null) => {
 		if (!drawingElement) {

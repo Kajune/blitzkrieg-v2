@@ -55,7 +55,7 @@ export const UnitTree = ({
 	const isExpanded = expandedIds.has(unit.id);
 	const isLast = isLasts.length > 0 ? isLasts[isLasts.length - 1] : false;
 	const indentWidth = 40;
-	const hasChildren = unit.children.length > 0;
+	const hasChildren = unit.lower_units.length > 0;
 	const isSelected = selectedId === unit.id;
 	const isAlreadyPlaced = placedIds.includes(unit.id);
 
@@ -96,20 +96,20 @@ export const UnitTree = ({
 				</td>
 
 				{visibleColumns.includes('type') && <td style={{ width: '10%', verticalAlign: 'middle' }}>{unit.type}</td>}
-				{visibleColumns.includes('personnel') && <td style={{ width: '10%', verticalAlign: 'middle' }}>{unit.personnel}</td>}
+				{visibleColumns.includes('personnel') && <td style={{ width: '10%', verticalAlign: 'middle' }}>{unit.current_personnel}</td>}
 				{visibleColumns.includes('equipments') && (
 					<td style={{ width: '40%', verticalAlign: 'middle', overflow: 'hidden' }}>
-						<EquipmentBadges equipments={unit.equipments} />
+						<EquipmentBadges equipments={unit.current_equipments} />
 					</td>
 				)}
 			</tr>
 			
-			{isExpanded && unit.children.map((child, idx) => (
+			{isExpanded && unit.lower_units.map((child, idx) => (
 				<UnitTree 
 					key={child.id}
 					unit={child}
 					depth={depth + 1} 
-					isLasts={[...isLasts, idx === unit.children.length - 1]} 
+					isLasts={[...isLasts, idx === unit.lower_units.length - 1]} 
 					onSelect={onSelect}
 					selectedId={selectedId}
 					expandedIds={expandedIds}

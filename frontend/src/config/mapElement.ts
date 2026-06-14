@@ -23,6 +23,21 @@ export const getMapElementColor = (element: MapElement): string => {
 	}
 };
 
+export const mapElementToJSON = (element: MapElement) => {
+	const geometry = element.layer && 'toGeoJSON' in element.layer 
+		? (element.layer as any).toGeoJSON() 
+		: null;
+
+	return {
+		id: element.id,
+		type: element.type,
+		force: element.force,
+		geometry: element.geometry,
+		name: element.name,
+		geoJson: geometry,
+	};
+};
+
 export const ElementTypeName: Record<ElementType, string> = {
 	'operation': "作戦地域",
 	'fortification': "陣地",

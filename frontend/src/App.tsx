@@ -1,15 +1,17 @@
 import { useState } from 'react';
 
-import { AppProvider } from './contexts/AppContext';
+import { AppProvider, useAppStore } from './contexts/AppContext';
 import { useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
 import { UnitPlacement } from './components/UnitPlacement';
 import { SimSetting } from './components/SimSetting';
 import { UnitDetailPane } from './components/UnitDetailPane';
-
+import { mapElementToJSON } from './config/mapElement';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.module.css';
+
 
 function AppContent() {
 	const [showMenu, setShowMenu] = useState(false);
@@ -18,8 +20,20 @@ function AppContent() {
 	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
 	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
 	const [showLabels, setShowLabels] = useState(true);
-	
+
 	const { 
+		simConfig, setSimConfig, 
+		units, setUnits,
+		placedUnits, setPlacedUnits,
+		mapElements, setMapElements
+	} = useAppStore();
+
+	const { 
+		map,
+		clearMap,
+		focusAll,
+		createLayerFromElement,
+		createLayerFromUnit,
 		mapRef,
 		pendingElement,
 		selectedUnit,
@@ -29,6 +43,72 @@ function AppContent() {
 		handleDrop,
 		removeUnitFromMap,
 	} = useMapEditor(showLabels);
+
+	const exportData = () => {
+		const payload = {
+			simConfig,
+			units,
+			placedUnits,
+			mapElements: mapElements.map(mapElementToJSON),
+		};
+
+		const dataStr = JSON.stringify(payload, null, 2);
+		const blob = new Blob([dataStr], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		
+		const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `blitzkrieg-data-${timestamp}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+	};
+
+	const importData = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e: ProgressEvent<FileReader>) => {
+			const content = e.target?.result;
+			if (typeof content !== 'string') return;
+
+			try {
+				const data = JSON.parse(content);
+
+				clearMap();
+
+				if (data.simConfig) setSimConfig(data.simConfig);
+				if (data.units) setUnits(data.units);
+				if (data.placedUnits) {
+					setPlacedUnits(data.placedUnits);
+					data.placedUnits.forEach((u: any) => {
+						createLayerFromUnit(u);
+					});
+				}
+
+				if (data.mapElements) {
+					const restoredElements = data.mapElements.map((el: any) => {
+						const layer = createLayerFromElement(el, el.geoJson);
+						if (map) {
+							layer.addTo(map);
+						}
+						return { ...el, layer: layer };
+					});
+					setMapElements(restoredElements);
+				}
+
+				setShowMenu(false);
+				focusAll();
+
+			} catch (error) {
+				console.error(error);
+				alert('ファイルの形式が正しくないか、読み込みに失敗しました。');
+			}
+		};
+		reader.readAsText(file);
+		event.target.value = '';
+	};
 
 	return (
 		<div data-bs-theme="dark" style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', backgroundColor: '#212529', color: '#fff' }}>
@@ -84,8 +164,13 @@ function AppContent() {
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionEditorOpen(true); setShowMenu(false); }}>地域設定</button>
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitPlacementOpen(true); setShowMenu(false); }}>部隊配置</button>
 						<button className="btn btn-outline-light text-start" onClick={() => { setIsSimSettingOpen(true); setShowMenu(false); }}>シミュレーション設定</button>
-						<button className="btn btn-outline-light text-start">インポート</button>
-						<button className="btn btn-outline-light text-start">エクスポート</button>
+						<button className="btn btn-outline-light text-start" onClick={exportData}>
+							エクスポート
+						</button>
+						<label className="btn btn-outline-light text-start">
+							インポート
+							<input type="file" accept=".json" onChange={importData} style={{ display: 'none' }} />
+						</label>
 					</div>
 				</div>
 			</div>

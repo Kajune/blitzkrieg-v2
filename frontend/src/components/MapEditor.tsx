@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import ms from 'milsymbol';
+import type { GeoJsonObject } from 'geojson';
 
 import { useAppStore } from '../contexts/AppContext';
 import type { MapElement } from '../config/mapElement'
@@ -51,6 +52,71 @@ export const useMapEditor = (showLabels: boolean) => {
 		if (selectedUnit?.id === unitId) {
 			setSelectedUnit(null);
 		}
+	};
+
+	const createLayerFromElement = (el: MapElement, geoJsonData : GeoJsonObject): L.Layer => {
+		const style = { color: getMapElementColor(el) };
+		
+		const layer = L.geoJSON(geoJsonData, {
+			style: () => style,
+			pointToLayer: (_feature, latlng) => {
+				const icon = L.divIcon({
+					className: '',
+					html: `<div style="color: ${style.color}; font-size: 28px;">+</div>`,
+					iconSize: [30, 30],
+					iconAnchor: [15, 15]
+				});
+				return L.marker(latlng, { icon });
+			}
+		}).addTo(mapInstance.current!);
+
+		if (layer) {
+			layer.bindTooltip(el.name ?? '', { 
+				permanent: true, 
+				direction: 'center',
+				className: 'my-custom-tooltip'
+			});
+			
+			if (!showLabels) {
+				layer.closeTooltip();
+			}
+		}
+
+		el.layer = layer;
+		
+		return layer;
+	};
+
+	const createLayerFromUnit = (unit: PlacedUnit): L.Marker => {
+		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
+		const symbolSize = getSymbolSize(totalPersonnel);
+		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
+		
+		const layer = L.marker([unit.position.lat, unit.position.lon], {
+			icon: L.divIcon({
+				className: '',
+				html: symbol.asSVG(),
+				iconSize: [symbolSize, symbolSize],
+				iconAnchor: [symbolSize / 2, symbolSize / 2]
+			}),
+			draggable: true
+		}).addTo(mapInstance.current!);
+
+		layer.on('dragend', (e) => {
+			const marker = e.target as L.Marker;
+			const newPos = marker.getLatLng();
+			
+			setPlacedUnits((prev) => 
+				prev.map(u => u.id === unit.id 
+					? { ...u, position: { lat: newPos.lat, lon: newPos.lng } } 
+					: u
+				)
+			);
+		});
+		layer.on('click', () => setSelectedUnit(unit));
+		layer.bindTooltip(unit.templateId);
+		unitLayerMap.current.set(unit.id, layer);
+		return layer;
 	};
 
 	useEffect(() => {
@@ -133,7 +199,7 @@ export const useMapEditor = (showLabels: boolean) => {
 		const y = e.clientY - rect.top;
 		const latLng = mapInstance.current.containerPointToLatLng([x, y]);
 
-		const totalPersonnel = getTotalPersonnel(unitData);
+		const totalPersonnel = getTotalPersonnel(unitData, 'full_personnel');
 		const symbolSize = getSymbolSize(totalPersonnel);
 
 		const symbol = new ms.Symbol(unitData.sidc, { size: symbolSize });
@@ -155,7 +221,7 @@ export const useMapEditor = (showLabels: boolean) => {
 			
 			setPlacedUnits((prev) => 
 				prev.map(u => u.id === unitData.id 
-					? { ...u, position: { x: newPos.lat, y: newPos.lng } } 
+					? { ...u, position: { lat: newPos.lat, lon: newPos.lng } } 
 					: u
 				)
 			);
@@ -163,7 +229,9 @@ export const useMapEditor = (showLabels: boolean) => {
 
 		const newPlacedUnit: PlacedUnit = {
 			...unitData,
-			position: { x: latLng.lat, y: latLng.lng }
+			current_personnel: unitData.full_personnel,
+			current_equipments: unitData.full_equipments,
+			position: { lat: latLng.lat, lon: latLng.lng },
 		};
 
 		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
@@ -174,6 +242,39 @@ export const useMapEditor = (showLabels: boolean) => {
 
 		layer.bindTooltip(newPlacedUnit.templateId);
 		unitLayerMap.current.set(newPlacedUnit.id, layer);
+	};
+
+	const clearMap = () => {
+		if (!mapInstance.current) return;
+		
+		mapInstance.current.eachLayer((layer) => {
+			if (layer instanceof L.Marker || layer instanceof L.Path) {
+				mapInstance.current!.removeLayer(layer);
+			}
+		});
+		
+		unitLayerMap.current.clear();
+	};
+
+	const focusAll = () => {
+		const map = mapInstance.current;
+		if (!map) return;
+
+		const layers: L.Layer[] = [];
+		
+		map.eachLayer((layer) => {
+			if (layer instanceof L.Marker || layer instanceof L.Path) {
+				layers.push(layer);
+			}
+		});
+
+		if (layers.length === 0) return;
+
+		const bounds = L.latLngBounds(layers.map(l => 
+			'getBounds' in l ? (l as any).getBounds() : (l as any).getLatLng()
+		));
+
+		map.fitBounds(bounds);
 	};
 
 	const tempLayerRef = useRef<L.Polyline | null>(null);
@@ -255,6 +356,11 @@ export const useMapEditor = (showLabels: boolean) => {
 	}, [showLabels, mapElements]);
 
 	return {
+		map: mapInstance.current,
+		clearMap,
+		focusAll,
+		createLayerFromElement,
+		createLayerFromUnit,
 		mapRef,
 		pendingElement,
 		selectedUnit,

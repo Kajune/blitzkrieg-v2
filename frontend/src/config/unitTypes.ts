@@ -34,14 +34,15 @@ export interface Unit {
 	name: string;
 	sidc: string;
 	type: string;
-	personnel: number;
-	equipments: { [key: string]: number };
-	children: Unit[];
+	full_personnel: number;
+	current_personnel: number;
+	full_equipments: { [key: string]: number };
+	current_equipments: { [key: string]: number };
+	lower_units: Unit[];
 }
 
 export interface PlacedUnit extends Unit {
-	force: Force;
-	position: { x: number, y: number };
+	position: { lat: number, lon: number };
 }
 
 export const fetchUnitTemplates = async (): Promise<UnitTemplate[]> => {
@@ -58,29 +59,40 @@ export const fetchUnitTemplates = async (): Promise<UnitTemplate[]> => {
 	}
 };
 
+export const reduceUnitTree = <T>(
+	unit: Unit,
+	selector: (u: Unit) => T,
+	reducer: (acc: T, val: T) => T,
+	initialValue: T
+): T => {
+	const current = selector(unit);
+	const childrenTotal = unit.lower_units.reduce(
+		(acc, child) => reducer(acc, reduceUnitTree(child, selector, reducer, initialValue)),
+		initialValue
+	);
+	return reducer(current, childrenTotal);
+};
+
 export const getAllUnitIds = (unit: Unit): string[] => {
-    return [unit.id, ...unit.children.flatMap(child => getAllUnitIds(child))];
+	return [unit.id, ...unit.lower_units.flatMap(child => getAllUnitIds(child))];
 };
 
-export const getTotalPersonnel = (unit: Unit): number => {
-	const childrenTotal = unit.children.reduce((acc, child) => acc + getTotalPersonnel(child), 0);
-	return unit.personnel + childrenTotal;
-};
+export const getTotalPersonnel = (unit: Unit, key: 'full_personnel' | 'current_personnel'): number => 
+	reduceUnitTree(unit, (u) => (u as any)[key] || 0, (a, b) => a + b, 0);
 
-export const getTotalEquipments = (unit: Unit) => {
-	const totals: Record<string, number> = { ...unit.equipments };
-	
-	const addChildrenEquipments = (u: Unit) => {
-		u.children?.forEach((child) => {
-			Object.entries(child.equipments || {}).forEach(([k, v]) => {
-				totals[k] = (totals[k] || 0) + (v as number);
+export const getTotalEquipments = (unit: Unit, key: 'full_equipments' | 'current_equipments'): Record<string, number> => {
+	return reduceUnitTree(
+		unit,
+		(u) => (u as any)[key] || {},
+		(acc, val) => {
+			const result = { ...acc };
+			Object.entries(val).forEach(([k, v]) => {
+				result[k] = (result[k] || 0) + (v as number);
 			});
-			addChildrenEquipments(child as Unit);
-		});
-	};
-	
-	addChildrenEquipments(unit);
-	return totals;
+			return result;
+		},
+		{}
+	);
 };
 
 export const getSymbolSize = (
