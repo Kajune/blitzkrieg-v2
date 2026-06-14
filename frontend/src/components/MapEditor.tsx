@@ -20,7 +20,10 @@ L.Marker.prototype.options.icon = L.icon({
 	iconAnchor: [12, 41],
 });
 
-export const useMapEditor = (showLabels: boolean) => {
+export const useMapEditor = (
+	showLabels: boolean,
+	isUnitPlacementOpen: boolean
+) => {
 	const mapInstance = useRef<L.Map | null>(null);
 	const mapRef = useRef<HTMLDivElement | null>(null);
 	const { 
@@ -34,7 +37,7 @@ export const useMapEditor = (showLabels: boolean) => {
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
-	const unitLayerMap = useRef<Map<string, L.Layer>>(new Map());
+	const { unitLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
@@ -91,7 +94,7 @@ export const useMapEditor = (showLabels: boolean) => {
 		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
 		const symbolSize = getSymbolSize(totalPersonnel);
 		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
-		
+
 		const layer = L.marker([unit.position.lat, unit.position.lon], {
 			icon: L.divIcon({
 				className: '',
@@ -99,7 +102,7 @@ export const useMapEditor = (showLabels: boolean) => {
 				iconSize: [symbolSize, symbolSize],
 				iconAnchor: [symbolSize / 2, symbolSize / 2]
 			}),
-			draggable: true
+			draggable: isUnitPlacementOpen
 		}).addTo(mapInstance.current!);
 
 		layer.on('dragend', (e) => {
@@ -124,6 +127,20 @@ export const useMapEditor = (showLabels: boolean) => {
 		pointsRef.current = points;
 		showLabelsRef.current = showLabels;
 	}, [pendingElement, points, showLabels]);
+
+	useEffect(() => {
+		if (!mapInstance.current) return;
+
+		unitLayerMap.current.forEach((layer) => {
+			if (layer instanceof L.Marker) {
+				if (isUnitPlacementOpen) {
+					layer.dragging?.enable();
+				} else {
+					layer.dragging?.disable();
+				}
+			}
+		});
+	}, [isUnitPlacementOpen]);
 
 	const startDrawing = (el: MapElement) => {
 		setPendingElement(el);
@@ -212,7 +229,7 @@ export const useMapEditor = (showLabels: boolean) => {
 
 		const layer = L.marker(latLng, {
 			icon,
-			draggable: true
+			draggable: isUnitPlacementOpen
 		}).addTo(mapInstance.current);
 
 		layer.on('dragend', (e) => {

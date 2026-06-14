@@ -8,6 +8,7 @@ import { UnitPlacement } from './components/UnitPlacement';
 import { SimSetting } from './components/SimSetting';
 import { UnitDetailPane } from './components/UnitDetailPane';
 import { mapElementToJSON } from './config/mapElement';
+import { SimControl } from './components/SimControl';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.module.css';
@@ -25,7 +26,8 @@ function AppContent() {
 		simConfig, setSimConfig, 
 		units, setUnits,
 		placedUnits, setPlacedUnits,
-		mapElements, setMapElements
+		mapElements, setMapElements,
+		simRecord, setSimRecord,
 	} = useAppStore();
 
 	const { 
@@ -42,7 +44,7 @@ function AppContent() {
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
-	} = useMapEditor(showLabels);
+	} = useMapEditor(showLabels, isUnitPlacementOpen);
 
 	const exportData = () => {
 		const payload = {
@@ -50,6 +52,7 @@ function AppContent() {
 			units,
 			placedUnits,
 			mapElements: mapElements.map(mapElementToJSON),
+			simRecord,
 		};
 
 		const dataStr = JSON.stringify(payload, null, 2);
@@ -97,6 +100,7 @@ function AppContent() {
 					});
 					setMapElements(restoredElements);
 				}
+				if (data.simRecord) setSimRecord(data.simRecord);
 
 				setShowMenu(false);
 				focusAll();
@@ -204,6 +208,10 @@ function AppContent() {
 			<SimSetting 
 				isOpen={isSimSettingOpen} 
 				onClose={() => setIsSimSettingOpen(false)}
+			/>
+
+			<SimControl
+				showMenu={showMenu}
 			/>
 		</div>
 	);

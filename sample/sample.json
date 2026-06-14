@@ -1,0 +1,1859 @@
+{
+  "simConfig": {
+    "startDateTime": "2026-07-31T23:00:00.000Z",
+    "endDateTime": "2026-08-01T11:00:00.000Z"
+  },
+  "units": [
+    {
+      "id": "17814281980030.6502102140978757",
+      "templateId": "MB",
+      "name": "機械化旅団",
+      "force": "REDFOR",
+      "sidc": "10061000181211020000",
+      "type": "infantry",
+      "full_personnel": 50,
+      "current_personnel": 50,
+      "full_equipments": {},
+      "current_equipments": {},
+      "lower_units": [
+        {
+          "id": "17814281980030.9845569346625307",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.13112868925705778",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.017806633880049882",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.039581884214100915",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        },
+        {
+          "id": "17814281980030.6736423249235365",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.3596054118877591",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.6640676211578059",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.09323343916352544",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        },
+        {
+          "id": "17814281980030.9641943614830386",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.4282531210573314",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.10237606026020707",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.7467360428825345",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "17814282004810.9803027017030309",
+      "templateId": "iR",
+      "name": "普通科連隊",
+      "force": "BLUFOR",
+      "sidc": "10031000171211040000",
+      "type": "infantry",
+      "full_personnel": 20,
+      "current_personnel": 20,
+      "full_equipments": {
+        "96WAPC": 3,
+        "拳銃": 10
+      },
+      "current_equipments": {
+        "96WAPC": 3,
+        "拳銃": 10
+      },
+      "lower_units": [
+        {
+          "id": "17814282004810.6020167574218004",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.9826535377017692",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.52705404250676",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.48712872589951894",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        }
+      ]
+    }
+  ],
+  "placedUnits": [
+    {
+      "id": "17814281980030.9845569346625307",
+      "templateId": "MBn",
+      "name": "機械化大隊",
+      "force": "REDFOR",
+      "sidc": "10061000161211020000",
+      "type": "infantry",
+      "full_personnel": 20,
+      "current_personnel": 20,
+      "full_equipments": {
+        "拳銃": 20
+      },
+      "current_equipments": {
+        "拳銃": 20
+      },
+      "lower_units": [
+        {
+          "id": "17814281980030.13112868925705778",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.017806633880049882",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.039581884214100915",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        }
+      ],
+      "position": {
+        "lat": 35.16089752543327,
+        "lon": 138.77014071913732
+      }
+    },
+    {
+      "id": "17814281980030.6736423249235365",
+      "templateId": "MBn",
+      "name": "機械化大隊",
+      "force": "REDFOR",
+      "sidc": "10061000161211020000",
+      "type": "infantry",
+      "full_personnel": 20,
+      "current_personnel": 20,
+      "full_equipments": {
+        "拳銃": 20
+      },
+      "current_equipments": {
+        "拳銃": 20
+      },
+      "lower_units": [
+        {
+          "id": "17814281980030.3596054118877591",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.6640676211578059",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.09323343916352544",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        }
+      ],
+      "position": {
+        "lat": 35.155494266893875,
+        "lon": 138.76739413710607
+      }
+    },
+    {
+      "id": "17814281980030.9641943614830386",
+      "templateId": "MBn",
+      "name": "機械化大隊",
+      "force": "REDFOR",
+      "sidc": "10061000161211020000",
+      "type": "infantry",
+      "full_personnel": 20,
+      "current_personnel": 20,
+      "full_equipments": {
+        "拳銃": 20
+      },
+      "current_equipments": {
+        "拳銃": 20
+      },
+      "lower_units": [
+        {
+          "id": "17814281980030.4282531210573314",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.10237606026020707",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814281980030.7467360428825345",
+          "templateId": "MCo",
+          "name": "機械化中隊",
+          "force": "REDFOR",
+          "sidc": "10061000151211020000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "current_equipments": {
+            "装甲戦闘車": 20,
+            "自動銃": 180
+          },
+          "lower_units": []
+        }
+      ],
+      "position": {
+        "lat": 35.161879897517444,
+        "lon": 138.76447589369786
+      }
+    },
+    {
+      "id": "17814282004810.6020167574218004",
+      "templateId": "iCo",
+      "name": "普通科中隊",
+      "force": "BLUFOR",
+      "sidc": "10031000151211040000",
+      "type": "infantry",
+      "full_personnel": 200,
+      "current_personnel": 200,
+      "full_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "current_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "lower_units": [],
+      "position": {
+        "lat": 35.15447729354257,
+        "lon": 138.8209333419795
+      }
+    },
+    {
+      "id": "17814282004810.9826535377017692",
+      "templateId": "iCo",
+      "name": "普通科中隊",
+      "force": "BLUFOR",
+      "sidc": "10031000151211040000",
+      "type": "infantry",
+      "full_personnel": 200,
+      "current_personnel": 200,
+      "full_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "current_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "lower_units": [],
+      "position": {
+        "lat": 35.147459451260055,
+        "lon": 138.8205900192256
+      }
+    },
+    {
+      "id": "17814282004810.52705404250676",
+      "templateId": "iCo",
+      "name": "普通科中隊",
+      "force": "BLUFOR",
+      "sidc": "10031000151211040000",
+      "type": "infantry",
+      "full_personnel": 200,
+      "current_personnel": 200,
+      "full_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "current_equipments": {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "lower_units": [],
+      "position": {
+        "lat": 35.150933358840284,
+        "lon": 138.83037471771192
+      }
+    },
+    {
+      "id": "17814282004810.9803027017030309",
+      "templateId": "iR",
+      "name": "普通科連隊",
+      "force": "BLUFOR",
+      "sidc": "10031000171211040000",
+      "type": "infantry",
+      "full_personnel": 20,
+      "current_personnel": 20,
+      "full_equipments": {
+        "96WAPC": 3,
+        "拳銃": 10
+      },
+      "current_equipments": {
+        "96WAPC": 3,
+        "拳銃": 10
+      },
+      "lower_units": [
+        {
+          "id": "17814282004810.6020167574218004",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.9826535377017692",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.52705404250676",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        },
+        {
+          "id": "17814282004810.48712872589951894",
+          "templateId": "iCo",
+          "name": "普通科中隊",
+          "force": "BLUFOR",
+          "sidc": "10031000151211040000",
+          "type": "infantry",
+          "full_personnel": 200,
+          "current_personnel": 200,
+          "full_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "current_equipments": {
+            "96WAPC": 20,
+            "89式小銃": 180
+          },
+          "lower_units": []
+        }
+      ],
+      "position": {
+        "lat": 35.15198504260019,
+        "lon": 138.8319103821791
+      }
+    },
+    {
+      "id": "17814281980030.6502102140978757",
+      "templateId": "MB",
+      "name": "機械化旅団",
+      "force": "REDFOR",
+      "sidc": "10061000181211020000",
+      "type": "infantry",
+      "full_personnel": 50,
+      "current_personnel": 50,
+      "full_equipments": {},
+      "current_equipments": {},
+      "lower_units": [
+        {
+          "id": "17814281980030.9845569346625307",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.13112868925705778",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.017806633880049882",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.039581884214100915",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        },
+        {
+          "id": "17814281980030.6736423249235365",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.3596054118877591",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.6640676211578059",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.09323343916352544",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        },
+        {
+          "id": "17814281980030.9641943614830386",
+          "templateId": "MBn",
+          "name": "機械化大隊",
+          "force": "REDFOR",
+          "sidc": "10061000161211020000",
+          "type": "infantry",
+          "full_personnel": 20,
+          "current_personnel": 20,
+          "full_equipments": {
+            "拳銃": 20
+          },
+          "current_equipments": {
+            "拳銃": 20
+          },
+          "lower_units": [
+            {
+              "id": "17814281980030.4282531210573314",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.10237606026020707",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            },
+            {
+              "id": "17814281980030.7467360428825345",
+              "templateId": "MCo",
+              "name": "機械化中隊",
+              "force": "REDFOR",
+              "sidc": "10061000151211020000",
+              "type": "infantry",
+              "full_personnel": 200,
+              "current_personnel": 200,
+              "full_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "current_equipments": {
+                "装甲戦闘車": 20,
+                "自動銃": 180
+              },
+              "lower_units": []
+            }
+          ]
+        }
+      ],
+      "position": {
+        "lat": 35.15914327884218,
+        "lon": 138.76517684287725
+      }
+    }
+  ],
+  "mapElements": [
+    {
+      "id": "1781428208218",
+      "type": "operation",
+      "force": null,
+      "geometry": "polygon",
+      "name": "作戦地域",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.745351,
+                    35.176496
+                  ],
+                  [
+                    138.760282,
+                    35.168921
+                  ],
+                  [
+                    138.788942,
+                    35.161626
+                  ],
+                  [
+                    138.811412,
+                    35.159227
+                  ],
+                  [
+                    138.823597,
+                    35.160911
+                  ],
+                  [
+                    138.837154,
+                    35.159508
+                  ],
+                  [
+                    138.842989,
+                    35.154246
+                  ],
+                  [
+                    138.840501,
+                    35.145757
+                  ],
+                  [
+                    138.835782,
+                    35.13881
+                  ],
+                  [
+                    138.819821,
+                    35.13874
+                  ],
+                  [
+                    138.802145,
+                    35.141266
+                  ],
+                  [
+                    138.774686,
+                    35.14716
+                  ],
+                  [
+                    138.756323,
+                    35.152773
+                  ],
+                  [
+                    138.735815,
+                    35.159648
+                  ],
+                  [
+                    138.735815,
+                    35.159648
+                  ],
+                  [
+                    138.735815,
+                    35.159648
+                  ],
+                  [
+                    138.745351,
+                    35.176496
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428227451",
+      "type": "fortification",
+      "force": null,
+      "geometry": "polygon",
+      "name": "陣地",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.819727,
+                    35.157115
+                  ],
+                  [
+                    138.818569,
+                    35.153186
+                  ],
+                  [
+                    138.819856,
+                    35.151081
+                  ],
+                  [
+                    138.823202,
+                    35.151152
+                  ],
+                  [
+                    138.824575,
+                    35.157115
+                  ],
+                  [
+                    138.824575,
+                    35.157115
+                  ],
+                  [
+                    138.824575,
+                    35.157115
+                  ],
+                  [
+                    138.819727,
+                    35.157115
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428234319",
+      "type": "obstacle",
+      "force": null,
+      "geometry": "polygon",
+      "name": "障害",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.818483,
+                    35.156975
+                  ],
+                  [
+                    138.817796,
+                    35.153397
+                  ],
+                  [
+                    138.818268,
+                    35.15045
+                  ],
+                  [
+                    138.815479,
+                    35.15045
+                  ],
+                  [
+                    138.815136,
+                    35.154379
+                  ],
+                  [
+                    138.81578,
+                    35.15715
+                  ],
+                  [
+                    138.81578,
+                    35.15715
+                  ],
+                  [
+                    138.81578,
+                    35.15715
+                  ],
+                  [
+                    138.818483,
+                    35.156975
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428240228",
+      "type": "fortification",
+      "force": null,
+      "geometry": "polygon",
+      "name": "陣地",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.81947,
+                    35.15024
+                  ],
+                  [
+                    138.823245,
+                    35.15052
+                  ],
+                  [
+                    138.822859,
+                    35.147433
+                  ],
+                  [
+                    138.822001,
+                    35.144065
+                  ],
+                  [
+                    138.817839,
+                    35.144065
+                  ],
+                  [
+                    138.817839,
+                    35.144065
+                  ],
+                  [
+                    138.817839,
+                    35.144065
+                  ],
+                  [
+                    138.81947,
+                    35.15024
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428244867",
+      "type": "obstacle",
+      "force": null,
+      "geometry": "polygon",
+      "name": "障害",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.814621,
+                    35.149854
+                  ],
+                  [
+                    138.818054,
+                    35.149538
+                  ],
+                  [
+                    138.817453,
+                    35.146837
+                  ],
+                  [
+                    138.817238,
+                    35.143995
+                  ],
+                  [
+                    138.814578,
+                    35.143644
+                  ],
+                  [
+                    138.814578,
+                    35.143644
+                  ],
+                  [
+                    138.814578,
+                    35.143644
+                  ],
+                  [
+                    138.814621,
+                    35.149854
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428249748",
+      "type": "fortification",
+      "force": null,
+      "geometry": "polygon",
+      "name": "陣地",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.829938,
+                    35.154309
+                  ],
+                  [
+                    138.826592,
+                    35.149187
+                  ],
+                  [
+                    138.831182,
+                    35.144311
+                  ],
+                  [
+                    138.835387,
+                    35.155887
+                  ],
+                  [
+                    138.835387,
+                    35.155887
+                  ],
+                  [
+                    138.835387,
+                    35.155887
+                  ],
+                  [
+                    138.829938,
+                    35.154309
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428255016",
+      "type": "obstacle",
+      "force": null,
+      "geometry": "polygon",
+      "name": "障害",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.830753,
+                    35.156063
+                  ],
+                  [
+                    138.82878,
+                    35.153642
+                  ],
+                  [
+                    138.826291,
+                    35.149187
+                  ],
+                  [
+                    138.825262,
+                    35.143714
+                  ],
+                  [
+                    138.823288,
+                    35.1441
+                  ],
+                  [
+                    138.824318,
+                    35.150169
+                  ],
+                  [
+                    138.82805,
+                    35.156519
+                  ],
+                  [
+                    138.82805,
+                    35.156519
+                  ],
+                  [
+                    138.82805,
+                    35.156519
+                  ],
+                  [
+                    138.830753,
+                    35.156063
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428271755",
+      "type": "coa",
+      "force": "REDFOR",
+      "geometry": "polygon",
+      "name": "1MBnバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.76155,
+                    35.159999
+                  ],
+                  [
+                    138.774765,
+                    35.156561
+                  ],
+                  [
+                    138.792699,
+                    35.152422
+                  ],
+                  [
+                    138.810633,
+                    35.150387
+                  ],
+                  [
+                    138.818441,
+                    35.150177
+                  ],
+                  [
+                    138.823676,
+                    35.150949
+                  ],
+                  [
+                    138.82522,
+                    35.154667
+                  ],
+                  [
+                    138.825992,
+                    35.158105
+                  ],
+                  [
+                    138.815953,
+                    35.158455
+                  ],
+                  [
+                    138.796989,
+                    35.159087
+                  ],
+                  [
+                    138.774078,
+                    35.163226
+                  ],
+                  [
+                    138.763438,
+                    35.166172
+                  ],
+                  [
+                    138.763438,
+                    35.166172
+                  ],
+                  [
+                    138.763438,
+                    35.166172
+                  ],
+                  [
+                    138.76155,
+                    35.159999
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428292182",
+      "type": "coa",
+      "force": "REDFOR",
+      "geometry": "polygon",
+      "name": "2MBnバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.823504,
+                    35.150949
+                  ],
+                  [
+                    138.823247,
+                    35.146879
+                  ],
+                  [
+                    138.822217,
+                    35.143932
+                  ],
+                  [
+                    138.812521,
+                    35.143511
+                  ],
+                  [
+                    138.795101,
+                    35.145546
+                  ],
+                  [
+                    138.777597,
+                    35.150036
+                  ],
+                  [
+                    138.75889,
+                    35.154386
+                  ],
+                  [
+                    138.761207,
+                    35.160209
+                  ],
+                  [
+                    138.791669,
+                    35.152703
+                  ],
+                  [
+                    138.810547,
+                    35.150317
+                  ],
+                  [
+                    138.818184,
+                    35.150247
+                  ],
+                  [
+                    138.818184,
+                    35.150247
+                  ],
+                  [
+                    138.818184,
+                    35.150247
+                  ],
+                  [
+                    138.823504,
+                    35.150949
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428308932",
+      "type": "coa",
+      "force": "REDFOR",
+      "geometry": "polygon",
+      "name": "3MBnバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.762494,
+                    35.166873
+                  ],
+                  [
+                    138.75726,
+                    35.153544
+                  ],
+                  [
+                    138.774679,
+                    35.148633
+                  ],
+                  [
+                    138.798534,
+                    35.143862
+                  ],
+                  [
+                    138.818355,
+                    35.142389
+                  ],
+                  [
+                    138.832943,
+                    35.143652
+                  ],
+                  [
+                    138.835603,
+                    35.150738
+                  ],
+                  [
+                    138.837662,
+                    35.157684
+                  ],
+                  [
+                    138.823761,
+                    35.159157
+                  ],
+                  [
+                    138.808316,
+                    35.158876
+                  ],
+                  [
+                    138.792441,
+                    35.16063
+                  ],
+                  [
+                    138.7673,
+                    35.165681
+                  ],
+                  [
+                    138.7673,
+                    35.165681
+                  ],
+                  [
+                    138.7673,
+                    35.165681
+                  ],
+                  [
+                    138.762494,
+                    35.166873
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428333376",
+      "type": "coa",
+      "force": "BLUFOR",
+      "geometry": "polygon",
+      "name": "1iCoバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.818439,
+                    35.150626
+                  ],
+                  [
+                    138.824403,
+                    35.150836
+                  ],
+                  [
+                    138.826119,
+                    35.154379
+                  ],
+                  [
+                    138.827621,
+                    35.157255
+                  ],
+                  [
+                    138.823502,
+                    35.157571
+                  ],
+                  [
+                    138.819254,
+                    35.157571
+                  ],
+                  [
+                    138.818182,
+                    35.153572
+                  ],
+                  [
+                    138.818182,
+                    35.153572
+                  ],
+                  [
+                    138.818182,
+                    35.153572
+                  ],
+                  [
+                    138.818439,
+                    35.150626
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428347143",
+      "type": "coa",
+      "force": "BLUFOR",
+      "geometry": "polygon",
+      "name": "2iCoバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.818825,
+                    35.150415
+                  ],
+                  [
+                    138.822429,
+                    35.150555
+                  ],
+                  [
+                    138.824274,
+                    35.150555
+                  ],
+                  [
+                    138.823588,
+                    35.147328
+                  ],
+                  [
+                    138.822558,
+                    35.14382
+                  ],
+                  [
+                    138.817538,
+                    35.143504
+                  ],
+                  [
+                    138.818053,
+                    35.147328
+                  ],
+                  [
+                    138.818053,
+                    35.147328
+                  ],
+                  [
+                    138.818053,
+                    35.147328
+                  ],
+                  [
+                    138.818825,
+                    35.150415
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "1781428357971",
+      "type": "coa",
+      "force": "BLUFOR",
+      "geometry": "polygon",
+      "name": "3iCoバンダレイ",
+      "geoJson": {
+        "type": "FeatureCollection",
+        "features": [
+          {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+              "type": "Polygon",
+              "coordinates": [
+                [
+                  [
+                    138.831353,
+                    35.15701
+                  ],
+                  [
+                    138.836287,
+                    35.156273
+                  ],
+                  [
+                    138.834871,
+                    35.151994
+                  ],
+                  [
+                    138.831568,
+                    35.1441
+                  ],
+                  [
+                    138.826419,
+                    35.144241
+                  ],
+                  [
+                    138.826291,
+                    35.148661
+                  ],
+                  [
+                    138.830366,
+                    35.154905
+                  ],
+                  [
+                    138.830366,
+                    35.154905
+                  ],
+                  [
+                    138.830366,
+                    35.154905
+                  ],
+                  [
+                    138.831353,
+                    35.15701
+                  ]
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

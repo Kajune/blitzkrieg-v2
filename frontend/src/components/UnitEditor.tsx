@@ -6,7 +6,7 @@ import { UnitTree } from './UnitTree';
 import { useAppStore } from '../contexts/AppContext';
 
 const createUnitStructure = (templateId: string, force: Force): Unit => {
-	const template = UNIT_TEMPLATES.find(t => t.id === templateId);
+	const template = UNIT_TEMPLATES[force].find(t => t.id === templateId);
 	if (!template) {
 		return { 
 			id: '', 
@@ -24,11 +24,11 @@ const createUnitStructure = (templateId: string, force: Force): Unit => {
 	}
 
 	return {
-		id: Date.now().toString() + Math.random(),
+		id: template.id + '_' + Date.now().toString(),
 		templateId: template.id,
 		name: template.name,
 		force: force,
-		sidc: template.sidc[force],
+		sidc: template.sidc,
 		type: template.type,
 		full_personnel: template.personnel,
 		current_personnel: template.personnel,
@@ -54,11 +54,11 @@ const UnitTable = ({
 	visibleColumns?: ('type' | 'personnel' | 'equipments')[] // 型定義を追加
 }) => {
 	const [searchText, setSearchText] = useState('');
-	const [selectedTemplateId, setSelectedTemplateId] = useState(UNIT_TEMPLATES[0]?.id || '');
+	const [selectedTemplateId, setSelectedTemplateId] = useState(UNIT_TEMPLATES[force][0]?.id || '');
 	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-	const filteredTemplates = UNIT_TEMPLATES.filter(
+	const filteredTemplates = UNIT_TEMPLATES[force].filter(
 		t => t.id.includes(searchText) || t.name.includes(searchText)
 	);
 
@@ -169,7 +169,7 @@ const UnitTable = ({
 			<div className="bg-secondary p-2 mb-3 rounded d-flex align-items-center gap-2">
 				<input type="text" className="form-control form-control-sm" style={{ width: '200px' }} placeholder="検索..." value={searchText} onChange={(e) => setSearchText(e.target.value)} />
 				<select className="form-select form-select-sm" style={{ flexGrow: 1 }} value={selectedTemplateId} onChange={e => setSelectedTemplateId(e.target.value)}>
-					{UNIT_TEMPLATES.filter(t => t.id.includes(searchText) || t.name.includes(searchText)).map(t => <option key={t.id} value={t.id}>[{t.id}] {t.name}</option>)}
+					{UNIT_TEMPLATES[force].filter(t => t.id.includes(searchText) || t.name.includes(searchText)).map(t => <option key={t.id} value={t.id}>[{t.id}] {t.name}</option>)}
 				</select>
 				<button className={`btn btn-sm ${'btn-' + FORCE_STYLES[force].class}`} style={{ width: '120px' }} onClick={addUnit}>追加</button>
 				<button 

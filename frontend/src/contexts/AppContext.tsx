@@ -1,7 +1,9 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useRef } from 'react';
+import type { MutableRefObject } from 'react';
 import type { Unit, PlacedUnit } from '../config/unitTypes';
 import type { MapElement } from '../config/mapElement';
-import type { SimConfig } from '../config/simTypes';
+import type { SimConfig, SimRecord } from '../config/simTypes';
+import type L from 'leaflet';
 
 type AppState = {
 	units: Unit[];
@@ -14,6 +16,9 @@ type AppState = {
 	setSimConfig: React.Dispatch<React.SetStateAction<SimConfig>>;
 	simUuid: string | null;
 	setSimUuid: React.Dispatch<React.SetStateAction<string | null>>;
+	simRecord: SimRecord[];
+	setSimRecord: React.Dispatch<React.SetStateAction<SimRecord[]>>;
+	unitLayerMap: MutableRefObject<Map<string, L.Marker>>;
 };
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -33,6 +38,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 	};
 	const [simConfig, setSimConfig] = useState<SimConfig>(getInitialSimConfig);
 	const [simUuid, setSimUuid] = useState<string | null>(null);
+	const [simRecord, setSimRecord] = useState<SimRecord[]>([]);
+	const unitLayerMap = useRef<Map<string, L.Marker>>(new Map());
 
 	return (
 		<AppContext.Provider value={{ 
@@ -41,6 +48,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 			mapElements, setMapElements,
 			simConfig, setSimConfig,
 			simUuid, setSimUuid,
+			simRecord, setSimRecord,
+			unitLayerMap,
 		 }}>
 			{children}
 		</AppContext.Provider>

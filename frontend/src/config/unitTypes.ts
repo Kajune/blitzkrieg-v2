@@ -20,7 +20,7 @@ export const FORCE_STYLES: Record<Force, ForceStyle> = {
 export interface UnitTemplate {
 	id: string;
 	name: string;
-	sidc: Record<Force, string>;
+	sidc: string;
 	type: string;
 	personnel: number;
 	equipments: { [key: string]: number };
@@ -45,17 +45,23 @@ export interface PlacedUnit extends Unit {
 	position: { lat: number, lon: number };
 }
 
-export const fetchUnitTemplates = async (): Promise<UnitTemplate[]> => {
+export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>> => {
 	try {
 		const response = await fetch('/data/unitTemplates.json');
 		if (!response.ok) {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 		const data = await response.json();
-		return data as UnitTemplate[];
+		return data as Record<Force,UnitTemplate[]>;
 	} catch (error) {
 		console.error("テンプレートの読み込みに失敗しました:", error);
-		return [];
+
+		const initialUnits = {} as Record<Force, UnitTemplate[]>;
+		FORCES.forEach((force) => {
+			initialUnits[force] = [];
+		});
+
+		return initialUnits;
 	}
 };
 
@@ -110,4 +116,4 @@ export const getSymbolSize = (
 	return Math.round(size);
 };
 
-export const UNIT_TEMPLATES: UnitTemplate[] = await fetchUnitTemplates();
+export const UNIT_TEMPLATES: Record<Force,UnitTemplate[]> = await fetchUnitTemplates();

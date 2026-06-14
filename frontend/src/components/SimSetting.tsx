@@ -21,15 +21,25 @@ export const SimSetting = ({
 
 	if (!isOpen) return null;
 
-	const formatDateForInput = (date: Date) => {
-		const offset = date.getTimezoneOffset() * 60000;
-		const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+	const formatDateForInput = (date: Date | string) => {
+		// 文字列ならDateに変換する
+		const d = typeof date === 'string' ? new Date(date) : date;
+		
+		if (!(d instanceof Date) || isNaN(d.getTime())) {
+			return ''; 
+		}
+		
+		const offset = d.getTimezoneOffset() * 60000;
+		const localISOTime = new Date(d.getTime() - offset).toISOString().slice(0, 16);
 		return localISOTime;
 	};
 
-	const durationHours = Math.round(
-		(simConfig.endDateTime.getTime() - simConfig.startDateTime.getTime()) / (1000 * 60 * 60)
-	);
+	const start = new Date(simConfig.startDateTime);
+	const end = new Date(simConfig.endDateTime);
+
+	const durationHours = !isNaN(start.getTime()) && !isNaN(end.getTime())
+		? Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60))
+		: 0;
 
 	const handleChange = (key: 'startDateTime' | 'endDateTime', value: string) => {
 		setSimConfig(prev => ({
@@ -57,7 +67,9 @@ export const SimSetting = ({
 				},
 			});
 			const data = await response.json();
-			setSimUuid(data.uuid);
+			if (data.success) {
+				setSimUuid(data.uuid);
+			}
 		} catch (error) {
 			console.error('送信失敗:', error);
 		} finally {
