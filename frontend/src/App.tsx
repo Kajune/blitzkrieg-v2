@@ -39,8 +39,8 @@ function AppContent() {
 		createLayerFromUnit,
 		mapRef,
 		pendingElement,
-		selectedUnit,
-		setSelectedUnit,
+		selectedUnitId,
+		setSelectedUnitId,
 		startDrawing,
 		handleDragOver,
 		handleDrop,
@@ -182,12 +182,12 @@ function AppContent() {
 			</div>
 
 			<UnitDetailPane 
-				unit={selectedUnit} 
-				onClose={() => setSelectedUnit(null)} 
+				unitId={selectedUnitId} 
+				onClose={() => setSelectedUnitId(null)} 
 				onDelete={(unit) => {
 					removeUnitFromMap(unit.id);
-					setSelectedUnit(null);
-				}} 
+					setSelectedUnitId(null);
+				}}
 			/>
 
 			{showMenu && <div className="offcanvas-backdrop fade show" onClick={() => setShowMenu(false)} style={{ zIndex: 1040 }} />}

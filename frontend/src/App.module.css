@@ -26,3 +26,9 @@
     color: #fff;
     width: 280px;
 }
+
+.milsymbol-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

@@ -12,6 +12,7 @@ import type { MapElement } from '../config/mapElement'
 import { getMapElementColor } from '../config/mapElement'
 import type { Unit, PlacedUnit } from '../config/unitTypes';
 import { getTotalPersonnel, getSymbolSize } from '../config/unitTypes';
+import '../App.module.css';
 
 L.Marker.prototype.options.icon = L.icon({
 	iconUrl: icon,
@@ -32,12 +33,16 @@ export const useMapEditor = (
 	} = useAppStore();
 	const [pendingElement, setPendingElement] = useState<MapElement | null>(null);
 	const [points, setPoints] = useState<L.LatLng[]>([]);
-	const [selectedUnit, setSelectedUnit] = useState<PlacedUnit | null>(null);
+	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
+	const selectedUnitIdRef = useRef(selectedUnitId);
+	useEffect(() => {
+		selectedUnitIdRef.current = selectedUnitId;
+	}, [selectedUnitId]);
 
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
-	const { unitLayerMap } = useAppStore();
+	const { unitLayerMap, actionLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
@@ -52,14 +57,14 @@ export const useMapEditor = (
 
 		setPlacedUnits((prev) => prev.filter(u => u.id !== unitId));
 
-		if (selectedUnit?.id === unitId) {
-			setSelectedUnit(null);
+		if (selectedUnitId === unitId) {
+			setSelectedUnitId(null);
 		}
 	};
 
 	const createLayerFromElement = (el: MapElement, geoJsonData : GeoJsonObject): L.Layer => {
 		const style = { color: getMapElementColor(el) };
-		
+
 		const layer = L.geoJSON(geoJsonData, {
 			style: () => style,
 			pointToLayer: (_feature, latlng) => {
@@ -94,13 +99,15 @@ export const useMapEditor = (
 		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
 		const symbolSize = getSymbolSize(totalPersonnel);
 		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
+		
+		const sSize = symbol.getSize();
 
 		const layer = L.marker([unit.position.lat, unit.position.lon], {
 			icon: L.divIcon({
-				className: '',
+				className: 'milsymbol-icon',
 				html: symbol.asSVG(),
-				iconSize: [symbolSize, symbolSize],
-				iconAnchor: [symbolSize / 2, symbolSize / 2]
+				iconSize: [sSize.width, sSize.height],
+				iconAnchor: [sSize.width / 2, sSize.height / 2]
 			}),
 			draggable: isUnitPlacementOpen
 		}).addTo(mapInstance.current!);
@@ -116,7 +123,7 @@ export const useMapEditor = (
 				)
 			);
 		});
-		layer.on('click', () => setSelectedUnit(unit));
+		layer.on('click', () => setSelectedUnitId(unit.id));
 		layer.bindTooltip(unit.templateId);
 		unitLayerMap.current.set(unit.id, layer);
 		return layer;
@@ -249,12 +256,13 @@ export const useMapEditor = (
 			current_personnel: unitData.full_personnel,
 			current_equipments: unitData.full_equipments,
 			position: { lat: latLng.lat, lon: latLng.lng },
+			actions: [],
 		};
 
 		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
 
 		layer.on('click', () => {
-			setSelectedUnit(newPlacedUnit);
+			setSelectedUnitId(newPlacedUnit.id);
 		});
 
 		layer.bindTooltip(newPlacedUnit.templateId);
@@ -341,7 +349,7 @@ export const useMapEditor = (
 
 			const target = e.originalEvent.target as HTMLElement;
 			if (!target.closest('.leaflet-marker-icon')) {
-				setSelectedUnit(null);
+				setSelectedUnitId(null);
 			}
 		};
 
@@ -362,6 +370,92 @@ export const useMapEditor = (
 	}, []);
 
 	useEffect(() => {
+		const map = mapInstance.current;
+		if (!map) return;
+
+		const handleContextMenu = (e: L.LeafletMouseEvent) => {
+			e.originalEvent.preventDefault();
+			
+			const currentId = selectedUnitIdRef.current;
+			if (!currentId) return;
+
+			let targetUnitId: string | null = null;
+			unitLayerMap.current.forEach((layer, unitId) => {
+				if (unitId !== currentId && layer.getLatLng().equals(e.latlng, 0.001)) {
+					targetUnitId = unitId;
+				}
+			});
+
+			const newAction = {
+				moveSpeed: 'MEDIUM' as const,
+				moveMode: 'COMBAT' as const,
+				fire: true,
+				targetPosition: targetUnitId ? null : { lat: e.latlng.lat, lon: e.latlng.lng },
+				targetUnitId: targetUnitId,
+			};
+
+			const isShiftPressed = e.originalEvent.shiftKey;
+
+			setPlacedUnits((prev) =>
+				prev.map((u) => {
+					if (u.id !== currentId) return u;
+					const nextActions = isShiftPressed ? [...u.actions, newAction] : [newAction];
+					return { ...u, actions: nextActions };
+				})
+			);
+		};
+
+		map.on('contextmenu', handleContextMenu);
+		return () => { map.off('contextmenu', handleContextMenu); };
+	}, []);
+
+	useEffect(() => {
+		const map = mapInstance.current;
+		if (!map) return;
+
+		actionLayerMap.current.forEach((layers) => {
+			layers.forEach(layer => map.removeLayer(layer));
+		});
+		actionLayerMap.current.clear();
+
+		placedUnits.forEach((unit) => {
+			if (unit.actions.length === 0) return;
+
+			const lines: L.Polyline[] = [];
+			let currentPos: L.LatLng = L.latLng(unit.position.lat, unit.position.lon);
+
+			unit.actions.forEach((action, index) => {
+				let targetPos: L.LatLng | null = null;
+				
+				if (action.targetPosition) {
+					targetPos = L.latLng(action.targetPosition.lat, action.targetPosition.lon);
+				} else if (action.targetUnitId) {
+					const targetUnit = placedUnits.find(u => u.id === action.targetUnitId);
+					if (targetUnit) {
+						targetPos = L.latLng(targetUnit.position.lat, targetUnit.position.lon);
+					}
+				}
+
+				if (targetPos) {
+					const isFirstAction = index === 0;
+					const isAttack = !!action.targetUnitId;
+
+					const line = L.polyline([currentPos, targetPos], {
+						color: isAttack ? 'red' : 'yellow',
+						weight: 2,
+						dashArray: isFirstAction ? '' : '5, 10',
+						interactive: false
+					}).addTo(map);
+					
+					lines.push(line);
+					currentPos = targetPos;
+				}
+			});
+			actionLayerMap.current.set(unit.id, lines);
+		});
+	}, [placedUnits]);
+
+	useEffect(() => {
 		mapElements.forEach((el) => {
 			if (!el.layer) return;
 			if (showLabels) {
@@ -380,8 +474,8 @@ export const useMapEditor = (
 		createLayerFromUnit,
 		mapRef,
 		pendingElement,
-		selectedUnit,
-		setSelectedUnit,
+		selectedUnitId,
+		setSelectedUnitId,
 		startDrawing,
 		handleDragOver,
 		handleDrop,

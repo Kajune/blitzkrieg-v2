@@ -8,7 +8,7 @@ import type L from 'leaflet';
 type AppState = {
 	units: Unit[];
 	setUnits: React.Dispatch<React.SetStateAction<Unit[]>>;
-	placedUnits: Unit[];
+	placedUnits: PlacedUnit[];
 	setPlacedUnits: React.Dispatch<React.SetStateAction<PlacedUnit[]>>;
 	mapElements: MapElement[];
 	setMapElements: React.Dispatch<React.SetStateAction<MapElement[]>>;
@@ -19,6 +19,7 @@ type AppState = {
 	simRecord: SimRecord[];
 	setSimRecord: React.Dispatch<React.SetStateAction<SimRecord[]>>;
 	unitLayerMap: MutableRefObject<Map<string, L.Marker>>;
+	actionLayerMap: MutableRefObject<Map<string, L.Polyline[]>>;
 };
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -41,6 +42,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 	const [simUuid, setSimUuid] = useState<string | null>(null);
 	const [simRecord, setSimRecord] = useState<SimRecord[]>([]);
 	const unitLayerMap = useRef<Map<string, L.Marker>>(new Map());
+	const actionLayerMap = useRef<Map<string, L.Polyline[]>>(new Map());
 
 	return (
 		<AppContext.Provider value={{ 
@@ -50,7 +52,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 			simConfig, setSimConfig,
 			simUuid, setSimUuid,
 			simRecord, setSimRecord,
-			unitLayerMap,
+			unitLayerMap, actionLayerMap,
 		 }}>
 			{children}
 		</AppContext.Provider>

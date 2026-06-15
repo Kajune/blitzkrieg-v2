@@ -1,3 +1,8 @@
+export interface GeoLocation {
+	lat: number;
+	lon: number;
+}
+
 export const FORCES = ['REDFOR', 'BLUFOR'] as const;
 export type Force = typeof FORCES[number];
 
@@ -41,8 +46,25 @@ export interface Unit {
 	lower_units: Unit[];
 }
 
+
+export const MOVE_SPEEDS = ['LOW', 'MEDIUM', 'HIGH'] as const;
+export type MoveSpeed = typeof MOVE_SPEEDS[number];
+
+export const MOVE_MODES = ['MARCH', 'COMBAT', 'DEFENSE'] as const;
+export type MoveMode = typeof MOVE_MODES[number];
+
+export interface UnitAction {
+	moveSpeed: MoveSpeed;
+	moveMode: MoveMode;
+	fire: boolean;
+	targetPosition: GeoLocation | null;
+	targetUnitId: string | null;
+}
+
+
 export interface PlacedUnit extends Unit {
-	position: { lat: number, lon: number };
+	position: GeoLocation;
+	actions: UnitAction[];
 }
 
 export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>> => {
@@ -64,6 +86,9 @@ export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>
 		return initialUnits;
 	}
 };
+
+export const UNIT_TEMPLATES: Record<Force,UnitTemplate[]> = await fetchUnitTemplates();
+
 
 export const reduceUnitTree = <T>(
 	unit: Unit,
@@ -115,5 +140,3 @@ export const getSymbolSize = (
 	
 	return Math.round(size);
 };
-
-export const UNIT_TEMPLATES: Record<Force,UnitTemplate[]> = await fetchUnitTemplates();
