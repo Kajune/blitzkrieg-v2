@@ -34,6 +34,8 @@ def simulate():
 	delta_time = data.get("deltaTime")
 	placed_units = data.get("placedUnits", [])
 
+	print(current_time, delta_time)
+
 	if sim_id is None:
 		return jsonify({"success": False, "message": "Invalid Sim ID"}), 400
 

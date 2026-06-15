@@ -1,7 +1,8 @@
 {
   "simConfig": {
     "startDateTime": "2026-07-31T23:00:00.000Z",
-    "endDateTime": "2026-08-01T11:00:00.000Z"
+    "endDateTime": "2026-08-01T11:00:00.000Z",
+    "tickInterval": 60
   },
   "units": [
     {
@@ -1855,5 +1856,6 @@
         ]
       }
     }
-  ]
+  ],
+  "simRecord": []
 }

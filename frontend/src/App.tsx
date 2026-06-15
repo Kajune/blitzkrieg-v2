@@ -28,6 +28,7 @@ function AppContent() {
 		placedUnits, setPlacedUnits,
 		mapElements, setMapElements,
 		simRecord, setSimRecord,
+		setSimUuid,
 	} = useAppStore();
 
 	const { 
@@ -101,6 +102,7 @@ function AppContent() {
 					setMapElements(restoredElements);
 				}
 				if (data.simRecord) setSimRecord(data.simRecord);
+				setSimUuid(null);
 
 				setShowMenu(false);
 				focusAll();

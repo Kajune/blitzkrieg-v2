@@ -6,8 +6,6 @@ import 'rc-slider/assets/index.css';
 
 type SimMode = 'playing' | 'recording' | null;
 
-const TICK_INTERVAL = 1000;
-
 export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 	const {
 		simUuid,
@@ -23,15 +21,22 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 	const [speed, setSpeed] = useState<number>(1);
 	const [currentTime, setCurrentTime] = useState(new Date(simConfig.startDateTime).getTime());
 
+	const [actualSpeed, setActualSpeed] = useState<string>("1.0");
+	const lastTickTimeRef = useRef<number>(performance.now());
+	const rollingSpeedRef = useRef<number>(1);
+
 	const startTime = new Date(simConfig.startDateTime).getTime();
 	const endTime = new Date(simConfig.endDateTime).getTime();
 
+	const animationRef = useRef<number | null>(null);
 	const isFetchingRef = useRef<boolean>(false);
 	const simRecordRef = useRef(simRecord);
 	const placedUnitsRef = useRef(placedUnits);
 
 	useEffect(() => { simRecordRef.current = simRecord; }, [simRecord]);
 	useEffect(() => { placedUnitsRef.current = placedUnits; }, [placedUnits]);
+	const currentTimeRef = useRef(currentTime);
+	useEffect(() => { currentTimeRef.current = currentTime; }, [currentTime]);
 
 	useEffect(() => {
 		if (showMenu) {
@@ -57,78 +62,138 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 		if (!mode) return;
 
 		let active = true;
+		const targetInterval = simConfig.tickInterval * 1000 / speed;
+		let drift = 0;
 
-		const loop = (_timestamp: number) => {
+		const loop = async (_timestamp: number) => {
 			if (!active) return;
 
-			const delta = TICK_INTERVAL;
+			const now = performance.now();
+			const elapsed = now - lastTickTimeRef.current;
+			lastTickTimeRef.current = now;
 
-			setCurrentTime((prevTime) => {
-				const nextTime = prevTime + (delta * speed);
-				
-				if (nextTime >= endTime) {
-					setMode(null);
-					return prevTime;
-				}
+			const currentRealSpeed = simConfig.tickInterval * 1000 / Math.max(elapsed, 1);
+			rollingSpeedRef.current = rollingSpeedRef.current * 0.5 + currentRealSpeed * 0.5;
+			setActualSpeed(rollingSpeedRef.current.toFixed(1));
 
+			drift += targetInterval - elapsed;
+			const adjustment = drift * 0.5;
+			drift -= adjustment;
+			const nextDelay = Math.max(0, targetInterval + adjustment);
+
+			const prevTime = currentTimeRef.current;
+			const nextTime = prevTime + simConfig.tickInterval * 1000;
+
+			if (nextTime >= endTime) {
+				setMode(null);
+				return;
+			}
+
+			try {
 				if (mode === 'playing') {
-					updateUnitsByTime(nextTime, true);
-				} else if (mode === 'recording' && !isFetchingRef.current) {
+					updateUnitsByTime(nextTime, true, nextDelay);
+				} else if (mode === 'recording') {
 					isFetchingRef.current = true;
-					fetchAndRecord(prevTime, nextTime - prevTime).finally(() => {
-						isFetchingRef.current = false;
-					});
+					await fetchAndRecord(prevTime, simConfig.tickInterval * 1000, nextDelay);
+					isFetchingRef.current = false;
 				}
 
-				return nextTime;
-			});
+				setCurrentTime(nextTime);
+				currentTimeRef.current = nextTime;
 
-			setTimeout(() => requestAnimationFrame(loop), TICK_INTERVAL);
+			} catch (err) {
+				console.error("Simulation loop error:", err);
+			}
+
+			if (active) {
+				setTimeout(() => requestAnimationFrame(loop), nextDelay);
+			}
 		};
 
+		lastTickTimeRef.current = performance.now();
 		requestAnimationFrame(loop);
-		return () => { 
-			active = false; 
-		};
+		
+		return () => { active = false; };
 	}, [mode, speed, endTime]);
 
 	const applyUnitPositions = (
 		unitRecords: Record<string, UnitRecord>,
-		animate: boolean = false
+		animate: boolean = false,
+		nextDelay: number
 	) => {
-		Object.entries(unitRecords).forEach(([unitId, unitRecord]) => {
+		updatePlacedUnits(unitRecords);
+
+		if (animationRef.current !== null) {
+			cancelAnimationFrame(animationRef.current);
+		}
+
+		if (!animate) {
+			Object.entries(unitRecords).forEach(([unitId, unitRecord]) => {
+				const marker = unitLayerMap.current.get(unitId);
+				if (marker) {
+					marker.setLatLng([unitRecord.position.lat, unitRecord.position.lon]);
+				}
+			});
+			return;
+		}
+
+		const startTime = performance.now();
+		const duration = nextDelay;
+
+		const startPositions = new Map<string, [number, number]>();
+		Object.entries(unitRecords).forEach(([unitId, _unitRecord]) => {
 			const marker = unitLayerMap.current.get(unitId);
 			if (marker) {
-				const icon = (marker as any)._icon;
-				if (icon) {
-					icon.style.transition = animate 
-						? `transform ${TICK_INTERVAL * 2.0 / 1000}s linear` 
-						: 'none';
-				}
-				marker.setLatLng([unitRecord.position.lat, unitRecord.position.lon]);
+				startPositions.set(unitId, [marker.getLatLng().lat, marker.getLatLng().lng]);
 			}
 		});
 
+		const animateFrame = (now: number) => {
+			const elapsed = now - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+
+			Object.entries(unitRecords).forEach(([unitId, unitRecord]) => {
+				const marker = unitLayerMap.current.get(unitId);
+				const startPos = startPositions.get(unitId);
+				
+				if (marker && startPos) {
+					const targetLat = startPos[0] + (unitRecord.position.lat - startPos[0]) * progress;
+					const targetLon = startPos[1] + (unitRecord.position.lon - startPos[1]) * progress;
+					marker.setLatLng([targetLat, targetLon]);
+				}
+			});
+
+			if (progress < 1) {
+				animationRef.current = requestAnimationFrame(animateFrame);
+			} else {
+				animationRef.current = null;
+			}
+		};
+
+		animationRef.current = requestAnimationFrame(animateFrame);
+	};
+
+	const updatePlacedUnits = (unitRecords: Record<string, UnitRecord>) => {
 		setPlacedUnits((prev) =>
 			prev.map((unit) => {
-				const pos = unitRecords[unit.id].position;
+				const pos = unitRecords[unit.id]?.position;
 				return pos ? { ...unit, position: pos } : unit;
 			})
 		);
 	};
 
-	const updateUnitsByTime = (time: number, animate: boolean) => {
+	const updateUnitsByTime = (time: number, animate: boolean, nextDelay: number) => {
 		const record = simRecordRef.current.find((r) => 
 			new Date(r.startDateTime).getTime() <= time && 
 			time <= new Date(r.endDateTime).getTime()
 		);
 		
 		if (record) {
-			applyUnitPositions(record.units, animate);
+			applyUnitPositions(record.units, animate, nextDelay);
 		}
 	};
 
-	const fetchAndRecord = async (time: number, deltaTime: number) => {
+	const fetchAndRecord = async (time: number, deltaTime: number, nextDelay: number) => {
 		try {
 			const response = await fetch('/api/simulate', {
 				method: 'POST',
@@ -144,8 +209,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 
 			if (result.success && result.units) {
 				setSimRecord((prev) => [...prev, result]);
-				// 共通関数を利用
-				applyUnitPositions(result.units, true);
+				applyUnitPositions(result.units, true, nextDelay);
 			}
 		} catch (err) {
 			console.error('シミュレーションの取得に失敗しました', err);
@@ -158,17 +222,17 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 			style={{ 
 				bottom: 0, 
 				right: 0, 
-				width: '380px', 
+				width: '600px', 
 				zIndex: 1000,
 				fontSize: '0.8rem',
 				borderTopLeftRadius: '8px'
 			}}
 		>
-			<div className="text-center mb-2 fw-bold text-light">
-				{new Date(currentTime).toLocaleString()}
-			</div>
-
 			<div className="d-flex align-items-center gap-2">
+				<div className="text-center mb-1 fw-bold text-light">
+					{new Date(currentTime).toLocaleString()}
+				</div>
+
 				{/* 再生ボタン */}
 				<button 
 					className={`btn btn-sm ${mode === 'recording' ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
@@ -189,7 +253,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 					{mode === 'recording' ? <i className="bi bi-stop-fill"></i> : <i className="bi bi-record-fill"></i>}
 				</button>
 
-				<div className="w-100" style={{ padding: '0 10px' }}>
+				<div className="w-100" style={{ padding: '0 0px' }}>
 					<Slider
 						min={startTime}
 						max={endTime}
@@ -197,7 +261,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 						onChange={(val) => {
 							const time = val as number;
 							setCurrentTime(time);
-							updateUnitsByTime(time, false); // ここは即時反映（false）
+							updateUnitsByTime(time, false, 0);
 						}}
 						disabled={mode !== null}
 						handleStyle={{
@@ -206,15 +270,19 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 							marginTop: -4,
 							backgroundColor: '#fff',
 							border: '2px solid #0d6efd',
-							zIndex: 2, // レールより上に表示
+							zIndex: 2,
 						}}
 					/>
+				</div>
+
+				<div className="text-muted" style={{ minWidth: '50px', fontSize: '0.7rem' }}>
+					{actualSpeed}x
 				</div>
 
 				{/* 倍速切り替え：いつでも操作可能 */}
 				<select 
 					className="form-select form-select-sm" 
-					style={{ width: '70px' }}
+					style={{ width: '100px' }}
 					value={speed}
 					onChange={(e) => setSpeed(Number(e.target.value))}
 				>
@@ -223,6 +291,8 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 					<option value="4">x4</option>
 					<option value="8">x8</option>
 					<option value="16">x16</option>
+					<option value="32">x32</option>
+					<option value="64">x64</option>
 				</select>
 			</div>
 		</div>

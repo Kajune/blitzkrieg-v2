@@ -114,6 +114,19 @@ export const SimSetting = ({
 					期間: <strong>{durationHours} 時間</strong>
 				</div>
 
+				<div className="mb-2">
+					<label className="form-label small mb-1">ステップ間隔 (s)</label>
+					<input
+						type="number"
+						className="form-control form-control-sm"
+						value={simConfig.tickInterval}
+						onChange={(e) => {
+							const val = parseInt(e.target.value, 10);
+							setSimConfig(prev => ({ ...prev, tickInterval: val }));
+						}}
+					/>
+				</div>
+
 				<button 
 					className="btn btn-primary btn-sm w-100 mb-3" 
 					onClick={handleSendToServer}

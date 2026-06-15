@@ -34,6 +34,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 		return {
 			startDateTime: now,
 			endDateTime: end,
+			tickInterval: 60,
 		};
 	};
 	const [simConfig, setSimConfig] = useState<SimConfig>(getInitialSimConfig);
