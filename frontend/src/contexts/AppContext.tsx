@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, useRef } from 'react';
 import type { MutableRefObject } from 'react';
-import type { Unit, PlacedUnit } from '../config/unitTypes';
-import type { MapElement } from '../config/mapElement';
-import type { SimConfig, SimRecord } from '../config/simTypes';
+import type { Unit, PlacedUnit } from '../types/unitTypes';
+import type { MapElement } from '../types/mapElement';
+import type { SimConfig, SimRecord } from '../types/simTypes';
 import type L from 'leaflet';
 
 type AppState = {

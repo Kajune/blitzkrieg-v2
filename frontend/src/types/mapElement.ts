@@ -1,5 +1,5 @@
-import type { Force } from '../config/unitTypes';
-import { FORCE_STYLES } from '../config/unitTypes';
+import type { Force } from './unitTypes';
+import { FORCE_STYLES } from './unitTypes';
 
 export type ElementType = 'operation' | 'fortification' | 'obstacle' | 'coa';
 export type GeometryType = 'polygon' | 'polyline' | 'point';

@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import type { CommonModalProps } from './CommonModal';
 import { CommonModal, InputModal } from './CommonModal';
 import { useAppStore } from '../contexts/AppContext';
-import type { Force } from '../config/unitTypes';
-import { FORCE_STYLES } from '../config/unitTypes';
-import type { MapElement, ElementType, GeometryType } from '../config/mapElement'
-import { ElementTypeName, GeometryTypeName } from '../config/mapElement'
+import type { Force } from '../types/unitTypes';
+import { FORCE_STYLES } from '../types/unitTypes';
+import type { MapElement, ElementType, GeometryType } from '../types/mapElement'
+import { ElementTypeName, GeometryTypeName } from '../types/mapElement'
 
 import '../App.module.css';
 

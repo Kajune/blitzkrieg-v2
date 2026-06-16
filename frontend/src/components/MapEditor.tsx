@@ -8,10 +8,10 @@ import ms from 'milsymbol';
 import type { GeoJsonObject } from 'geojson';
 
 import { useAppStore } from '../contexts/AppContext';
-import type { MapElement } from '../config/mapElement'
-import { getMapElementColor } from '../config/mapElement'
-import type { Unit, PlacedUnit } from '../config/unitTypes';
-import { getTotalPersonnel, getSymbolSize } from '../config/unitTypes';
+import type { MapElement } from '../types/mapElement'
+import { getMapElementColor } from '../types/mapElement'
+import type { Unit, PlacedUnit } from '../types/unitTypes';
+import { getTotalPersonnel, getSymbolSize } from '../types/unitTypes';
 import '../App.module.css';
 
 L.Marker.prototype.options.icon = L.icon({

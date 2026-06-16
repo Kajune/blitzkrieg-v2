@@ -1,4 +1,4 @@
-import type { Unit } from '../config/unitTypes';
+import type { Unit } from '../types/unitTypes';
 import ms from 'milsymbol';
 
 export type UnitColumn = 'type' | 'personnel' | 'equipments';

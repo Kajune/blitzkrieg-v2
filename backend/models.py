@@ -1,0 +1,120 @@
+from dataclasses import dataclass
+from enum import Enum
+from datetime import datetime
+from typing import Dict, List, Optional
+import msgspec
+
+#
+# 共通
+#
+
+class GeoLocation(msgspec.Struct):
+	lat: float
+	lon: float
+
+#
+# Unit関係
+#
+
+class Force(Enum):
+	REDFOR = 'REDFOR'
+	BLUFOR = 'BLUFOR'
+
+
+class MoveSpeed(Enum):
+	LOW = 'LOW'
+	MEDIUM = 'MEDIUM'
+	HIGH = 'HIGH'
+
+
+class MoveMode(Enum):
+	MARCH = 'MARCH'
+	COMBAT = 'COMBAT'
+	DEFENSE = 'DEFENSE'
+
+
+class Unit(msgspec.Struct):
+	id: str
+	templateId: str
+	force: Force
+	name: str
+	sidc: str
+	type: str
+	full_personnel: int
+	current_personnel: int
+	full_equipments: Dict[str, int]
+	current_equipments: Dict[str, int]
+	lower_units: List['Unit']
+
+
+class UnitAction(msgspec.Struct):
+	moveSpeed: MoveSpeed
+	moveMode: MoveMode
+	fire: bool
+	targetPosition: Optional[GeoLocation]
+	targetUnitId: Optional[str]
+
+
+class PlacedUnit(Unit):
+	position: GeoLocation
+	actions: List[UnitAction]
+
+#
+# 地物関係
+#
+
+class ElementType(Enum):
+	OPERATION = 'operation'
+	FORTIFICATION = 'fortification'
+	OBSTACLE = 'obstacle'
+	COA = 'coa'
+
+
+class GeometryType(Enum):
+	POLYGON = 'polygon'
+	POLYLINE = 'polyline'
+	POINT = 'point'
+
+
+class MapElement(msgspec.Struct):
+	id: str
+	type: ElementType
+	force: Optional[Force]
+	geometry: GeometryType
+	name: str
+
+#
+# シミュレーション関係
+#
+
+class SimConfig(msgspec.Struct):
+	startDateTime: datetime
+	endDateTime: datetime
+	tickInterval: float
+
+
+class SimSetting(msgspec.Struct):
+	simConfig: SimConfig
+	units: List[Unit]
+	placedUnits: List[PlacedUnit]
+	mapElements: List[MapElement]
+
+
+class UnitRecord(msgspec.Struct):
+	position: GeoLocation
+	actions: List[UnitAction]
+
+
+class SimRequest(msgspec.Struct):
+	sim_id: str
+	current_time: int
+	delta_time: int
+	placed_units: List[PlacedUnit]
+
+
+class SimResponse(msgspec.Struct):
+	success: bool
+	sim_id: str
+	startDateTime: int
+	endDateTime: int
+	unitRecords: Dict[str, UnitRecord]

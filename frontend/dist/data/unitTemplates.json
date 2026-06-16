@@ -1,0 +1,109 @@
+{
+  "REDFOR":
+  [
+    {
+      "id": "MB",
+      "name": "機械化旅団",
+      "sidc": "10061000181211020000",
+      "type": "infantry",
+      "personnel": 50,
+      "equipments":
+      {},
+      "lower_units":
+      {
+        "MBn": 3
+      }
+    },
+    {
+      "id": "MBn",
+      "name": "機械化大隊",
+      "sidc": "10061000161211020000",
+      "type": "infantry",
+      "personnel": 20,
+      "equipments":
+      {
+        "拳銃": 20
+      },
+      "lower_units":
+      {
+        "MCo": 3
+      }
+    },
+    {
+      "id": "MCo",
+      "name": "機械化中隊",
+      "sidc": "10061000151211020000",
+      "type": "infantry",
+      "personnel": 200,
+      "equipments":
+      {
+        "装甲戦闘車": 20,
+        "自動銃": 180
+      },
+      "lower_units":
+      {}
+    },
+    {
+      "id": "TKBn",
+      "name": "戦車大隊",
+      "sidc": "10061000161205000000",
+      "type": "tank",
+      "personnel": 10,
+      "equipments":
+      {
+        "拳銃": 5
+      },
+      "lower_units":
+      {
+        "TKCo": 3
+      }
+    },
+    {
+      "id": "TKCo",
+      "name": "戦車中隊",
+      "sidc": "10061000151205000000",
+      "type": "infantry",
+      "personnel": 36,
+      "equipments":
+      {
+        "主力戦車": 12,
+        "自動銃": 24
+      },
+      "lower_units":
+      {}
+    }
+  ],
+  "BLUFOR":
+  [
+    {
+      "id": "iR",
+      "name": "普通科連隊",
+      "sidc": "10031000171211040000",
+      "type": "infantry",
+      "personnel": 20,
+      "equipments":
+      {
+        "96WAPC": 3,
+        "拳銃": 10
+      },
+      "lower_units":
+      {
+        "iCo": 4
+      }
+    },
+    {
+      "id": "iCo",
+      "name": "普通科中隊",
+      "sidc": "10031000151211040000",
+      "type": "infantry",
+      "personnel": 200,
+      "equipments":
+      {
+        "96WAPC": 20,
+        "89式小銃": 180
+      },
+      "lower_units":
+      {}
+    }
+  ]
+}

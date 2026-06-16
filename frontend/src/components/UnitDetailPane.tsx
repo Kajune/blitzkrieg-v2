@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ms from 'milsymbol';
-import type { PlacedUnit, MoveSpeed, MoveMode } from '../config/unitTypes';
-import { getTotalPersonnel, getTotalEquipments, MOVE_SPEEDS, MOVE_MODES } from '../config/unitTypes';
+import type { PlacedUnit, MoveSpeed, MoveMode } from '../types/unitTypes';
+import { getTotalPersonnel, getTotalEquipments, MOVE_SPEEDS, MOVE_MODES } from '../types/unitTypes';
 import { useAppStore } from '../contexts/AppContext';
 
 interface Props {

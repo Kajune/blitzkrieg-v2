@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { UNIT_TEMPLATES, FORCE_STYLES, FORCES } from '../config/unitTypes';
-import type { Unit, Force } from '../config/unitTypes';
-import { getAllUnitIds } from '../config/unitTypes';
+import { UNIT_TEMPLATES, FORCE_STYLES, FORCES } from '../types/unitTypes';
+import type { Unit, Force } from '../types/unitTypes';
+import { getAllUnitIds } from '../types/unitTypes';
 import { UnitTree } from './UnitTree';
 import { useAppStore } from '../contexts/AppContext';
 

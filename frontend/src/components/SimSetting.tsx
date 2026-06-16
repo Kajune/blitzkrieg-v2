@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../contexts/AppContext';
-import { mapElementToJSON } from '../config/mapElement';
+import { mapElementToJSON } from '../types/mapElement';
 import '../App.module.css';
 
 
@@ -69,6 +69,8 @@ export const SimSetting = ({
 			const data = await response.json();
 			if (data.success) {
 				setSimUuid(data.uuid);
+			} else {
+				console.log(data.errors);
 			}
 		} catch (error) {
 			console.error('送信失敗:', error);

@@ -429,7 +429,7 @@
             "lat": 35.15732644782957,
             "lon": 138.78582094608515
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -439,7 +439,7 @@
             "lat": 35.152205033332436,
             "lon": 138.80950404021434
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -449,7 +449,7 @@
             "lat": 35.153674189131685,
             "lon": 138.82572521293326
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -459,7 +459,7 @@
             "lat": 35.15360403179715,
             "lon": 138.8315172739975
           },
-          "targetUnit": null
+          "targetUnitId": null
         }
       ]
     },
@@ -550,7 +550,7 @@
             "lat": 35.15381450361922,
             "lon": 138.77707189999407
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -560,7 +560,7 @@
             "lat": 35.15058720918445,
             "lon": 138.783893660803
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -570,7 +570,7 @@
             "lat": 35.14928923946077,
             "lon": 138.7934183834419
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -580,7 +580,7 @@
             "lat": 35.148306978340194,
             "lon": 138.80152726893178
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -590,7 +590,7 @@
             "lat": 35.14721946112674,
             "lon": 138.8085206463648
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -600,7 +600,7 @@
             "lat": 35.14792108679892,
             "lon": 138.81688695679088
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -610,7 +610,7 @@
             "lat": 35.148131573321,
             "lon": 138.82229288045082
           },
-          "targetUnit": null
+          "targetUnitId": null
         },
         {
           "moveSpeed": "MEDIUM",
@@ -620,7 +620,7 @@
             "lat": 35.14616701127635,
             "lon": 138.82834236645118
           },
-          "targetUnit": null
+          "targetUnitId": null
         }
       ]
     },

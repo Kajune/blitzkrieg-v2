@@ -1,10 +1,15 @@
 from flask import Flask, send_from_directory, jsonify, request
+from typing import Dict, List, Optional
+from dataclasses import asdict
+import msgspec
 import uuid, json
+from models import SimSetting, SimRequest
+from sim import Simulation
+
 
 app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
 
-simulation_settings = {
-}
+sim_instances : Dict[str, Simulation] = {}
 
 
 @app.route('/')
@@ -19,44 +24,30 @@ def static_proxy(path):
 
 @app.route('/api/register_simulation', methods=['POST'])
 def register_simulation():
-	data = request.json
-	new_id = str(uuid.uuid4())
-	simulation_settings[new_id] = data	
-	return jsonify({"success": True, "uuid": new_id})
+	try:
+		config = msgspec.convert(request.json, SimSetting)
+		sim_instance = Simulation(config)
+		new_id = str(uuid.uuid4())
+		sim_instances[new_id] = sim_instance
+		return jsonify({"success": True, "uuid": new_id})
+	except msgspec.ValidationError as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
 
 
 @app.route('/api/simulate', methods=['POST'])
 def simulate():
-	data = request.json
+	try:
+		sim_request = msgspec.convert(request.json, SimRequest)
+	except msgspec.ValidationError as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
 
-	sim_id = data.get("simUuid")
-	current_time = data.get("time")
-	delta_time = data.get("deltaTime")
-	placed_units = data.get("placedUnits", [])
+	if sim_request.sim_id is None or sim_request.sim_id not in sim_instances:
+		return jsonify({"success": False, "errors": "Invalid Sim ID"}), 400
 
-	print(current_time, delta_time)
+	sim_response = sim_instances[sim_request.sim_id].step(sim_request)
 
-	if sim_id is None:
-		return jsonify({"success": False, "message": "Invalid Sim ID"}), 400
+	return msgspec.json.encode(sim_response)
 
-	updated_units = {}
-	for unit in placed_units:
-		unit_id = unit.get("id")
-		pos = unit.get("position", {"lat": 35.0, "lon": 135.0})
-		
-		new_lon = pos["lon"] + 0.0001 * delta_time / 1000
-		new_lat = pos["lat"]
-		
-		updated_units[unit_id] = {
-			"position": {"lat": new_lat, "lon": new_lon}
-		}
-
-	return jsonify({
-		"success": True,
-		"startDateTime": current_time,
-		"endDateTime": current_time + delta_time,
-		"units": updated_units
-	})
 
 if __name__ == '__main__':
 	app.run(port=5000, debug=True)

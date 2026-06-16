@@ -1,3 +1,5 @@
+import type { GeoLocation, UnitAction } from './unitTypes';
+
 export interface SimConfig {
 	startDateTime: Date;
 	endDateTime: Date;
@@ -5,11 +7,12 @@ export interface SimConfig {
 }
 
 export interface UnitRecord {
-	position: { lat: number, lon: number };
+	position: GeoLocation;
+	actions: UnitAction[];
 }
 
 export interface SimRecord {
 	startDateTime: Date;
 	endDateTime: Date;
-	units: Record<string, UnitRecord>;
+	unitRecords: Record<string, UnitRecord>;
 }

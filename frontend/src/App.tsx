@@ -1,14 +1,15 @@
 import { useState } from 'react';
 
 import { AppProvider, useAppStore } from './contexts/AppContext';
+import { mapElementToJSON } from './types/mapElement';
 import { useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
 import { UnitPlacement } from './components/UnitPlacement';
 import { SimSetting } from './components/SimSetting';
 import { UnitDetailPane } from './components/UnitDetailPane';
-import { mapElementToJSON } from './config/mapElement';
 import { SimControl } from './components/SimControl';
+
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './App.module.css';

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
-import type { UnitRecord } from '../config/simTypes';
+import type { UnitRecord } from '../types/simTypes';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
@@ -116,7 +116,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 		return () => { active = false; };
 	}, [mode, speed, endTime]);
 
-	const applyUnitPositions = (
+	const applyUnitStatus = (
 		unitRecords: Record<string, UnitRecord>,
 		animate: boolean = false,
 		nextDelay: number
@@ -176,8 +176,9 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 	const updatePlacedUnits = (unitRecords: Record<string, UnitRecord>) => {
 		setPlacedUnits((prev) =>
 			prev.map((unit) => {
-				const pos = unitRecords[unit.id]?.position;
-				return pos ? { ...unit, position: pos } : unit;
+				const pos = unitRecords[unit.id].position;
+				const actions = unitRecords[unit.id].actions;
+				return { ...unit, position: pos, actions: actions };
 			})
 		);
 	};
@@ -187,9 +188,10 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 			new Date(r.startDateTime).getTime() <= time && 
 			time <= new Date(r.endDateTime).getTime()
 		);
-		
+
 		if (record) {
-			applyUnitPositions(record.units, animate, nextDelay);
+			console.log(record);
+			applyUnitStatus(record.unitRecords, animate, nextDelay);
 		}
 	};
 
@@ -199,17 +201,19 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					simUuid,
-					time,
-					deltaTime,
-					placedUnits: placedUnitsRef.current,
+					sim_id: simUuid,
+					current_time: time,
+					delta_time: deltaTime,
+					placed_units: placedUnitsRef.current,
 				})
 			});
 			const result = await response.json();
 
-			if (result.success && result.units) {
+			if (result.success && result.unitRecords) {
 				setSimRecord((prev) => [...prev, result]);
-				applyUnitPositions(result.units, true, nextDelay);
+				applyUnitStatus(result.unitRecords, true, nextDelay);
+			} else {
+				console.log(result.errors);
 			}
 		} catch (err) {
 			console.error('シミュレーションの取得に失敗しました', err);
