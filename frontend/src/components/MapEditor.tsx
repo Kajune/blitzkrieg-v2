@@ -438,10 +438,17 @@ export const useMapEditor = (
 
 				if (targetPos) {
 					const isFirstAction = index === 0;
-					const isAttack = !!action.targetUnitId;
+					const isApproach = !!action.targetUnitId;
+					let isEnemy = false;
+					if (isApproach) {
+						const targetUnit = placedUnits.find(u => u.id === action.targetUnitId);
+						if (targetUnit && targetUnit.force !== unit.force) {
+							isEnemy = true;
+						}
+					}
 
 					const line = L.polyline([currentPos, targetPos], {
-						color: isAttack ? 'red' : 'yellow',
+						color: isApproach ? (isEnemy ? 'red' : 'green') : 'yellow',
 						weight: 2,
 						dashArray: isFirstAction ? '' : '5, 10',
 						interactive: false

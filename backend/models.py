@@ -31,6 +31,7 @@ class MoveMode(Enum):
 	MARCH = 'MARCH'
 	COMBAT = 'COMBAT'
 	DEFENSE = 'DEFENSE'
+	ARTILLERY = 'ARTILLERY'
 
 
 class Unit(msgspec.Struct):

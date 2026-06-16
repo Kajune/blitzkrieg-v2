@@ -50,7 +50,7 @@ export interface Unit {
 export const MOVE_SPEEDS = ['LOW', 'MEDIUM', 'HIGH'] as const;
 export type MoveSpeed = typeof MOVE_SPEEDS[number];
 
-export const MOVE_MODES = ['MARCH', 'COMBAT', 'DEFENSE'] as const;
+export const MOVE_MODES = ['MARCH', 'COMBAT', 'DEFENSE', 'ARTIRELLY'] as const;
 export type MoveMode = typeof MOVE_MODES[number];
 
 export interface UnitAction {
