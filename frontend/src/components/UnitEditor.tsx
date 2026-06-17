@@ -24,7 +24,7 @@ const createUnitStructure = (templateId: string, force: Force): Unit => {
 	}
 
 	return {
-		id: template.id + '_' + Date.now().toString(),
+		id: template.id + '_' + crypto.randomUUID(),
 		templateId: template.id,
 		name: template.name,
 		force: force,

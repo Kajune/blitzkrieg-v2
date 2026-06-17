@@ -54,11 +54,13 @@ export const MOVE_MODES = ['MARCH', 'COMBAT', 'DEFENSE', 'ARTIRELLY'] as const;
 export type MoveMode = typeof MOVE_MODES[number];
 
 export interface UnitAction {
+	id: string;
 	moveSpeed: MoveSpeed;
 	moveMode: MoveMode;
 	fire: boolean;
 	targetPosition: GeoLocation | null;
 	targetUnitId: string | null;
+	finished: boolean;
 }
 
 

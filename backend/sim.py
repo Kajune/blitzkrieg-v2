@@ -90,28 +90,33 @@ class Simulation:
 				if not record.actions:
 					continue
 
-				action = record.actions[0]
-				target_pos = action.targetPosition or (unit_map[action.targetUnitId].position if action.targetUnitId in unit_map else None)
-				
-				if not target_pos:
-					continue
+				for ai, action in enumerate(record.actions):
+					if action.finished:
+						continue
 
-				# 一貫したゾーンで変換
-				ux, uy = self._to_utm(record.position)
-				tx, ty = self._to_utm(target_pos)
-
-				dist = math.sqrt((tx - ux)**2 + (ty - uy)**2)
-				move_dist_per_tick = self._get_move_speed_mps(action.moveSpeed, action.moveMode) * self._sim_setting.simConfig.tickInterval
-
-				if dist <= move_dist_per_tick:
-					record.position = target_pos
-					record.actions.pop(0)
-				else:
-					angle = math.atan2(ty - uy, tx - ux)
-					nx = ux + math.cos(angle) * move_dist_per_tick
-					ny = uy + math.sin(angle) * move_dist_per_tick
+					target_pos = action.targetPosition or (unit_map[action.targetUnitId].position if action.targetUnitId in unit_map else None)
 					
-					record.position = self._to_geo(nx, ny)
+					if not target_pos:
+						continue
+
+					# 一貫したゾーンで変換
+					ux, uy = self._to_utm(record.position)
+					tx, ty = self._to_utm(target_pos)
+
+					dist = math.sqrt((tx - ux)**2 + (ty - uy)**2)
+					move_dist_per_tick = self._get_move_speed_mps(action.moveSpeed, action.moveMode) * self._sim_setting.simConfig.tickInterval
+
+					if dist <= move_dist_per_tick:
+						record.position = target_pos
+						record.actions[ai].finished = True
+					else:
+						angle = math.atan2(ty - uy, tx - ux)
+						nx = ux + math.cos(angle) * move_dist_per_tick
+						ny = uy + math.sin(angle) * move_dist_per_tick
+						
+						record.position = self._to_geo(nx, ny)
+
+					break
 
 		return SimResponse(
 			success=True,

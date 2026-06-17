@@ -176,9 +176,28 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 	const updatePlacedUnits = (unitRecords: Record<string, UnitRecord>) => {
 		setPlacedUnits((prev) =>
 			prev.map((unit) => {
-				const pos = unitRecords[unit.id].position;
-				const actions = unitRecords[unit.id].actions;
-				return { ...unit, position: pos, actions: actions };
+				const record = unitRecords[unit.id];
+				if (!record) return unit;
+
+				if (mode === 'recording') {
+					const finishedIds = new Set(record.actions.filter(a => a.finished).map(a => a.id));
+
+					return {
+						...unit,
+						position: record.position,
+						actions: unit.actions.map(a => ({
+							...a,
+							finished: finishedIds.has(a.id) ? true : a.finished
+						}))
+					};
+
+				} else {
+					return {
+						...unit,
+						position: record.position,
+						actions: record.actions,
+					};
+				}
 			})
 		);
 	};
@@ -225,11 +244,11 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 			className="position-absolute bg-dark border-top border-start border-secondary p-2"
 			style={{ 
 				bottom: 0, 
-				right: 0, 
+				left: 0, 
 				width: '600px', 
 				zIndex: 1000,
 				fontSize: '0.8rem',
-				borderTopLeftRadius: '8px'
+				borderTopRightRadius: '8px'
 			}}
 		>
 			<div className="d-flex align-items-center gap-2">

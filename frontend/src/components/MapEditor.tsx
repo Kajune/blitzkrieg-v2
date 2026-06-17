@@ -387,11 +387,13 @@ export const useMapEditor = (
 			});
 
 			const newAction = {
+				id: crypto.randomUUID(),
 				moveSpeed: 'MEDIUM' as const,
 				moveMode: 'COMBAT' as const,
 				fire: true,
 				targetPosition: targetUnitId ? null : { lat: e.latlng.lat, lon: e.latlng.lng },
 				targetUnitId: targetUnitId,
+				finished: false,
 			};
 
 			const isShiftPressed = e.originalEvent.shiftKey;
@@ -419,12 +421,13 @@ export const useMapEditor = (
 		actionLayerMap.current.clear();
 
 		placedUnits.forEach((unit) => {
-			if (unit.actions.length === 0) return;
+			const activeActions = unit.actions.filter(a => !a.finished);
+			if (activeActions.length === 0) return;
 
 			const lines: L.Polyline[] = [];
 			let currentPos: L.LatLng = L.latLng(unit.position.lat, unit.position.lon);
 
-			unit.actions.forEach((action, index) => {
+			activeActions.forEach((action, index) => {
 				let targetPos: L.LatLng | null = null;
 				
 				if (action.targetPosition) {

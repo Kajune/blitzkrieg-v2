@@ -49,11 +49,13 @@ class Unit(msgspec.Struct):
 
 
 class UnitAction(msgspec.Struct):
+	id: str
 	moveSpeed: MoveSpeed
 	moveMode: MoveMode
 	fire: bool
 	targetPosition: Optional[GeoLocation]
 	targetUnitId: Optional[str]
+	finished: bool
 
 
 class PlacedUnit(Unit):

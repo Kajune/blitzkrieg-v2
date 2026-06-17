@@ -143,7 +143,7 @@ function AppContent() {
 			<button 
 				className="btn btn-secondary btn-sm position-absolute"
 				style={{ 
-					bottom: 20, 
+					bottom: 80, 
 					left: 10, 
 					zIndex: 1000,
 					borderRadius: '20px',

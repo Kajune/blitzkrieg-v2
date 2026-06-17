@@ -154,7 +154,9 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 										</tr>
 									</thead>
 									<tbody>
-										{unit.actions.map((action, idx) => (
+										{unit.actions
+											.filter((action) => !action.finished)
+											.map((action, idx) => (
 											<tr key={idx} className="align-middle">
 												<td className="ps-1">
 													<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
