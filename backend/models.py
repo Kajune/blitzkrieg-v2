@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime
 from typing import Dict, List, Optional
 import msgspec
+import math
 
 #
 # 共通
@@ -11,6 +12,20 @@ import msgspec
 class GeoLocation(msgspec.Struct):
 	lat: float
 	lon: float
+
+
+class UTMLocation(msgspec.Struct):
+	easting: float
+	northing: float
+
+	def distance(self, rhs : "UTMLocation") -> float:
+		return math.sqrt((rhs.easting - self.easting) ** 2 + (rhs.northing - self.northing) ** 2)
+
+	def direction(self, rhs : "UTMLocation") -> float:
+		return math.atan2(rhs.northing - self.northing, rhs.easting - self.easting)
+
+	def move(self, angle : float, distance : float) -> "UTMLocation":
+		return UTMLocation(easting=self.easting + math.cos(angle) * distance, northing=self.northing + math.sin(angle) * distance)
 
 #
 # Unit関係
@@ -85,6 +100,7 @@ class MapElement(msgspec.Struct):
 	force: Optional[Force]
 	geometry: GeometryType
 	name: str
+	geoJson: Dict
 
 #
 # シミュレーション関係
