@@ -83,30 +83,28 @@ class BaseMesh(Generic[T]):
 		dx, dy, sx, sy = self._deltas
 		height = self.data.shape[0]
 		
+		def _convert(p):
+			x = p.lon if hasattr(p, 'lon') else p.easting
+			y = p.lat if hasattr(p, 'lat') else p.northing
+			return [height - (y - sy) / dy, (x - sx) / dx]
+
 		if isinstance(pos, list):
-			coords = []
-			for p in pos:
-				x = p.lon if hasattr(p, 'lon') else p.easting
-				y = p.lat if hasattr(p, 'lat') else p.northing
-				coords.append([height - (y - sy) / dy, (x - sx) / dx])
-			return np.array(coords)
-		
-		x = pos.lon if hasattr(pos, 'lon') else pos.easting
-		y = pos.lat if hasattr(pos, 'lat') else pos.northing
-		return np.array([height - (y - sy) / dy, (x - sx) / dx])
+			return np.array([_convert(p) for p in pos])
+		return np.array(_convert(pos))
 
 
 	def from_image_coord(self, pos: np.ndarray) -> Union[T, List[T]]:
 		dx, dy, sx, sy = self._deltas
 		height = self.data.shape[0]
 		
+		def _revert(p):
+			x = sx + (p[1] * dx)
+			y = sy + (height - p[0]) * dy
+			return self.cls_t(x, y)
+
 		if pos.ndim == 2:
-			results = []
-			for p in pos:
-				results.append(self.cls_t(sx + (height - p[1]) * dx, sy + p[0] * dy))
-			return results
-		
-		return self.cls_t(sx + (height - pos[1]) * dx, sy + pos[0] * dy)
+			return [_revert(p) for p in pos]
+		return _revert(pos)
 
 
 	def to_image_geom(self, geom: BaseGeometry) -> BaseGeometry:
@@ -200,13 +198,51 @@ class MoveMode(Enum):
 	ARTILLERY = 'ARTILLERY'
 
 
+class UnitType(Enum):
+	COMBINED = 'combined'
+	INFANTRY = 'infantry'
+	TANK = 'tank'
+	ARTILLERY = 'artillery'
+
+
+class VehicleType(Enum):
+	FOOT = 'Foot'
+	GROUND_SOFT = 'GroundSoft'
+	GROUND_HARD_WHEELED = 'GroundHardWheeled'
+	GROUND_HARD_TRACKED = 'GroundHardTracked'
+	AIRCRAFT = 'Aircraft'
+
+
+class FireType(Enum):
+	DIRECT = 'Direct'
+	INDIRECT = 'Indirect'
+
+
+class Equipment(msgspec.Struct):
+	name: str
+
+
+class Weapon(Equipment):
+	fire_range: float
+	fire_type: FireType
+	fire_power: Dict[VehicleType, float]
+
+
+class Vehicle(Equipment):
+	type: VehicleType
+	max_speed: float
+	weapons: List[Weapon]
+	required_personnel: int
+	personnel_capacity: int
+
+
 class Unit(msgspec.Struct):
 	id: str
 	templateId: str
 	force: Force
 	name: str
 	sidc: str
-	type: str
+	type: UnitType
 	full_personnel: int
 	current_personnel: int
 	full_equipments: Dict[str, int]
@@ -227,6 +263,7 @@ class UnitAction(msgspec.Struct):
 class PlacedUnit(Unit):
 	position: GeoLocation
 	actions: List[UnitAction]
+
 
 #
 # 地物関係

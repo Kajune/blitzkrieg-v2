@@ -62,7 +62,7 @@
       "id": "TKCo",
       "name": "戦車中隊",
       "sidc": "10061000151205000000",
-      "type": "infantry",
+      "type": "tank",
       "personnel": 36,
       "equipments":
       {

@@ -7,13 +7,116 @@ from shapely.geometry import GeometryCollection
 from models import *
 from geometry import *
 from gis import *
+import json, msgspec, copy
+import pyastar2d
 import cv2, time
+
+
+def remove_duplicated_units(units: List[Unit], existing_unit_ids: List[str] = None) -> List[Unit]:
+	if existing_unit_ids is None:
+		existing_unit_ids = []
+
+	for unit in units:
+		existing_unit_ids.append(unit.id)
+
+	for unit in units:
+		current_existing_ids = list(existing_unit_ids)
+		
+		unit.lower_units = [
+			u for u in unit.lower_units 
+			if u.id not in current_existing_ids
+		]
+		
+		remove_duplicated_units(unit.lower_units, list(current_existing_ids))
+		
+	return units
+
+
+def aggregate_objects(unit: Unit, fetch_fn, aggr_dict: Dict[str, int] = None) -> Dict[str, int]:
+	if aggr_dict is None:
+		aggr_dict = {}
+
+	for k, v in fetch_fn(unit).items():
+		if k not in aggr_dict and v > 0:
+			aggr_dict[k] = 0
+		aggr_dict[k] += v
+
+	for lower_unit in unit.lower_units:
+		aggregate_objects(lower_unit, fetch_fn, aggr_dict)
+
+	return aggr_dict
+
+
+def get_current_personnel(unit: Unit) -> int:
+	return aggregate_objects(unit, lambda unit: {"personnel": unit.current_personnel})["personnel"]
+
+
+def get_current_equipments(unit: Unit) -> Dict[str, int]:
+	return aggregate_objects(unit, lambda unit: unit.current_equipments)
+
 
 
 class Simulation:
 	def __init__(self, sim_setting: SimSetting, debug=False):
 		self._sim_setting = sim_setting
 
+		#
+		# Unit
+		#
+		self.weapons = []
+		self.vehicles = []
+
+		try:
+			with open("data/equipments.json") as f:
+				equipments = json.load(f)
+				for weapon in equipments["weapons"]:
+					self.weapons.append(msgspec.convert(weapon, Weapon))
+				for vehicle in equipments["vehicles"]:
+					self.vehicles.append(msgspec.convert(vehicle, Vehicle))
+		except Exception as e:
+			print(e)
+
+		self.weapons = {w.name: w for w in self.weapons}
+		self.vehicles = {v.name: v for v in self.vehicles}
+		self.equipments = {**self.weapons, **self.vehicles}
+
+		try:
+			with open("data/mobility_cost.json") as f:
+				mobility_cost = json.load(f)
+
+				self.mobility_cost = {}
+				for vt, mc in mobility_cost.items():
+					self.mobility_cost[VehicleType(vt)] = mc
+
+		except Exception as e:
+			print(e)
+
+		self.mobility_cost_scale = {
+			MoveSpeed.LOW: 1,
+			MoveSpeed.MEDIUM: 10,
+			MoveSpeed.HIGH: 100,
+		}
+
+		self.move_speed_cap = {
+			MoveSpeed.LOW: 4.0,
+			MoveSpeed.MEDIUM: 20,
+			MoveSpeed.HIGH: np.inf,
+		}
+
+		self.speed_scale_by_move_mode = {
+			MoveMode.MARCH: 1.0,
+			MoveMode.COMBAT: 0.5,
+			MoveMode.DEFENSE: 0.0,
+			MoveMode.ARTILLERY: 0.1,
+		}
+
+		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
+			for eq_name in get_current_equipments(unit):
+				assert eq_name in self.equipments, f"Unknown equipment: {eq_name}"
+
+		#
+		# Map
+		#
 		self.ao = None
 		self.fortifications = []
 		self.obstacles = []
@@ -86,10 +189,10 @@ class Simulation:
 			img = np.zeros_like(terrain.data)
 
 			if geometries[geom_name]["type"] == "polyline":
-				cv2.polylines(img, geom_coords_list, isClosed=False, color=255, 
+				cv2.polylines(img, geom_coords_list, isClosed=False, color=1, 
 					thickness=max(1, int(geometries[geom_name]["width"] / map_resolution)))
 			elif geometries[geom_name]["type"] == "polygon":
-				cv2.fillPoly(img, geom_coords_list, color=255)
+				cv2.fillPoly(img, geom_coords_list, color=1)
 			else:
 				raise ValueError
 
@@ -109,17 +212,90 @@ class Simulation:
 			)
 
 			for geom_name in geometries:
-				cv2.imwrite(f"{geom_name}.png", geometries[geom_name]["mesh"].data)
+				cv2.imwrite(f"{geom_name}.png", geometries[geom_name]["mesh"].data * 255)
 
 		return terrain, geometries
 
 
-	def _get_move_speed_mps(self, speed: MoveSpeed, mode: MoveMode) -> float:
-		kmh = 5.0 if speed == MoveSpeed.LOW else (20.0 if speed == MoveSpeed.MEDIUM else 50.0)
-		return (kmh * 1000 / 3600) * (0.5 if mode == MoveMode.COMBAT else 1.0)
+	def _get_unit_mobility_composition(self, unit: PlacedUnit) -> dict:
+		current_eqs = get_current_equipments(unit)
+		current_personnel = get_current_personnel(unit)
+		
+		if current_personnel <= 0:
+			return {VehicleType.FOOT: 0}
+			
+		composition = {k: 0 for k in VehicleType}
+		total_capacity = 0
+		
+		for eq_name, eq_num in current_eqs.items():
+			if eq_name in self.vehicles:
+				v = self.vehicles[eq_name]
+				total_capacity += v.personnel_capacity * eq_num
+				composition[v.type] = composition.get(v.type, 0) + eq_num
+				
+		if total_capacity < current_personnel:
+			composition[VehicleType.FOOT] = current_personnel - total_capacity
+			
+		return composition
 
 
-	def maneuver_evaluation(self, placed_units : List[PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def _compute_speed(self, unit: PlacedUnit, foot_speed: float = 4.0) -> float:
+		comp = self._get_unit_mobility_composition(unit)
+		
+		speeds = []
+		total_personnel = get_current_personnel(unit)
+		
+		for eq_name, eq_num in get_current_equipments(unit).items():
+			if eq_name in self.vehicles:
+				speeds += [self.vehicles[eq_name].max_speed] * eq_num
+		
+		personnel_in_vehicles = sum(self.vehicles[e].personnel_capacity * n 
+									for e, n in get_current_equipments(unit).items() 
+									if e in self.vehicles)
+		if total_personnel > personnel_in_vehicles:
+			speeds += [foot_speed] * (total_personnel - personnel_in_vehicles)
+
+		return np.mean(speeds) if speeds else foot_speed
+
+
+	def _compute_mobility_map(self, unit: PlacedUnit, climb_power: float = 30.0) -> UTMMesh:
+		vehicle_types = self._get_unit_mobility_composition(unit)
+		
+		coeffs = {geom_type: [] for geom_type in self.map_geometries}
+		for v_type, num in vehicle_types.items():
+			mobility_cost = self.mobility_cost.get(v_type, {})
+			for geom_type in self.map_geometries:
+				coeffs[geom_type] += [mobility_cost.get(geom_type, 0)] * num
+
+		coeffs = {k: np.mean(v) if v else 0 for k, v in coeffs.items()}
+
+		# 基本は斜度
+		mobility_map = copy.deepcopy(self.slope_mesh)
+		mobility_map.data /= climb_power
+
+		# vegetation, fortificationは加算
+		for k in ["vegetation", "fortification"]:
+			mobility_map.data += self.map_geometries[k]["mesh"].data * coeffs[k]
+
+		# water, waterway, buildingは大きい方で上書き
+		for k in ["water", "waterway", "building"]:
+			mobility_map.data = np.maximum(mobility_map.data, self.map_geometries[k]["mesh"].data * coeffs[k])
+
+		# roadは小さい方で上書き
+		for k in ["road"]:
+			mobility_map.data = np.minimum(mobility_map.data, (1 - self.map_geometries[k]["mesh"].data))
+
+		# obstacleは加算
+		for k in ["obstacle"]:
+			mobility_map.data += self.map_geometries[k]["mesh"].data * coeffs[k]
+
+		# aoは絶対
+		mobility_map.data[self.map_geometries["ao"]["mesh"].data == 0] = 1
+
+		return mobility_map
+
+
+	def maneuver_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
 		for unit_id, record in updated_units.items():
 			if not record.actions:
 				continue
@@ -128,56 +304,91 @@ class Simulation:
 				if action.finished:
 					continue
 
-				target_pos = action.targetPosition or (unit_map[action.targetUnitId].position if action.targetUnitId in unit_map else None)
+				target_pos = action.targetPosition or (placed_units[action.targetUnitId].position if action.targetUnitId in placed_units else None)
 				
 				if not target_pos:
 					continue
 
+				unit = placed_units[unit_id]
+				mobility_map = self._compute_mobility_map(unit)
+				speed = self._compute_speed(unit)
+
 				upos = self.geo_transformer.to_utm(record.position)
 				tpos = self.geo_transformer.to_utm(target_pos)
 
-				dist = tpos.distance(upos)
-				move_dist_per_tick = self._get_move_speed_mps(action.moveSpeed, action.moveMode) * self._sim_setting.simConfig.tickInterval
+				upos_px, tpos_px = mobility_map.to_image_coord([upos, tpos])
 
-				if dist <= move_dist_per_tick:
-					record.position = target_pos
-					record.actions[ai].finished = True
+				cost_map = mobility_map.data.astype(np.float32) * self.mobility_cost_scale[action.moveSpeed] + 1
+				path_px = pyastar2d.astar_path(cost_map, 
+					(int(round(upos_px[0])), int(round(upos_px[1]))), 
+					(int(round(tpos_px[0])), int(round(tpos_px[1]))), 
+					allow_diagonal=True
+				)
+
+				if len(path_px) > 1:
+					path = mobility_map.from_image_coord(path_px)
+					path[0] = upos
+					path[-1] = tpos
+					base_speed = speed * 1000 / 3600 * self.speed_scale_by_move_mode[action.moveMode]
+					speed_cap = self.move_speed_cap[action.moveSpeed] * 1000 / 3600
+					actual_speed = np.clip(np.clip(1 - mobility_map.data, 0, 1) * base_speed, 0.5, speed_cap)
+
+					total_t = 0
+					new_position = path[0]
+					for i in range(len(path) - 1):
+						d = path[i].distance(path[i+1])
+						s = actual_speed[path_px[i][0], path_px[i][1]]
+						t = d / s
+
+						if total_t + t > self._sim_setting.simConfig.tickInterval:
+							new_position = path[i].move(
+								path[i].direction(path[i+1]),
+								(self._sim_setting.simConfig.tickInterval - total_t) * s
+							)
+							break
+						else:
+							total_t += t
+							new_position = path[i+1]
+							if i == len(path) - 2:
+								record.actions[ai].finished = True
+
 				else:
-					record.position = self.geo_transformer.to_geo(
-						upos.move(
-							angle=tpos.direction(upos), 
-							distance=move_dist_per_tick)
-						)
+					new_position = tpos
+					record.actions[ai].finished = True
+
+				record.position = self.geo_transformer.to_geo(new_position)
 
 				break
 
 		return updated_units
 
 
-	def intelligence_evaluation(self, placed_units : List[PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def intelligence_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
 		return updated_units
 
 
-	def combat_evaluation(self, placed_units : List[PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def combat_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
 		return updated_units
 
 
 	def step(self, sim_request: SimRequest) -> SimResponse:
-		unit_map = {u.id: u for u in sim_request.placed_units}
+		placed_units = remove_duplicated_units(sim_request.placed_units)
 		updated_units = {}
 		
-		for unit in sim_request.placed_units:
+		for unit in placed_units:
 			updated_units[unit.id] = UnitRecord(
 				position=unit.position,
 				actions=list(unit.actions)
 			)
 
+		placed_units = {u.id: u for u in placed_units}
+
 		num_loops = int(sim_request.delta_time / self._sim_setting.simConfig.tickInterval / 1000)
 
 		for _ in range(num_loops):
-			updated_units = self.maneuver_evaluation(sim_request.placed_units, updated_units)
-			updated_units = self.intelligence_evaluation(sim_request.placed_units, updated_units)
-			updated_units = self.combat_evaluation(sim_request.placed_units, updated_units)
+			updated_units = self.maneuver_evaluation(placed_units, updated_units)
+			updated_units = self.intelligence_evaluation(placed_units, updated_units)
+			updated_units = self.combat_evaluation(placed_units, updated_units)
 
 		return SimResponse(
 			success=True,

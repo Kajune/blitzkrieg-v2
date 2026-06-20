@@ -72,7 +72,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 			const elapsed = now - lastTickTimeRef.current;
 			lastTickTimeRef.current = now;
 
-			const currentRealSpeed = simConfig.tickInterval * 1000 / Math.max(elapsed, 1);
+			const currentRealSpeed = simConfig.tickInterval * 1000 / Math.max(elapsed, targetInterval / 2);
 			rollingSpeedRef.current = rollingSpeedRef.current * 0.5 + currentRealSpeed * 0.5;
 			setActualSpeed(rollingSpeedRef.current.toFixed(1));
 
