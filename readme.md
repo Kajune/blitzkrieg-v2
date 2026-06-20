@@ -1,5 +1,3 @@
-# blitzkrieg-v2
-
 ![ロゴ](res/logo.png)
 ![イメージ画像](res/image.png)
 
@@ -9,6 +7,7 @@
 ## 構築手順
 1. PostGISサーバの構築
 下記からDEMとosm.pbfをダウンロードし、それぞれ`geo-server/dem`と`geo-server/osm`以下に配置
+
 ALOSはzipを解凍して、`geo-server/dem/N020E120_N025E125/ALPSMLC30_N020E121_DSM.tif`のようになっていることを期待
 - ALOS (https://www.eorc.jaxa.jp/ALOS/jp/index_j.htm)
 - OSM (https://download.geofabrik.de/asia.html)

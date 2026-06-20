@@ -91,14 +91,13 @@ class PostGIS:
 		
 		query = f"""
 		SELECT ST_AsBinary(ST_Transform(way, {epsg})) 
-		FROM {table_name} 
-		WHERE ST_Intersects(
-			ST_Transform(way, {epsg}), 
-			ST_GeomFromText('{wkt}', {epsg})
-		)
+			FROM {table_name} 
+			WHERE way && ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)
+			AND (ST_Intersects(way, ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)))
 		"""
+
 		if condition:
-			query += f" AND {condition}"
+			query += f" AND ({condition})"
 
 		geometries = []
 		with self.get_cursor() as cur:

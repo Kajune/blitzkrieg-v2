@@ -1,5 +1,6 @@
 from typing import Dict, List, Tuple, Optional, Any
 from pyproj import Transformer, CRS
+from shapely import get_coordinates, set_coordinates
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import shape, GeometryCollection
 from shapely.ops import transform
@@ -54,6 +55,20 @@ def get_geometry_coords(geom: BaseGeometry) -> List[np.ndarray]:
 	return coords_list
 
 
+def compute_slope_mesh(alt_mesh: UTMMesh) -> UTMMesh:
+	cell_size = alt_mesh.resolution[0]
+	dy, dx = np.gradient(alt_mesh.data, cell_size)
+	gradient_magnitude = np.sqrt(dx**2 + dy**2)
+	slope_radians = np.arctan(gradient_magnitude)
+	slope_degrees = np.degrees(slope_radians)
+	return UTMMesh(
+		data=slope_degrees, 
+		left_bottom=alt_mesh.left_bottom,
+		right_top=alt_mesh.right_top,
+		epsg=alt_mesh.epsg,
+	)
+
+
 class GeoTransformer:
 	def __init__(self, ao, base_epsg=4326):
 		self.base_epsg = base_epsg
@@ -95,31 +110,30 @@ class GeoTransformer:
 
 
 	def convrt_to_utm_geom(self, geom: Union[GeometryCollection, BaseGeometry]) -> Union[GeometryCollection, BaseGeometry]:
-		def project(lon, lat, z=None):
-			return self._to_utm_transformer.transform(lon, lat)
-		
-		return transform(project, geom)
+		coords = get_coordinates(geom)
+		xx, yy = self._to_utm_transformer.transform(coords[:, 0], coords[:, 1])
+		new_coords = np.column_stack([xx, yy])
+		return set_coordinates(geom, new_coords)
 
 
 	def convrt_to_geo_geom(self, geom: Union[GeometryCollection, BaseGeometry]) -> Union[GeometryCollection, BaseGeometry]:
-		def project(easting, northing, z=None):
-			return self._to_geo_transformer.transform(easting, northing)
-		
-		return transform(project, geom)
+		coords = get_coordinates(geom)
+		xx, yy = self._to_geo_transformer.transform(coords[:, 0], coords[:, 1])
+		new_coords = np.column_stack([xx, yy])
+		return set_coordinates(geom, new_coords)
 
 
-	def _reproject_mesh(self, data, src_crs_code, dst_crs_code, bounds, shape):
-		"""投影変換の共通化ロジック"""
+	def _reproject_mesh(self, data, src_crs_code, dst_crs_code, bounds, shape, nodata_value=-32768):
 		src_crs = CRS.from_epsg(src_crs_code)
 		dst_crs = CRS.from_epsg(dst_crs_code)
 		
-		# 出力先の定義計算
 		dst_transform, dst_width, dst_height = calculate_default_transform(
 			src_crs, dst_crs, shape[1], shape[0], *bounds
 		)
 		
 		src_transform = from_bounds(*bounds, width=shape[1], height=shape[0])
-		dst_array = np.full((dst_height, dst_width), -32768, dtype=np.float32)
+		
+		dst_array = np.full((dst_height, dst_width), nodata_value, dtype=np.float32)
 		
 		reproject(
 			source=data,
@@ -128,10 +142,11 @@ class GeoTransformer:
 			src_crs=src_crs,
 			dst_transform=dst_transform,
 			dst_crs=dst_crs,
-			resampling=Resampling.cubic
+			resampling=Resampling.cubic,
+			src_nodata=nodata_value,
+			dst_nodata=nodata_value,
 		)
-		
-		# 変換後の範囲を計算
+
 		lb_x, lb_y = dst_transform * (0, dst_height)
 		rt_x, rt_y = dst_transform * (dst_width, 0)
 		

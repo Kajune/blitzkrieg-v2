@@ -116,7 +116,7 @@ export const RegionSettings = ({
 								key={type}
 								className={`btn btn-sm ${isActive(type, geometry, null) ? btnClass : `btn-outline-${btnClass.replace('btn-', '')}`}`}
 								onClick={() => addElement(type, geometry, null, false)}
-								disabled={!!drawingElement}
+								disabled={!!drawingElement || (type === 'operation' && hasOperationArea) || (type !== 'operation' && !hasOperationArea)}
 							>
 								{ElementTypeName[type]}
 							</button>
@@ -134,7 +134,7 @@ export const RegionSettings = ({
 									key={geo}
 									className={`btn btn-sm btn-${isActive("coa", geo, force as Force) ? "" : "outline-"}${style.class}`}
 									onClick={() => addElement("coa", geo, force as Force, true)}
-									disabled={!!drawingElement}
+									disabled={!!drawingElement || !hasOperationArea}
 								>
 									{GeometryTypeName[geo]}
 								</button>
