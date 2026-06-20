@@ -1,5 +1,8 @@
 # blitzkrieg-v2
 
+![ロゴ](res/logo.png)
+![イメージ画像](res/image.png)
+
 ## 概要
 戦術レベルの陸上戦闘のシミュレーション
 
