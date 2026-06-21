@@ -7,7 +7,7 @@ export type GeometryType = 'polygon' | 'polyline' | 'point';
 export interface MapElement {
 	id: string;
 	type: ElementType;
-	force: Force | null;
+	force: Force;
 	geometry: GeometryType;
 	name: string;
 	layer?: L.Layer;

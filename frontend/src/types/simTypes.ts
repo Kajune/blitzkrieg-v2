@@ -7,7 +7,7 @@ export interface SimConfig {
 }
 
 export interface UnitRecord {
-	position: GeoLocation;
+	trajectory: GeoLocation[];
 	actions: UnitAction[];
 }
 

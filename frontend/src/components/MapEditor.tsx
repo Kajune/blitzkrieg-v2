@@ -154,6 +154,17 @@ export const useMapEditor = (
 		setPoints([]);
 	};
 
+	const setVisibility = (el: MapElement, visible: boolean) => {
+		if (!mapInstance.current) return;
+		if (!el.layer) return;
+		const isOnMap = mapInstance.current.hasLayer(el.layer);
+		if (visible && !isOnMap) {
+			el.layer.addTo(mapInstance.current);
+		} else if (!visible && isOnMap) {
+			el.layer.remove();
+		}
+	};
+
 	const completeDrawing = (finalPoints: L.LatLng[]) => {
 		if (!pendingRef.current || !mapInstance.current) return;
 
@@ -487,6 +498,7 @@ export const useMapEditor = (
 		selectedUnitId,
 		setSelectedUnitId,
 		startDrawing,
+		setVisibility,
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,

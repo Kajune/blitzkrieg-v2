@@ -6,6 +6,7 @@ import msgspec
 from shapely import get_coordinates, set_coordinates
 from shapely.ops import transform
 from shapely.geometry.base import BaseGeometry
+from shapely.geometry import Point
 import numpy as np
 import cv2
 import math
@@ -32,6 +33,13 @@ class UTMLocation(msgspec.Struct):
 	def move(self, angle : float, distance : float) -> "UTMLocation":
 		return UTMLocation(easting=self.easting + math.cos(angle) * distance, northing=self.northing + math.sin(angle) * distance)
 
+	def to_shapely(self) -> Point:
+		return Point(self.easting, self.northing)
+
+	@classmethod
+	def from_shapely(cls, point: Point) -> "UTMLocation":
+		return cls(easting=point.x, northing=point.y)
+
 
 T = TypeVar("T", GeoLocation, UTMLocation)
 
@@ -57,6 +65,12 @@ class BaseMesh(Generic[T]):
 	@property
 	def _deltas(self):
 		raise NotImplementedError
+
+
+	def clip_to_image_size(self, pt):
+		if isinstance(pt, List):
+			return [self.clip_to_image_size(p) for p in pt]
+		return np.stack([np.clip(pt[...,0], 0, self.data.shape[0] - 1), np.clip(pt[...,1], 0, self.data.shape[1] - 1)], axis=-1)
 
 
 	def resize(self, target_width: int, target_height: int) -> 'BaseMesh':
@@ -308,7 +322,7 @@ class SimSetting(msgspec.Struct):
 
 
 class UnitRecord(msgspec.Struct):
-	position: GeoLocation
+	trajectory: List[GeoLocation]
 	actions: List[UnitAction]
 
 
@@ -325,3 +339,10 @@ class SimResponse(msgspec.Struct):
 	startDateTime: int
 	endDateTime: int
 	unitRecords: Dict[str, UnitRecord]
+
+
+class Coefficients(msgspec.Struct):
+	mobility_cost: Dict[VehicleType, Dict[str, float]]
+	mobility_cost_scale: Dict[MoveSpeed, float]
+	move_speed_cap: Dict[MoveSpeed, float]
+	speed_scale_by_move_mode: Dict[MoveMode, float]

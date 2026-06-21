@@ -3,7 +3,7 @@ from pyproj import Transformer, CRS
 from shapely import get_coordinates, set_coordinates
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import shape, GeometryCollection
-from shapely.ops import transform
+from shapely.ops import transform, unary_union
 from models import *
 import numpy as np
 import rasterio
@@ -19,7 +19,7 @@ def to_shapely_geom(geojson_data: Dict[str, Any]) -> Union[GeometryCollection, s
 	if geojson_data.get("type") == "FeatureCollection":
 		# 各Featureのgeometryを取り出し、それぞれをshapely化してリストにまとめる
 		geoms = [shape(f["geometry"]) for f in geojson_data.get("features", []) if "geometry" in f]
-		return GeometryCollection(geoms)
+		return unary_union(GeometryCollection(geoms))
 	
 	elif geojson_data.get("type") == "Feature":
 		# Feature単体の場合はgeometryを取り出す
@@ -70,12 +70,11 @@ def compute_slope_mesh(alt_mesh: UTMMesh) -> UTMMesh:
 
 
 class GeoTransformer:
-	def __init__(self, ao, base_epsg=4326):
+	def __init__(self, ao_geom, base_epsg=4326):
 		self.base_epsg = base_epsg
 
-		if ao:
-			geom = to_shapely_geom(ao.geoJson)
-			center_lon, center_lat = geom.centroid.x, geom.centroid.y
+		if ao_geom:
+			center_lon, center_lat = ao_geom.centroid.x, ao_geom.centroid.y
 			self._zone = int((center_lon + 180) / 6) + 1
 			self._is_north = center_lat >= 0
 		else:

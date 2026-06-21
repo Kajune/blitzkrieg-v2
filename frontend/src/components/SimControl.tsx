@@ -131,7 +131,8 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 			Object.entries(unitRecords).forEach(([unitId, unitRecord]) => {
 				const marker = unitLayerMap.current.get(unitId);
 				if (marker) {
-					marker.setLatLng([unitRecord.position.lat, unitRecord.position.lon]);
+					const last_position = unitRecord.trajectory[unitRecord.trajectory.length - 1];
+					marker.setLatLng([last_position.lat, last_position.lon]);
 				}
 			});
 			return;
@@ -157,9 +158,9 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 				const startPos = startPositions.get(unitId);
 				
 				if (marker && startPos) {
-					const targetLat = startPos[0] + (unitRecord.position.lat - startPos[0]) * progress;
-					const targetLon = startPos[1] + (unitRecord.position.lon - startPos[1]) * progress;
-					marker.setLatLng([targetLat, targetLon]);
+					const currentIndex = Math.round((unitRecord.trajectory.length - 1) * progress);
+					const targetPos = unitRecord.trajectory[currentIndex];
+					marker.setLatLng([targetPos.lat, targetPos.lon]);
 				}
 			});
 
@@ -184,7 +185,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 
 					return {
 						...unit,
-						position: record.position,
+						position: record.trajectory[record.trajectory.length - 1],
 						actions: unit.actions.map(a => ({
 							...a,
 							finished: finishedIds.has(a.id) ? true : a.finished
@@ -194,7 +195,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 				} else {
 					return {
 						...unit,
-						position: record.position,
+						position: record.trajectory[record.trajectory.length - 1],
 						actions: record.actions,
 					};
 				}

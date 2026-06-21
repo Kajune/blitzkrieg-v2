@@ -1,0 +1,62 @@
+{
+	"mobility_cost":
+	{
+		"Foot":
+		{
+			"vegetation": 0.25,
+			"fortification": 0.0,
+			"water": 0.5,
+			"waterway": 0.5,
+			"building": 0.0,
+			"obstacle": 0.8
+		},
+		"GroundSoft":
+		{
+			"vegetation": 0.5,
+			"fortification": 0.5,
+			"water": 0.9,
+			"waterway": 0.9,
+			"building": 1.0,
+			"obstacle": 0.8
+		},
+		"GroundHardWheeled":
+		{
+			"vegetation": 0.25,
+			"fortification": 0.5,
+			"water": 0.9,
+			"waterway": 0.9,
+			"building": 1.0,
+			"obstacle": 0.8
+		},
+		"GroundHardTracked":
+		{
+			"vegetation": 0.1,
+			"fortification": 0.5,
+			"water": 0.9,
+			"waterway": 0.9,
+			"building": 0.8,
+			"obstacle": 0.6
+		},
+		"Aircraft":
+		{}
+	},
+	"mobility_cost_scale":
+	{
+		"LOW": 1,
+		"MEDIUM": 10,
+		"HIGH": 100
+	},
+	"move_speed_cap":
+	{
+		"LOW": 4,
+		"MEDIUM": 20,
+		"HIGH": 1E+10
+	},
+	"speed_scale_by_move_mode":
+	{
+		"MARCH": 1.0,
+		"COMBAT": 0.5,
+		"DEFENSE": 0.0,
+		"ARTILLERY": 0.1
+	}
+}

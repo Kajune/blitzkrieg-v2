@@ -43,6 +43,7 @@ function AppContent() {
 		selectedUnitId,
 		setSelectedUnitId,
 		startDrawing,
+		setVisibility,
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
@@ -203,6 +204,7 @@ function AppContent() {
 				onClose={() => setIsRegionEditorOpen(false)}
 				onStartDrawing={startDrawing}
 				drawingElement={pendingElement}
+				onVisibilityChange={setVisibility}
 			/>
 			<UnitPlacement 
 				isOpen={isUnitPlacementOpen} 
