@@ -6,7 +6,13 @@ import 'rc-slider/assets/index.css';
 
 type SimMode = 'playing' | 'recording' | null;
 
-export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
+export const SimControl = ({ 
+	showMenu,
+	updateDetectionPolygons,
+}: { 
+	showMenu: boolean,
+	updateDetectionPolygons: (unitId: string, detectedUnits: Record<string, number>) => void,
+}) => {
 	const {
 		simUuid,
 		simConfig,
@@ -133,6 +139,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 				if (marker) {
 					const last_position = unitRecord.trajectory[unitRecord.trajectory.length - 1];
 					marker.setLatLng([last_position.lat, last_position.lon]);
+					updateDetectionPolygons(unitId, unitRecord.detectedUnits);
 				}
 			});
 			return;
@@ -161,6 +168,7 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 					const currentIndex = Math.round((unitRecord.trajectory.length - 1) * progress);
 					const targetPos = unitRecord.trajectory[currentIndex];
 					marker.setLatLng([targetPos.lat, targetPos.lon]);
+					updateDetectionPolygons(unitId, unitRecord.detectedUnits);
 				}
 			});
 
@@ -210,7 +218,6 @@ export const SimControl = ({ showMenu }: { showMenu: boolean }) => {
 		);
 
 		if (record) {
-			console.log(record);
 			applyUnitStatus(record.unitRecords, animate, nextDelay);
 		}
 	};

@@ -47,6 +47,7 @@ function AppContent() {
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
+		updateDetectionPolygons,
 	} = useMapEditor(showLabels, isUnitPlacementOpen);
 
 	const exportData = () => {
@@ -217,6 +218,7 @@ function AppContent() {
 
 			<SimControl
 				showMenu={showMenu}
+				updateDetectionPolygons={updateDetectionPolygons}
 			/>
 		</div>
 	);

@@ -66,13 +66,13 @@ class Map:
 					tpos_utm_shapely = intersection
 				tpos = UTMLocation.from_shapely(tpos_utm_shapely)
 
-		mobility_map = self._compute_mobility_map(unit)
+		mobility_map = self._compute_mobility_map(unit, deplyment_distribution[unit.id])
 		speed = self._compute_speed(unit)
 
 		upos_px, tpos_px = mobility_map.to_image_coord([upos, tpos])
 		upos_px, tpos_px = mobility_map.clip_to_image_size([upos_px, tpos_px])
 
-		cost_map = mobility_map.data.astype(np.float32) * self.coeffs.mobility_cost_scale[action.moveSpeed] + 1
+		cost_map = mobility_map.data.astype(np.float32) * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
 		path_px = pyastar2d.astar_path(cost_map, 
 			(int(round(upos_px[0])), int(round(upos_px[1]))), 
 			(int(round(tpos_px[0])), int(round(tpos_px[1]))), 
@@ -88,7 +88,7 @@ class Map:
 		path = mobility_map.from_image_coord(path_px)
 		path[0] = upos
 		path[-1] = tpos
-		base_speed = speed * 1000 / 3600 * self.coeffs.speed_scale_by_move_mode[action.moveMode]
+		base_speed = speed * 1000 / 3600 * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
 
 		# 渋滞ペナルティ
 		overlap_ratio = 0
@@ -100,7 +100,7 @@ class Map:
 		base_speed *= np.exp(-overlap_ratio * lam_overlap)
 
 		# TODO: 火制されているときの機動速度低下もいつか入れる
-		speed_cap = self.coeffs.move_speed_cap[action.moveSpeed] * 1000 / 3600
+		speed_cap = self.coeffs.mobility.move_speed_cap[action.moveSpeed] * 1000 / 3600
 		actual_speed = np.clip(np.clip(1 - mobility_map.data, 0, 1) * base_speed, 0.5, speed_cap)
 
 		total_t = 0
@@ -296,18 +296,36 @@ class Map:
 		return mobility_map
 
 
-	def _compute_mobility_map(self, unit: PlacedUnit) -> UTMMesh:
+	def _compute_mobility_map(self, unit: PlacedUnit, deplyment_distribution: Dict) -> UTMMesh:
 		vehicle_types = self._get_unit_mobility_composition(unit)
 		
 		coeffs = {geom_type: [] for geom_type in self.map_geometries[unit.force]}
 		for v_type, num in vehicle_types.items():
-			mobility_cost = self.coeffs.mobility_cost.get(v_type, {})
+			mobility_cost = self.coeffs.mobility.cost.get(v_type, {})
 			for geom_type in self.map_geometries[unit.force]:
 				coeffs[geom_type] += [mobility_cost.get(geom_type, 0)] * num
 
 		coeffs = {k: np.mean(v) if v else 0 for k, v in coeffs.items()}
 
-		return self._compute_mobility_map_impl(frozenset(coeffs.items()), unit.force)
+		mobility_map = self._compute_mobility_map_impl(frozenset(coeffs.items()), unit.force)
+
+		"""
+		sigma_meters = np.mean(deplyment_distribution["sigma"])
+		res_x, res_y = mobility_map.resolution
+		avg_res = (res_x + res_y) / 2.0
+		sigma_pixels = sigma_meters / avg_res
+
+		if sigma_pixels > 0.1:
+			kernel_size = int(round(sigma_pixels * 3) * 2 + 1)
+			mobility_map.data = cv2.GaussianBlur(
+				mobility_map.data, 
+				(kernel_size, kernel_size), 
+				sigmaX=sigma_pixels, 
+				sigmaY=sigma_pixels
+			)
+		"""
+
+		return mobility_map
 
 
 	def _debug_plot_units_on_terrain(self, terrain: Union[GeoMesh, UTMMesh], filename: str, geometries, to_utm=False):

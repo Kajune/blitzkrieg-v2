@@ -20,6 +20,7 @@ type AppState = {
 	setSimRecord: React.Dispatch<React.SetStateAction<SimRecord[]>>;
 	unitLayerMap: MutableRefObject<Map<string, L.Marker>>;
 	actionLayerMap: MutableRefObject<Map<string, L.Polyline[]>>;
+	detectionLayerMap: MutableRefObject<Map<string, L.Polygon[]>>;
 };
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -43,6 +44,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 	const [simRecord, setSimRecord] = useState<SimRecord[]>([]);
 	const unitLayerMap = useRef<Map<string, L.Marker>>(new Map());
 	const actionLayerMap = useRef<Map<string, L.Polyline[]>>(new Map());
+	const detectionLayerMap = useRef<Map<string, L.Polygon[]>>(new Map());
 
 	return (
 		<AppContext.Provider value={{ 
@@ -52,7 +54,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 			simConfig, setSimConfig,
 			simUuid, setSimUuid,
 			simRecord, setSimRecord,
-			unitLayerMap, actionLayerMap,
+			unitLayerMap, actionLayerMap, detectionLayerMap,
 		 }}>
 			{children}
 		</AppContext.Provider>

@@ -42,7 +42,7 @@ export const useMapEditor = (
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
-	const { unitLayerMap, actionLayerMap } = useAppStore();
+	const { unitLayerMap, actionLayerMap, detectionLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
@@ -55,11 +55,75 @@ export const useMapEditor = (
 			unitLayerMap.current.delete(unitId);
 		}
 
+		const layers = detectionLayerMap.current.get(unitId);
+		if (layers) {
+			layers.forEach(layer => layer.remove());
+			detectionLayerMap.current.delete(unitId);
+		}
+
 		setPlacedUnits((prev) => prev.filter(u => u.id !== unitId));
 
 		if (selectedUnitId === unitId) {
 			setSelectedUnitId(null);
 		}
+	};
+
+	const updateDetectionPolygons = (unitId: string, detectedUnits: Record<string, number>) => {
+		const existingLayers = detectionLayerMap.current.get(unitId) || [];
+		existingLayers.forEach(layer => layer.remove());
+
+		const sourceMarker = unitLayerMap.current.get(unitId);
+		if (!sourceMarker) return;
+		const sourcePos = sourceMarker.getLatLng();
+
+		const newPolygons: L.Polygon[] = Object.entries(detectedUnits).map(([targetUnitId, detectionRate]) => {
+			const targetMarker = unitLayerMap.current.get(targetUnitId);
+			if (!targetMarker) return null;
+			const targetPos = targetMarker.getLatLng();
+
+			// ベクトル (lat: 緯度方向, lng: 経度方向)
+			const latDiff = targetPos.lat - sourcePos.lat;
+			const lngDiff = targetPos.lng - sourcePos.lng;
+			
+			// 距離に関係なく、現在の敵までの位置ベクトルを正規化して使うのが確実
+			const dist = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+			if (dist === 0) return null;
+
+			// 正規化ベクトル
+			const unitLat = latDiff / dist;
+			const unitLng = lngDiff / dist;
+
+			// 扇形の幅（ラジアン）
+			const halfWidth = 0.05;
+
+			// 扇形の頂点計算
+			// 回転行列を適用して幅を出す
+			const p1 = [
+				sourcePos.lat + dist * (unitLat * Math.cos(halfWidth) - unitLng * Math.sin(halfWidth)),
+				sourcePos.lng + dist * (unitLng * Math.cos(halfWidth) + unitLat * Math.sin(halfWidth))
+			] as [number, number];
+			
+			const p2 = [
+				sourcePos.lat + dist * (unitLat * Math.cos(-halfWidth) - unitLng * Math.sin(-halfWidth)),
+				sourcePos.lng + dist * (unitLng * Math.cos(-halfWidth) + unitLat * Math.sin(-halfWidth))
+			] as [number, number];
+
+			const opacity = Math.min(0.5, detectionRate * 0.5);
+
+			return L.polygon([
+				[sourcePos.lat, sourcePos.lng],
+				p1,
+				p2
+			], {
+				color: 'yellow',
+				fillColor: 'yellow',
+				fillOpacity: opacity,
+				weight: 0,
+				interactive: false
+			}).addTo(mapInstance.current!);
+		}).filter((p): p is L.Polygon => p !== null);
+
+		detectionLayerMap.current.set(unitId, newPolygons);
 	};
 
 	const createLayerFromElement = (el: MapElement, geoJsonData : GeoJsonObject): L.Layer => {
@@ -290,6 +354,10 @@ export const useMapEditor = (
 		});
 		
 		unitLayerMap.current.clear();
+		detectionLayerMap.current.forEach(layers => {
+			layers.forEach(layer => layer.remove());
+		});
+		detectionLayerMap.current.clear();
 	};
 
 	const focusAll = () => {
@@ -502,6 +570,7 @@ export const useMapEditor = (
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
+		updateDetectionPolygons,
 	};
 };
 

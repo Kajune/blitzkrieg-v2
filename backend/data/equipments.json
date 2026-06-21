@@ -29,6 +29,19 @@
 			}
 		}
 	],
+	"sensors":
+	[
+		{
+			"name": "装甲車用ペリスコープ(EO)",
+			"type": "OpticalVisual",
+			"sensor_range": 2000
+		},
+		{
+			"name": "装甲車用ペリスコープ(IR)",
+			"type": "OpticalThermal",
+			"sensor_range": 2000
+		}
+	],
 	"vehicles":
 	[
 		{
@@ -37,6 +50,11 @@
 			"max_speed": 50,
 			"weapons":
 			[],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
+			],
 			"required_personnel": 2,
 			"personnel_capacity": 10
 		},
@@ -46,6 +64,11 @@
 			"max_speed": 70,
 			"weapons":
 			[],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
+			],
 			"required_personnel": 2,
 			"personnel_capacity": 10
 		}

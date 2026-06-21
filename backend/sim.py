@@ -25,6 +25,7 @@ class Simulation:
 			print(e)
 
 		self.weapons = []
+		self.sensors = []
 		self.vehicles = []
 
 		try:
@@ -32,14 +33,26 @@ class Simulation:
 				equipments = json.load(f)
 				for weapon in equipments["weapons"]:
 					self.weapons.append(msgspec.convert(weapon, Weapon))
+				for sensor in equipments["sensors"]:
+					self.sensors.append(msgspec.convert(sensor, Sensor))
 				for vehicle in equipments["vehicles"]:
 					self.vehicles.append(msgspec.convert(vehicle, Vehicle))
 		except Exception as e:
 			print(e)
 
 		self.weapons = {w.name: w for w in self.weapons}
+		self.sensors = {s.name: s for s in self.sensors}
 		self.vehicles = {v.name: v for v in self.vehicles}
-		self.equipments = {**self.weapons, **self.vehicles}
+		for vehicle in self.vehicles.values():
+			vehicle.sensors = [
+				self.sensors.get(s) if isinstance(s, str) else s 
+				for s in vehicle.sensors
+			]
+			vehicle.weapons = [
+				self.weapons.get(w) if isinstance(w, str) else w 
+				for w in vehicle.weapons
+			]
+		self.equipments = {**self.weapons, **self.sensors, **self.vehicles}
 
 		# Unit
 		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
@@ -50,36 +63,36 @@ class Simulation:
 		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)
 
 
-	def compute_deployment_area(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, float]:
+	def compute_deployment_distribution(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, Dict]:
 		deployment_area = {}
 		for unit_id, record in updated_units.items():
-			current_mode = MoveMode.DEFENSE
-			unit = placed_units[unit_id]
+			last_action = get_last_action(record)
+			deployment_area[unit_id] = get_deployment_area(
+				placed_units[unit_id], 
+				last_action.moveMode, 
+				self.coeffs.unit_deployment
+			)
 
-			if record.actions:
-				for ai, action in enumerate(record.actions):
-					if action.finished:
-						continue
-					current_mode = action.moveMode
-					break
-
-			deployment_area[unit_id] = get_deployment_area(unit, current_mode, self.coeffs.unit_deployment)
-
-		return deployment_area
-
-
-	def maneuver_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
-		deplyment_distribution = {}
+		deployment_distribution = {}
 		n_sigma = 2
 		for unit_id, record in updated_units.items():
 			unit = placed_units[unit_id]
 			upos = self.map.geo_transformer.to_utm(unit.position)
 			sigma = np.sqrt(deployment_area[unit_id] / np.pi) / n_sigma
-			deplyment_distribution[unit_id] = {
+			deployment_distribution[unit_id] = {
+				"area": deployment_area[unit_id],
 				"mean": np.array([upos.easting, upos.northing]),
 				"sigma": np.array([sigma, sigma]),
 			}
 
+		return deployment_distribution
+
+
+	def maneuver_evaluation(self, 
+		placed_units : Dict[str, PlacedUnit], 
+		updated_units : Dict[str, UnitRecord], 
+		deployment_distribution : Dict[str, Dict]
+	) -> Dict[str, UnitRecord]:
 		for unit_id, record in updated_units.items():
 			if not record.actions:
 				continue
@@ -94,7 +107,7 @@ class Simulation:
 					continue
 
 				unit = placed_units[unit_id]
-				trajectories, finished = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deplyment_distribution)
+				trajectories, finished = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deployment_distribution)
 				record.trajectory += trajectories
 				record.actions[ai].finished = finished
 				break
@@ -102,11 +115,94 @@ class Simulation:
 		return updated_units
 
 
-	def intelligence_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
+	def intelligence_evaluation(self, 
+		placed_units : Dict[str, PlacedUnit], 
+		updated_units : Dict[str, UnitRecord], 
+		deployment_distribution : Dict[str, Dict]
+	) -> Dict[str, UnitRecord]:
+
+		# Step1: 発見部隊の装備品を集約し、発見部隊の特性・行動の係数を踏まえ、発見距離分布を作成
+		# Step2: 被発見部隊の装備品を集約し、被発見部隊の特性・行動の係数を踏まえ、被発見距離分布を作成
+
+		discovery_distribution = {}
+		exposure_distribution = {}
+
+		for unit_id, record in updated_units.items():
+			unit = placed_units[unit_id]
+			equipments = []
+
+			for eq_name, eq_num in get_current_equipments(unit).items():
+				equipments += [self.equipments[eq_name]] * eq_num
+
+			last_action = get_last_action(record)
+			sensors = filter_eqipments(equipments, Sensor)
+			vehicles = filter_eqipments(equipments, Vehicle)
+
+			discovery_ranges = []
+			for sensor in sensors:
+				distance_scales = np.array([
+					self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
+					for vehicle_type in VehicleType
+				])
+				discovery_ranges.append(distance_scales * sensor.sensor_range)
+
+			discovery_distribution[unit_id] = np.sqrt((np.array(discovery_ranges) ** 2)
+				* self.coeffs.intelligence.discovery_distance_scale_by_move_mode[last_action.moveMode]
+				* self.coeffs.intelligence.discovery_distance_scale_by_move_speed[last_action.moveSpeed])
+
+			# TODO: 発見部隊が火制中なら発見率にペナルティ
+
+			vehicle_types = []
+			for vehicle in vehicles:
+				vehicle_type_one_hot = [1 if vehicle.type == vt else 0 for vt in VehicleType]
+				vehicle_types.append(vehicle_type_one_hot)
+
+			exposure_distribution[unit_id] = (np.array(vehicle_types) \
+				* self.coeffs.intelligence.exposure_distance_scale_by_move_mode[last_action.moveMode]
+				* self.coeffs.intelligence.exposure_distance_scale_by_move_speed[last_action.moveSpeed])
+
+		# Step3: 部隊間距離を計算し、発見距離分布*被発見距離分布外なら計算から除外
+		unit_positions = [placed_units[unit_id].position for unit_id in updated_units]
+		unit_positions_utm = np.array([[p.easting, p.northing] for p in self.map.geo_transformer.to_utm(unit_positions)])
+		unit_distances = np.linalg.norm(unit_positions_utm[:,np.newaxis,:] - unit_positions_utm[np.newaxis,:,:], axis=-1)
+
+		for ui, unit_id1 in enumerate(updated_units):
+			unit1 = placed_units[unit_id1]
+			if len(discovery_distribution[unit_id1]) == 0:
+				continue
+
+			for uj, unit_id2 in enumerate(updated_units):
+				unit2 = placed_units[unit_id2]
+
+				if unit1.force == unit2.force:
+					continue
+
+				if len(exposure_distribution[unit_id2]) == 0:
+					continue
+
+				R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2].T
+				discovery_prob = (R_eff / unit_distances[ui,uj]) ** 2
+				discovery_prob = np.clip(discovery_prob, 0, 1)
+
+				# TODO: 前の時刻で発見済みならプラス
+
+				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
+				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
+
+				# Step4: 発見部隊、被発見部隊の通視状況を計算(未実装)
+
+				# Step5: 発見できたのか、できたとしたらその割合はいくらなのか記録
+				if np.random.rand() <= unit_discovery_prob:
+					updated_units[unit_id1].detectedUnits[unit_id2] = float(unit_awareness_ratio)
+
 		return updated_units
 
 
-	def combat_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
+	def combat_evaluation(self, 
+		placed_units : Dict[str, PlacedUnit], 
+		updated_units : Dict[str, UnitRecord], 
+		deployment_distribution : Dict[str, Dict]
+	) -> Dict[str, UnitRecord]:
 		return updated_units
 
 
@@ -117,7 +213,8 @@ class Simulation:
 		for unit in placed_units:
 			updated_units[unit.id] = UnitRecord(
 				trajectory=[unit.position],
-				actions=list(unit.actions)
+				actions=list(unit.actions),
+				detectedUnits={},
 			)
 
 		placed_units = {u.id: u for u in placed_units}
@@ -125,10 +222,10 @@ class Simulation:
 		num_loops = int(sim_request.delta_time / self._sim_setting.simConfig.tickInterval / 1000)
 
 		for _ in range(num_loops):
-			deployment_area = self.compute_deployment_area(placed_units, updated_units)
-			updated_units = self.maneuver_evaluation(placed_units, updated_units, deployment_area)
-			updated_units = self.intelligence_evaluation(placed_units, updated_units, deployment_area)
-			updated_units = self.combat_evaluation(placed_units, updated_units, deployment_area)
+			deploy_dist = self.compute_deployment_distribution(placed_units, updated_units)
+			updated_units = self.maneuver_evaluation(placed_units, updated_units, deploy_dist)
+			updated_units = self.intelligence_evaluation(placed_units, updated_units, deploy_dist)
+			updated_units = self.combat_evaluation(placed_units, updated_units, deploy_dist)
 
 		return SimResponse(
 			success=True,

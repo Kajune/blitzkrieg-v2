@@ -219,6 +219,14 @@ class UnitType(Enum):
 	ARTILLERY = 'artillery'
 
 
+class SensorType(Enum):
+	OPTICAL_VISUAL = 'OpticalVisual'
+	OPTICAL_THERMAL = 'OpticalThermal'
+	RADAR_GROUND = 'RadarGround'
+	RADAR_COUNTER_BATTERY = 'RadarCounterBattery'
+	RADAR_ANTI_AIR = 'RadarAntiAir'
+
+
 class VehicleType(Enum):
 	FOOT = 'Foot'
 	GROUND_SOFT = 'GroundSoft'
@@ -236,6 +244,11 @@ class Equipment(msgspec.Struct):
 	name: str
 
 
+class Sensor(Equipment):
+	sensor_range: float
+	type: SensorType
+
+
 class Weapon(Equipment):
 	fire_range: float
 	fire_type: FireType
@@ -245,7 +258,8 @@ class Weapon(Equipment):
 class Vehicle(Equipment):
 	type: VehicleType
 	max_speed: float
-	weapons: List[Weapon]
+	weapons: List[Weapon | str]
+	sensors: List[Sensor | str]
 	required_personnel: int
 	personnel_capacity: int
 
@@ -324,6 +338,7 @@ class SimSetting(msgspec.Struct):
 class UnitRecord(msgspec.Struct):
 	trajectory: List[GeoLocation]
 	actions: List[UnitAction]
+	detectedUnits: Dict[str, float]
 
 
 class SimRequest(msgspec.Struct):
@@ -347,9 +362,23 @@ class UnitDeploymentCoeff(msgspec.Struct):
 	scaling_table: Dict[UnitType, Dict[MoveMode, float]]
 
 
-class Coefficients(msgspec.Struct):
-	mobility_cost: Dict[VehicleType, Dict[str, float]]
-	mobility_cost_scale: Dict[MoveSpeed, float]
+class MobilityCoeff(msgspec.Struct):
+	cost: Dict[VehicleType, Dict[str, float]]
+	cost_scale: Dict[MoveSpeed, float]
 	move_speed_cap: Dict[MoveSpeed, float]
 	speed_scale_by_move_mode: Dict[MoveMode, float]
+
+
+class IntelligenceCoeff(msgspec.Struct):
+	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]
+	exposure_distance_scale_by_move_speed: Dict[MoveSpeed, float]
+	discovery_distance_scale_by_move_mode: Dict[MoveMode, float]
+	exposure_distance_scale_by_move_mode: Dict[MoveMode, float]
+	discovery_distance_scale_by_vehicle_type: Dict[SensorType, Dict[VehicleType, float]]
+
+
+class Coefficients(msgspec.Struct):
 	unit_deployment: UnitDeploymentCoeff
+	mobility: MobilityCoeff
+	intelligence: IntelligenceCoeff
+

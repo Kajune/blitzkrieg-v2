@@ -9,6 +9,7 @@ export interface SimConfig {
 export interface UnitRecord {
 	trajectory: GeoLocation[];
 	actions: UnitAction[];
+	detectedUnits: Record<string, number>;
 }
 
 export interface SimRecord {

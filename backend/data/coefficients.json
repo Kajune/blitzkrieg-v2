@@ -35,64 +35,139 @@
 			}
 		}
 	},
-	"mobility_cost":
+	"mobility":
 	{
-		"Foot":
+		"cost":
 		{
-			"vegetation": 0.25,
-			"fortification": 0.0,
-			"water": 0.5,
-			"waterway": 0.5,
-			"building": 0.0,
-			"obstacle": 0.8
+			"Foot":
+			{
+				"vegetation": 0.25,
+				"fortification": 0.0,
+				"water": 0.5,
+				"waterway": 0.5,
+				"building": 0.0,
+				"obstacle": 0.8
+			},
+			"GroundSoft":
+			{
+				"vegetation": 0.5,
+				"fortification": 0.5,
+				"water": 0.9,
+				"waterway": 0.9,
+				"building": 1.0,
+				"obstacle": 0.8
+			},
+			"GroundHardWheeled":
+			{
+				"vegetation": 0.25,
+				"fortification": 0.5,
+				"water": 0.9,
+				"waterway": 0.9,
+				"building": 1.0,
+				"obstacle": 0.8
+			},
+			"GroundHardTracked":
+			{
+				"vegetation": 0.1,
+				"fortification": 0.5,
+				"water": 0.9,
+				"waterway": 0.9,
+				"building": 0.8,
+				"obstacle": 0.6
+			},
+			"Aircraft":
+			{}
 		},
-		"GroundSoft":
+		"cost_scale":
 		{
-			"vegetation": 0.5,
-			"fortification": 0.5,
-			"water": 0.9,
-			"waterway": 0.9,
-			"building": 1.0,
-			"obstacle": 0.8
+			"LOW": 1,
+			"MEDIUM": 10,
+			"HIGH": 100
 		},
-		"GroundHardWheeled":
+		"move_speed_cap":
 		{
-			"vegetation": 0.25,
-			"fortification": 0.5,
-			"water": 0.9,
-			"waterway": 0.9,
-			"building": 1.0,
-			"obstacle": 0.8
+			"LOW": 4,
+			"MEDIUM": 20,
+			"HIGH": 1E+10
 		},
-		"GroundHardTracked":
+		"speed_scale_by_move_mode":
 		{
-			"vegetation": 0.1,
-			"fortification": 0.5,
-			"water": 0.9,
-			"waterway": 0.9,
-			"building": 0.8,
-			"obstacle": 0.6
-		},
-		"Aircraft":
-		{}
+			"MARCH": 1.0,
+			"COMBAT": 0.5,
+			"DEFENSE": 0.0,
+			"ARTILLERY": 0.1
+		}
 	},
-	"mobility_cost_scale":
+	"intelligence":
 	{
-		"LOW": 1,
-		"MEDIUM": 10,
-		"HIGH": 100
-	},
-	"move_speed_cap":
-	{
-		"LOW": 4,
-		"MEDIUM": 20,
-		"HIGH": 1E+10
-	},
-	"speed_scale_by_move_mode":
-	{
-		"MARCH": 1.0,
-		"COMBAT": 0.5,
-		"DEFENSE": 0.0,
-		"ARTILLERY": 0.1
+		"discovery_distance_scale_by_move_speed":
+		{
+			"LOW": 1.0,
+			"MEDIUM": 0.8,
+			"HIGH": 0.6
+		},
+		"exposure_distance_scale_by_move_speed":
+		{
+			"LOW": 0.6,
+			"MEDIUM": 0.8,
+			"HIGH": 1.0
+		},
+		"discovery_distance_scale_by_move_mode":
+		{
+			"MARCH": 0.5,
+			"COMBAT": 0.8,
+			"DEFENSE": 1.0,
+			"ARTILLERY": 0.5
+		},
+		"exposure_distance_scale_by_move_mode":
+		{
+			"MARCH": 1.0,
+			"COMBAT": 0.8,
+			"DEFENSE": 0.5,
+			"ARTILLERY": 0.5
+		},
+		"discovery_distance_scale_by_vehicle_type":
+		{
+			"OpticalVisual":
+			{
+				"Foot": 0.1,
+				"GroundSoft": 0.5,
+				"GroundHardWheeled": 0.8,
+				"GroundHardTracked": 1.0,
+				"Aircraft": 0.25
+			},
+			"OpticalThermal":
+			{
+				"Foot": 0.25,
+				"GroundSoft": 0.5,
+				"GroundHardWheeled": 0.8,
+				"GroundHardTracked": 1.0,
+				"Aircraft": 0.5
+			},
+			"RadarGround":
+			{
+				"Foot": 0.0,
+				"GroundSoft": 0.1,
+				"GroundHardWheeled": 0.8,
+				"GroundHardTracked": 0.8,
+				"Aircraft": 0.0
+			},
+			"RadarCounterBattery":
+			{
+				"Foot": 0.0,
+				"GroundSoft": 0.0,
+				"GroundHardWheeled": 0.0,
+				"GroundHardTracked": 0.0,
+				"Aircraft": 0.0
+			},
+			"RadarAntiAir":
+			{
+				"Foot": 0.0,
+				"GroundSoft": 0.0,
+				"GroundHardWheeled": 0.0,
+				"GroundHardTracked": 0.0,
+				"Aircraft": 1.0
+			}
+		}
 	}
 }
