@@ -1,4 +1,40 @@
 {
+	"unit_deployment":
+	{
+		"base_area": 100,
+		"scale_factor": 1.3,
+		"scaling_table":
+		{
+			"combined":
+			{
+				"MARCH": 0.5,
+				"COMBAT": 1.5,
+				"DEFENSE": 0.0,
+				"ARTILLERY": 2.0
+			},
+			"infantry":
+			{
+				"MARCH": 0.3,
+				"COMBAT": 0.8,
+				"DEFENSE": 0.7,
+				"ARTILLERY": 1.0
+			},
+			"tank":
+			{
+				"MARCH": 0.8,
+				"COMBAT": 2.0,
+				"DEFENSE": 1.2,
+				"ARTILLERY": 1.5
+			},
+			"artillery":
+			{
+				"MARCH": 1.0,
+				"COMBAT": 1.5,
+				"DEFENSE": 1.5,
+				"ARTILLERY": 3.0
+			}
+		}
+	},
 	"mobility_cost":
 	{
 		"Foot":

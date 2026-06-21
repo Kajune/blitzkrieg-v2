@@ -1,5 +1,6 @@
 from typing import Dict, List, Tuple, Optional, Any
 from models import *
+from scipy.stats import multivariate_normal
 
 
 def remove_duplicated_units(units: List[Unit], existing_unit_ids: List[str] = None) -> List[Unit]:
@@ -43,3 +44,32 @@ def get_current_personnel(unit: Unit) -> int:
 
 def get_current_equipments(unit: Unit) -> Dict[str, int]:
 	return aggregate_objects(unit, lambda unit: unit.current_equipments)
+
+
+def get_deployment_area(unit: Unit, move_mode: MoveMode, coeff: UnitDeploymentCoeff) -> float:
+	return aggregate_objects(unit, 
+		lambda unit: {
+			"area": (unit.current_personnel ** coeff.scale_factor) * coeff.scaling_table[unit.type][move_mode] * coeff.base_area
+		}
+	)["area"]
+
+
+def calculate_distribution_overlap(dist1: Dict, dist2: Dict) -> float:
+	mu1, mu2 = dist1["mean"], dist2["mean"]
+	s1, s2 = dist1["sigma"], dist2["sigma"]
+	
+	v1 = s1**2
+	v2 = s2**2
+	
+	v_avg = (v1 + v2) / 2
+	
+	diff = mu1 - mu2
+	dist_sq = np.sum((diff**2) / v_avg)
+	
+	log_det_avg = np.sum(np.log(v_avg))
+	log_det1 = np.sum(np.log(v1))
+	log_det2 = np.sum(np.log(v2))
+	
+	log_coeff = 0.5 * (log_det_avg - 0.5 * (log_det1 + log_det2))
+	
+	return np.exp(log_coeff - 0.125 * dist_sq)

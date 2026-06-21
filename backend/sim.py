@@ -50,7 +50,36 @@ class Simulation:
 		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)
 
 
-	def maneuver_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def compute_deployment_area(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, float]:
+		deployment_area = {}
+		for unit_id, record in updated_units.items():
+			current_mode = MoveMode.DEFENSE
+			unit = placed_units[unit_id]
+
+			if record.actions:
+				for ai, action in enumerate(record.actions):
+					if action.finished:
+						continue
+					current_mode = action.moveMode
+					break
+
+			deployment_area[unit_id] = get_deployment_area(unit, current_mode, self.coeffs.unit_deployment)
+
+		return deployment_area
+
+
+	def maneuver_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
+		deplyment_distribution = {}
+		n_sigma = 2
+		for unit_id, record in updated_units.items():
+			unit = placed_units[unit_id]
+			upos = self.map.geo_transformer.to_utm(unit.position)
+			sigma = np.sqrt(deployment_area[unit_id] / np.pi) / n_sigma
+			deplyment_distribution[unit_id] = {
+				"mean": np.array([upos.easting, upos.northing]),
+				"sigma": np.array([sigma, sigma]),
+			}
+
 		for unit_id, record in updated_units.items():
 			if not record.actions:
 				continue
@@ -65,7 +94,7 @@ class Simulation:
 					continue
 
 				unit = placed_units[unit_id]
-				trajectories, finished = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos)
+				trajectories, finished = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deplyment_distribution)
 				record.trajectory += trajectories
 				record.actions[ai].finished = finished
 				break
@@ -73,11 +102,11 @@ class Simulation:
 		return updated_units
 
 
-	def intelligence_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def intelligence_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
 		return updated_units
 
 
-	def combat_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, UnitRecord]:
+	def combat_evaluation(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord], deployment_area : Dict[str, float]) -> Dict[str, UnitRecord]:
 		return updated_units
 
 
@@ -96,9 +125,10 @@ class Simulation:
 		num_loops = int(sim_request.delta_time / self._sim_setting.simConfig.tickInterval / 1000)
 
 		for _ in range(num_loops):
-			updated_units = self.maneuver_evaluation(placed_units, updated_units)
-			updated_units = self.intelligence_evaluation(placed_units, updated_units)
-			updated_units = self.combat_evaluation(placed_units, updated_units)
+			deployment_area = self.compute_deployment_area(placed_units, updated_units)
+			updated_units = self.maneuver_evaluation(placed_units, updated_units, deployment_area)
+			updated_units = self.intelligence_evaluation(placed_units, updated_units, deployment_area)
+			updated_units = self.combat_evaluation(placed_units, updated_units, deployment_area)
 
 		return SimResponse(
 			success=True,

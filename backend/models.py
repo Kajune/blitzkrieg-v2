@@ -341,8 +341,15 @@ class SimResponse(msgspec.Struct):
 	unitRecords: Dict[str, UnitRecord]
 
 
+class UnitDeploymentCoeff(msgspec.Struct):
+	base_area: float
+	scale_factor: float
+	scaling_table: Dict[UnitType, Dict[MoveMode, float]]
+
+
 class Coefficients(msgspec.Struct):
 	mobility_cost: Dict[VehicleType, Dict[str, float]]
 	mobility_cost_scale: Dict[MoveSpeed, float]
 	move_speed_cap: Dict[MoveSpeed, float]
 	speed_scale_by_move_mode: Dict[MoveMode, float]
+	unit_deployment: UnitDeploymentCoeff

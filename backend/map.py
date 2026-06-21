@@ -6,6 +6,7 @@ from models import *
 from geometry import *
 from gis import *
 from utils import *
+from functools import lru_cache
 import pyastar2d
 import cv2, time, copy
 
@@ -42,10 +43,17 @@ class Map:
 		self.slope_mesh = compute_slope_mesh(self.alt_mesh)
 
 
-	def compute_maneuver(self, unit: PlacedUnit, action: UnitAction, upos: GeoLocation, tpos: GeoLocation) -> Tuple[List[UTMLocation], bool]:
+	def compute_maneuver(self, 
+		unit: PlacedUnit, 
+		action: UnitAction, 
+		upos: GeoLocation, 
+		tpos: GeoLocation, 
+		deplyment_distribution: Dict[str, Dict],
+	) -> Tuple[List[UTMLocation], bool]:
 		upos = self.geo_transformer.to_utm(upos)
 		tpos = self.geo_transformer.to_utm(tpos)
 
+		# tposがAOをはみ出しているときは、はみ出さないぎりぎりの場所でクリップ
 		ao_geom = self.map_geometries[unit.force]["ao"]["geom"]
 		if not ao_geom.contains(tpos.to_shapely()):
 			line = LineString([upos.to_shapely(), tpos.to_shapely()])
@@ -81,7 +89,16 @@ class Map:
 		path[0] = upos
 		path[-1] = tpos
 		base_speed = speed * 1000 / 3600 * self.coeffs.speed_scale_by_move_mode[action.moveMode]
-		# TODO: 渋滞ペナルティを入れる
+
+		# 渋滞ペナルティ
+		overlap_ratio = 0
+		lam_overlap = 1.0
+		for unit_id, dist in deplyment_distribution.items():
+			if unit_id == unit.id:
+				continue
+			overlap_ratio += calculate_distribution_overlap(deplyment_distribution[unit.id], dist)
+		base_speed *= np.exp(-overlap_ratio * lam_overlap)
+
 		# TODO: 火制されているときの機動速度低下もいつか入れる
 		speed_cap = self.coeffs.move_speed_cap[action.moveSpeed] * 1000 / 3600
 		actual_speed = np.clip(np.clip(1 - mobility_map.data, 0, 1) * base_speed, 0.5, speed_cap)
@@ -246,7 +263,40 @@ class Map:
 		return np.mean(speeds) if speeds else foot_speed
 
 
-	def _compute_mobility_map(self, unit: PlacedUnit, climb_power: float = 30.0) -> UTMMesh:
+	@lru_cache(maxsize=None)
+	def _compute_mobility_map_impl(self, coeffs : Dict, force : Force, climb_power: float = 30.0) -> UTMMesh:
+		coeffs = dict(coeffs)
+
+		# 基本は斜度
+		mobility_map = copy.deepcopy(self.slope_mesh)
+		mobility_map.data /= climb_power
+
+		# vegetation, fortificationは加算
+		for k in ["vegetation", "fortification"]:
+			mobility_map.data += self.map_geometries[force][k]["mesh"].data * coeffs[k]
+
+		# water, waterway, buildingは大きい方で上書き
+		for k in ["water", "waterway", "building"]:
+			mobility_map.data = np.maximum(mobility_map.data, self.map_geometries[force][k]["mesh"].data * coeffs[k])
+
+		# roadは小さい方で上書き
+		for k in ["road"]:
+			mobility_map.data = np.minimum(mobility_map.data, (1 - self.map_geometries[force][k]["mesh"].data))
+
+		# obstacleは加算
+		for k in ["obstacle"]:
+			for f in Force:
+				if f == force:
+					continue
+				mobility_map.data += self.map_geometries[f][k]["mesh"].data * coeffs[k]
+
+		# aoは絶対
+		mobility_map.data[self.map_geometries[force]["ao"]["mesh"].data == 0] = 1
+
+		return mobility_map
+
+
+	def _compute_mobility_map(self, unit: PlacedUnit) -> UTMMesh:
 		vehicle_types = self._get_unit_mobility_composition(unit)
 		
 		coeffs = {geom_type: [] for geom_type in self.map_geometries[unit.force]}
@@ -257,33 +307,7 @@ class Map:
 
 		coeffs = {k: np.mean(v) if v else 0 for k, v in coeffs.items()}
 
-		# 基本は斜度
-		mobility_map = copy.deepcopy(self.slope_mesh)
-		mobility_map.data /= climb_power
-
-		# vegetation, fortificationは加算
-		for k in ["vegetation", "fortification"]:
-			mobility_map.data += self.map_geometries[unit.force][k]["mesh"].data * coeffs[k]
-
-		# water, waterway, buildingは大きい方で上書き
-		for k in ["water", "waterway", "building"]:
-			mobility_map.data = np.maximum(mobility_map.data, self.map_geometries[unit.force][k]["mesh"].data * coeffs[k])
-
-		# roadは小さい方で上書き
-		for k in ["road"]:
-			mobility_map.data = np.minimum(mobility_map.data, (1 - self.map_geometries[unit.force][k]["mesh"].data))
-
-		# obstacleは加算
-		for k in ["obstacle"]:
-			for f in Force:
-				if f == unit.force:
-					continue
-				mobility_map.data += self.map_geometries[f][k]["mesh"].data * coeffs[k]
-
-		# aoは絶対
-		mobility_map.data[self.map_geometries[unit.force]["ao"]["mesh"].data == 0] = 1
-
-		return mobility_map
+		return self._compute_mobility_map_impl(frozenset(coeffs.items()), unit.force)
 
 
 	def _debug_plot_units_on_terrain(self, terrain: Union[GeoMesh, UTMMesh], filename: str, geometries, to_utm=False):
