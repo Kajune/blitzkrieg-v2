@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
 import type { UnitRecord } from '../types/simTypes';
+import type { Force, DisplayForce } from '../types/unitTypes';
+import { FORCES, DISPLAY_FORCES } from '../types/unitTypes';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
@@ -21,6 +23,9 @@ export const SimControl = ({
 		simRecord, 
 		setSimRecord,
 		unitLayerMap,
+		setSimDatalink,
+		displayForce,
+		setDisplayForce,
 	} = useAppStore();
 
 	const [mode, setMode] = useState<SimMode>(null);
@@ -89,6 +94,11 @@ export const SimControl = ({
 
 			const prevTime = currentTimeRef.current;
 			const nextTime = prevTime + simConfig.tickInterval * 1000;
+			const resetDatalink = FORCES.reduce((acc, force) => {
+				acc[force] = [];
+				return acc;
+			}, {} as Record<Force, string[]>);
+			setSimDatalink(resetDatalink);
 
 			if (nextTime >= endTime) {
 				setMode(null);
@@ -127,6 +137,23 @@ export const SimControl = ({
 		animate: boolean = false,
 		nextDelay: number
 	) => {
+		const newDatalink = FORCES.reduce((acc, force) => {
+			acc[force] = [];
+			return acc;
+		}, {} as Record<Force, string[]>);
+
+		Object.entries(unitRecords).forEach(([unitId, record]) => {
+			const unit = placedUnitsRef.current.find(u => u.id === unitId);
+			if (unit) {
+				Object.keys(record.detectedUnits).forEach(targetId => {
+					if (!newDatalink[unit.force].includes(targetId)) {
+						newDatalink[unit.force].push(targetId);
+					}
+				});
+			}
+		});
+		setSimDatalink(newDatalink);
+
 		updatePlacedUnits(unitRecords);
 
 		if (animationRef.current !== null) {
@@ -253,7 +280,7 @@ export const SimControl = ({
 			style={{ 
 				bottom: 0, 
 				left: 0, 
-				width: '600px', 
+				width: '720px', 
 				zIndex: 1000,
 				fontSize: '0.8rem',
 				borderTopRightRadius: '8px'
@@ -324,6 +351,19 @@ export const SimControl = ({
 					<option value="16">x16</option>
 					<option value="32">x32</option>
 					<option value="64">x64</option>
+				</select>
+
+				<select 
+					className="form-select form-select-sm" 
+					style={{ width: '120px' }}
+					value={displayForce}
+					onChange={(e) => setDisplayForce(e.target.value as DisplayForce)}
+				>
+					{DISPLAY_FORCES.map((force) => (
+						<option key={force} value={force}>
+							{force}
+						</option>
+					))}
 				</select>
 			</div>
 		</div>

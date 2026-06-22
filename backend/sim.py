@@ -126,6 +126,7 @@ class Simulation:
 
 		discovery_distribution = {}
 		exposure_distribution = {}
+		sensors_dict = {}
 
 		for unit_id, record in updated_units.items():
 			unit = placed_units[unit_id]
@@ -137,6 +138,7 @@ class Simulation:
 			last_action = get_last_action(record)
 			sensors = filter_eqipments(equipments, Sensor)
 			vehicles = filter_eqipments(equipments, Vehicle)
+			sensors_dict[unit_id] = sensors
 
 			discovery_ranges = []
 			for sensor in sensors:
@@ -171,8 +173,12 @@ class Simulation:
 			if len(discovery_distribution[unit_id1]) == 0:
 				continue
 
+			sensors = sensors_dict[unit_id1]
+			last_action1 = get_last_action(updated_units[unit_id1])
+
 			for uj, unit_id2 in enumerate(updated_units):
 				unit2 = placed_units[unit_id2]
+				last_action2 = get_last_action(updated_units[unit_id2])
 
 				if unit1.force == unit2.force:
 					continue
@@ -181,15 +187,22 @@ class Simulation:
 					continue
 
 				R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2].T
+
+				# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつfire == trueならば、R_effは諸元上の最大距離となる)
+				if last_action1.moveMode in [MoveMode.DEFENSE, MoveMode.ARTILLERY] and last_action2.moveMode == MoveMode.ARTILLERY and last_action2.fire:
+					for si, sensor in enumerate(sensors):
+						if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
+							R_eff[unit_id1][si] = sensor.sensor_range
+
 				discovery_prob = (R_eff / unit_distances[ui,uj]) ** 2
 				discovery_prob = np.clip(discovery_prob, 0, 1)
+
+				# TODO: LOS考慮
 
 				# TODO: 前の時刻で発見済みならプラス
 
 				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
 				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
-
-				# Step4: 発見部隊、被発見部隊の通視状況を計算(未実装)
 
 				# Step5: 発見できたのか、できたとしたらその割合はいくらなのか記録
 				if np.random.rand() <= unit_discovery_prob:

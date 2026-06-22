@@ -5,6 +5,8 @@ export interface GeoLocation {
 
 export const FORCES = ['REDFOR', 'BLUFOR'] as const;
 export type Force = typeof FORCES[number];
+export const DISPLAY_FORCES = ['GOD', ...FORCES] as const;
+export type DisplayForce = typeof DISPLAY_FORCES[number];
 
 export type ForceStyle = {
 	color: string;

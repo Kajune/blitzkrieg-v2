@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useRef } from 'react';
 import type { MutableRefObject } from 'react';
-import type { Unit, PlacedUnit } from '../types/unitTypes';
+import type { Unit, PlacedUnit, Force, DisplayForce } from '../types/unitTypes';
 import type { MapElement } from '../types/mapElement';
 import type { SimConfig, SimRecord } from '../types/simTypes';
+import { FORCES } from '../types/unitTypes';
 import type L from 'leaflet';
 
 type AppState = {
@@ -18,6 +19,10 @@ type AppState = {
 	setSimUuid: React.Dispatch<React.SetStateAction<string | null>>;
 	simRecord: SimRecord[];
 	setSimRecord: React.Dispatch<React.SetStateAction<SimRecord[]>>;
+	simDatalink: Record<Force, string[]>;
+	setSimDatalink: React.Dispatch<React.SetStateAction<Record<Force, string[]>>>;
+	displayForce: DisplayForce;
+	setDisplayForce: React.Dispatch<React.SetStateAction<DisplayForce>>;
 	unitLayerMap: MutableRefObject<Map<string, L.Marker>>;
 	actionLayerMap: MutableRefObject<Map<string, L.Polyline[]>>;
 	detectionLayerMap: MutableRefObject<Map<string, L.Polygon[]>>;
@@ -42,6 +47,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 	const [simConfig, setSimConfig] = useState<SimConfig>(getInitialSimConfig);
 	const [simUuid, setSimUuid] = useState<string | null>(null);
 	const [simRecord, setSimRecord] = useState<SimRecord[]>([]);
+
+	const initialDatalink = FORCES.reduce((acc, force) => {
+		acc[force] = [];
+		return acc;
+	}, {} as Record<Force, string[]>);
+	const [simDatalink, setSimDatalink] = useState<Record<Force, string[]>>(initialDatalink);
+
+	const [displayForce, setDisplayForce] = useState<DisplayForce>('GOD');
 	const unitLayerMap = useRef<Map<string, L.Marker>>(new Map());
 	const actionLayerMap = useRef<Map<string, L.Polyline[]>>(new Map());
 	const detectionLayerMap = useRef<Map<string, L.Polygon[]>>(new Map());
@@ -54,6 +67,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 			simConfig, setSimConfig,
 			simUuid, setSimUuid,
 			simRecord, setSimRecord,
+			simDatalink, setSimDatalink,
+			displayForce, setDisplayForce,
 			unitLayerMap, actionLayerMap, detectionLayerMap,
 		 }}>
 			{children}

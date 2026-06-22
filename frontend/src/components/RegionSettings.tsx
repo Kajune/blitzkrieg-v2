@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CommonModalProps } from './CommonModal';
 import { CommonModal, InputModal } from './CommonModal';
 import { useAppStore } from '../contexts/AppContext';
@@ -31,8 +31,20 @@ export const RegionSettings = ({
 	drawingElement: MapElement | null;
 	onVisibilityChange: (el: MapElement, visible: boolean) => void;
 }) => {
-	const { mapElements, setMapElements } = useAppStore();
-	const [activeTab, setActiveTab] = useState<Force>(FORCES[0]);
+	const { mapElements, setMapElements, displayForce } = useAppStore();
+	const initialTab = displayForce === 'GOD' ? FORCES[0] : displayForce;
+	const [activeTab, setActiveTab] = useState<Force>(initialTab);
+
+	useEffect(() => {
+		if (displayForce !== 'GOD') {
+			setActiveTab(displayForce);
+		} else {
+			setActiveTab(prev => prev || FORCES[0]);
+		}
+	}, [displayForce]);
+
+	const availableForces = displayForce === 'GOD' ? FORCES : [displayForce];
+
 	const [visible, setVisible] = useState<Record<Force, boolean>>(() => {
 		const initialVisible = {} as Record<Force, boolean>;
 		FORCES.forEach((f) => { initialVisible[f] = true; });
@@ -128,15 +140,18 @@ export const RegionSettings = ({
 			</div>
 
 			<div className="nav nav-tabs">
-				{Object.entries(FORCE_STYLES).map(([force, style]) => (
-					<button 
-						key={force}
-						className={`nav-link ${activeTab === force ? 'active' : 'text-secondary'} ${activeTab === force ? 'text-' + style.class : ''}`} 
-						onClick={() => setActiveTab(force as Force)}
-					>
-						{force}
-					</button>
-				))}
+				{availableForces.map((force) => {
+					const style = FORCE_STYLES[force];
+					return (
+						<button 
+							key={force}
+							className={`nav-link ${activeTab === force ? 'active' : 'text-secondary'} ${activeTab === force ? 'text-' + style.class : ''}`} 
+							onClick={() => setActiveTab(force)}
+						>
+							{force}
+						</button>
+					);
+				})}
 			</div>
 
 			<div className="offcanvas-body p-2" style={{ fontSize: '0.85rem' }}>

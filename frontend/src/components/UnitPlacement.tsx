@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Force, Unit } from '../types/unitTypes';
 import { FORCES, FORCE_STYLES } from '../types/unitTypes';
 import { UnitTree } from './UnitTree';
@@ -13,8 +13,19 @@ export const UnitPlacement = ({
 	isOpen: boolean; 
 	onClose: () => void;
 }) => {
-	const { units, placedUnits } = useAppStore();
-	const [activeTab, setActiveTab] = useState<Force>(FORCES[0]);
+	const { units, placedUnits, displayForce } = useAppStore();
+	const initialTab = displayForce === 'GOD' ? FORCES[0] : displayForce;
+	const [activeTab, setActiveTab] = useState<Force>(initialTab);
+
+	useEffect(() => {
+		if (displayForce !== 'GOD') {
+			setActiveTab(displayForce);
+		} else {
+			setActiveTab(prev => prev || FORCES[0]);
+		}
+	}, [displayForce]);
+
+	const availableForces = displayForce === 'GOD' ? FORCES : [displayForce];
 	const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
 	const handleDragStart = (e: React.DragEvent, unit: Unit) => {
@@ -41,15 +52,18 @@ export const UnitPlacement = ({
 			</div>
 
 			<div className="nav nav-tabs">
-				{Object.entries(FORCE_STYLES).map(([force, style]) => (
-					<button 
-						key={force}
-						className={`nav-link ${activeTab === force ? 'active' : 'text-secondary'} ${activeTab === force ? 'text-' + style.class : ''}`} 
-						onClick={() => setActiveTab(force as Force)}
-					>
-						{force}
-					</button>
-				))}
+				{availableForces.map((force) => {
+					const style = FORCE_STYLES[force];
+					return (
+						<button 
+							key={force}
+							className={`nav-link ${activeTab === force ? 'active' : 'text-secondary'} ${activeTab === force ? 'text-' + style.class : ''}`} 
+							onClick={() => setActiveTab(force)}
+						>
+							{force}
+						</button>
+					);
+				})}
 			</div>
 
 			<div className="offcanvas-body p-2" style={{ fontSize: '0.85rem' }}>

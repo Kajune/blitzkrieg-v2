@@ -10,7 +10,7 @@ import type { GeoJsonObject } from 'geojson';
 import { useAppStore } from '../contexts/AppContext';
 import type { MapElement } from '../types/mapElement'
 import { getMapElementColor } from '../types/mapElement'
-import type { Unit, PlacedUnit } from '../types/unitTypes';
+import type { Unit, PlacedUnit, Force } from '../types/unitTypes';
 import { getTotalPersonnel, getSymbolSize } from '../types/unitTypes';
 import '../App.module.css';
 
@@ -23,13 +23,15 @@ L.Marker.prototype.options.icon = L.icon({
 
 export const useMapEditor = (
 	showLabels: boolean,
-	isUnitPlacementOpen: boolean
+	showDetectionPolygons: boolean,
+	isUnitPlacementOpen: boolean,
 ) => {
 	const mapInstance = useRef<L.Map | null>(null);
 	const mapRef = useRef<HTMLDivElement | null>(null);
 	const { 
 		mapElements, setMapElements, 
 		placedUnits, setPlacedUnits,
+		simDatalink, displayForce,
 	} = useAppStore();
 	const [pendingElement, setPendingElement] = useState<MapElement | null>(null);
 	const [points, setPoints] = useState<L.LatLng[]>([]);
@@ -42,6 +44,7 @@ export const useMapEditor = (
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
+	const showDetectionPolygonsRef = useRef(showDetectionPolygons);
 	const { unitLayerMap, actionLayerMap, detectionLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
@@ -72,9 +75,23 @@ export const useMapEditor = (
 		const existingLayers = detectionLayerMap.current.get(unitId) || [];
 		existingLayers.forEach(layer => layer.remove());
 
+		if (!showDetectionPolygonsRef.current) {
+			return;
+		}
+
 		const sourceMarker = unitLayerMap.current.get(unitId);
 		if (!sourceMarker) return;
 		const sourcePos = sourceMarker.getLatLng();
+
+		const sourceUnit = placedUnits.find(u => u.id === unitId);
+		if (!sourceUnit) return;
+
+		const isUnitVisible = displayForce === 'GOD' || sourceUnit.force === displayForce;
+
+		if (!isUnitVisible) {
+			detectionLayerMap.current.set(unitId, []);
+			return;
+		}
 
 		const newPolygons: L.Polygon[] = Object.entries(detectedUnits).map(([targetUnitId, detectionRate]) => {
 			const targetMarker = unitLayerMap.current.get(targetUnitId);
@@ -197,7 +214,8 @@ export const useMapEditor = (
 		pendingRef.current = pendingElement;
 		pointsRef.current = points;
 		showLabelsRef.current = showLabels;
-	}, [pendingElement, points, showLabels]);
+		showDetectionPolygonsRef.current = showDetectionPolygons;
+	}, [pendingElement, points, showLabels, showDetectionPolygons]);
 
 	useEffect(() => {
 		if (!mapInstance.current) return;
@@ -268,7 +286,7 @@ export const useMapEditor = (
 				className: 'my-custom-tooltip'
 			});
 			
-			if (!showLabels) {
+			if (!showLabelsRef.current) {
 				layer.closeTooltip();
 			}
 			
@@ -545,6 +563,59 @@ export const useMapEditor = (
 	}, [placedUnits]);
 
 	useEffect(() => {
+		const map = mapInstance.current;
+		if (!map) return;
+
+		placedUnits.forEach((unit) => {
+			const unitMarker = unitLayerMap.current.get(unit.id);
+			const actionLines = actionLayerMap.current.get(unit.id);
+			const detectionPolygons = detectionLayerMap.current.get(unit.id);
+
+			const isVisible = (() => {
+				if (displayForce === 'GOD') return true;
+				const currentForce = displayForce as Force;
+				return unit.force === currentForce || (simDatalink[currentForce]?.includes(unit.id) ?? false);
+			})();
+			const isVisibleCOA = displayForce === 'GOD' || unit.force === displayForce;
+
+			if (unitMarker) {
+				if (isVisible && !map.hasLayer(unitMarker)) {
+					unitMarker.addTo(map);
+				} else if (!isVisible && map.hasLayer(unitMarker)) {
+					map.removeLayer(unitMarker);
+				}
+			}
+
+			if (actionLines) {
+				actionLines.forEach(line => {
+					if (isVisibleCOA && !map.hasLayer(line)) line.addTo(map);
+					else if (!isVisibleCOA && map.hasLayer(line)) map.removeLayer(line);
+				});
+			}
+
+			if (detectionPolygons) {
+				detectionPolygons.forEach(poly => {
+					if ((isVisibleCOA && showDetectionPolygons) && !map.hasLayer(poly)) poly.addTo(map);
+					else if (!(isVisibleCOA && showDetectionPolygons) && map.hasLayer(poly)) map.removeLayer(poly);
+				});
+			}
+		});
+
+		mapElements.forEach((el) => {
+			if (!el.layer) return;
+			
+			const isVisible = displayForce === 'GOD' || el.force === displayForce || el.type !== 'coa';
+			
+			const isOnMap = map.hasLayer(el.layer);
+			if (isVisible && !isOnMap) {
+				el.layer.addTo(map);
+			} else if (!isVisible && isOnMap) {
+				el.layer.remove();
+			}
+		});
+	}, [displayForce, placedUnits, mapElements, showDetectionPolygons]);
+
+	useEffect(() => {
 		mapElements.forEach((el) => {
 			if (!el.layer) return;
 			if (showLabels) {
@@ -553,7 +624,7 @@ export const useMapEditor = (
 				el.layer.closeTooltip();
 			}
 		});
-	}, [showLabels, mapElements]);
+	}, [showLabels, displayForce, mapElements]);
 
 	return {
 		map: mapInstance.current,

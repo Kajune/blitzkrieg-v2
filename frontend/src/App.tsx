@@ -22,6 +22,7 @@ function AppContent() {
 	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
 	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
 	const [showLabels, setShowLabels] = useState(true);
+	const [showDetectionPolygons, setShowDetectionPolygons] = useState(true);
 
 	const { 
 		simConfig, setSimConfig, 
@@ -48,7 +49,7 @@ function AppContent() {
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionPolygons,
-	} = useMapEditor(showLabels, isUnitPlacementOpen);
+	} = useMapEditor(showLabels, showDetectionPolygons, isUnitPlacementOpen);
 
 	const exportData = () => {
 		const payload = {
@@ -155,6 +156,21 @@ function AppContent() {
 				onClick={() => setShowLabels(!showLabels)}
 			>
 				{showLabels ? 'ラベル非表示' : 'ラベル表示'}
+			</button>
+
+			<button 
+				className="btn btn-secondary btn-sm position-absolute"
+				style={{ 
+					bottom: 80, 
+					left: 120, 
+					zIndex: 1000,
+					borderRadius: '20px',
+					padding: '5px 10px',
+					fontSize: '0.8rem'
+				}}
+				onClick={() => setShowDetectionPolygons(!showDetectionPolygons)}
+			>
+				{showDetectionPolygons ? '探知非表示' : '探知表示'}
 			</button>
 
 			<div 
