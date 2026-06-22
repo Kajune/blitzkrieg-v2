@@ -38,7 +38,10 @@ class Map:
 			raise ValueError("Operation area is not defined.")
 
 		self.geo_transformer = GeoTransformer(self.common_ao_geom, base_epsg=os.getenv("DEM_EPSG"))
-		self.gis = PostGIS()
+		try:
+			self.gis = PostGIS()
+		except Exception as e:
+			self.gis = None
 		self.alt_mesh, self.map_geometries = self._prepare_map(debug=debug)
 		self.slope_mesh = compute_slope_mesh(self.alt_mesh)
 
@@ -131,27 +134,41 @@ class Map:
 	def _prepare_map(self, map_resolution=10.0, debug=False):
 		start_time = time.time()
 
-		terrain = self.gis.load_dem(self.common_ao_geom)
-		terrain = self.geo_transformer.convert_to_utm_mesh(terrain)
-		terrain = terrain.resize_by_resolution(map_resolution, map_resolution)
-		print(f"Terrain preparation: {time.time() - start_time:.4f} seconds")
+		if self.gis is not None:
+			terrain = self.gis.load_dem(self.common_ao_geom)
+			terrain = self.geo_transformer.convert_to_utm_mesh(terrain)
+			terrain = terrain.resize_by_resolution(map_resolution, map_resolution)
+			print(f"Terrain preparation: {time.time() - start_time:.4f} seconds")
 
-		osm_start = time.time()
-		road_condition = "\"highway\" IS NOT NULL"
-		road = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=road_condition)
+			osm_start = time.time()
+			road_condition = "\"highway\" IS NOT NULL"
+			road = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=road_condition)
 
-		building_condition = "\"building\" IS NOT NULL AND building != 'no'"
-		building = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=building_condition)
+			building_condition = "\"building\" IS NOT NULL AND building != 'no'"
+			building = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=building_condition)
 
-		waterway_condition = "\"waterway\" IS NOT NULL"
-		waterway = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=waterway_condition)
+			waterway_condition = "\"waterway\" IS NOT NULL"
+			waterway = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=waterway_condition)
 
-		water_condition = "\"water\" IS NOT NULL"
-		water = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
+			water_condition = "\"water\" IS NOT NULL"
+			water = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
 
-		veg_condition = "\"natural\" IN ('wood', 'scrub', 'grassland') OR \"landuse\" IN ('forest', 'grass', 'orchard')"
-		vegetation = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=veg_condition)
-		print(f"OSM data loading: {time.time() - osm_start:.4f} seconds")
+			veg_condition = "\"natural\" IN ('wood', 'scrub', 'grassland') OR \"landuse\" IN ('forest', 'grass', 'orchard')"
+			vegetation = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=veg_condition)
+			print(f"OSM data loading: {time.time() - osm_start:.4f} seconds")
+
+		else:
+			min_x, min_y, max_x, max_y = self.geo_transformer.convert_to_utm_geom(self.common_ao_geom).bounds
+			width = int((max_x - min_x) / map_resolution)
+			height = int((max_y - min_y) / map_resolution)
+			
+			terrain = UTMMesh(
+				data=np.zeros((height, width)),
+				left_bottom=UTMLocation(easting=min_x, northing=min_y),
+				right_top=UTMLocation(easting=max_x, northing=max_y),
+				epsg=None
+			)
+			road = building = waterway = water = vegetation = None
 
 		loop_start = time.time()
 		geometries = {}
@@ -179,12 +196,22 @@ class Map:
 			for k in cached_geometries:
 				geometries[force][k] = cached_geometries[k]
 
-			for geom_name in geometries[force]:
-				if "mesh" in geometries[force][geom_name]:
+			for geom_name, val in geometries[force].items():
+				if "mesh" in val:
 					continue
+				if val["geom"] is None:
+					# データがない場合は、地形と同じサイズのゼロメッシュを代入しておく
+					val["mesh"] = UTMMesh(
+						data=np.zeros_like(terrain.data),
+						left_bottom=terrain.left_bottom,
+						right_top=terrain.right_top,
+						epsg=terrain.epsg
+					)
+					continue
+
 				item_start = time.time()
 				
-				geometries[force][geom_name]["geom"] = self.geo_transformer.convrt_to_utm_geom(geometries[force][geom_name]["geom"])
+				geometries[force][geom_name]["geom"] = self.geo_transformer.convert_to_utm_geom(geometries[force][geom_name]["geom"])
 				geom_pixel = terrain.to_image_geom(geometries[force][geom_name]["geom"])
 				geom_coords_list = get_geometry_coords(geom_pixel)
 
@@ -216,8 +243,10 @@ class Map:
 				to_utm=True
 			)
 
-			for geom_name in geometries:
-				cv2.imwrite(f"{geom_name}.png", geometries[geom_name]["mesh"].data * 255)
+			for force in geometries:
+				for geom_name in geometries[force]:
+					if geometries[force][geom_name]["mesh"] is not None:
+						cv2.imwrite(f"{force}_{geom_name}.png", geometries[force][geom_name]["mesh"].data * 255)
 
 		return terrain, geometries
 
@@ -343,6 +372,8 @@ class Map:
 			unit_positions = self.geo_transformer.to_utm(unit_positions)
 
 		for geom_name, geometry in geometries.items():
+			if geometry["geom"] is None:
+				continue
 			geom_pixel = terrain.to_image_geom(geometry["geom"])
 			geom_coords_list = get_geometry_coords(geom_pixel)
 

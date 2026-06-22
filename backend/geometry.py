@@ -108,7 +108,7 @@ class GeoTransformer:
 		return GeoLocation(lat=lat, lon=lon)
 
 
-	def convrt_to_utm_geom(self, geom: Union[GeometryCollection, BaseGeometry]) -> Union[GeometryCollection, BaseGeometry]:
+	def convert_to_utm_geom(self, geom: Union[GeometryCollection, BaseGeometry]) -> Union[GeometryCollection, BaseGeometry]:
 		coords = get_coordinates(geom)
 		xx, yy = self._to_utm_transformer.transform(coords[:, 0], coords[:, 1])
 		new_coords = np.column_stack([xx, yy])

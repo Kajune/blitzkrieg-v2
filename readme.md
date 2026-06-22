@@ -5,7 +5,7 @@
 戦術レベルの陸上戦闘のシミュレーション
 
 ## 構築手順
-1. PostGISサーバの構築
+1. PostGISサーバの構築 (省略すると一応地図情報なしで動く)
 
 下記からDEMとosm.pbfをダウンロードし、それぞれ`geo-server/dem`と`geo-server/osm`以下に配置
 
