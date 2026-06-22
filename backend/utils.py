@@ -1,6 +1,39 @@
 from typing import Dict, List, Tuple, Optional, Any
 from models import *
 from scipy.stats import multivariate_normal
+import numpy as np
+
+
+def smooth_linestring(coords, alpha=0.5, iterations=5, max_dist=1.0):
+	"""
+	coords: (N, 2) の ndarray
+	alpha: 平滑化の強さ (0〜1)
+	iterations: 反復回数
+	max_dist: 頂点の移動許容範囲
+	"""
+	smoothed = coords.copy().astype(float)
+	original = coords.copy().astype(float)
+	
+	for _ in range(iterations):
+		# 隣接点の平均を計算 (境界は固定するため、1から-1までを操作)
+		# 前後の頂点の平均: (P_{i-1} + P_{i+1}) / 2
+		avg_pos = (smoothed[:-2] + smoothed[2:]) / 2.0
+		
+		# アルファ値に応じて移動量を計算
+		new_pos = (1 - alpha) * smoothed[1:-1] + alpha * avg_pos
+		
+		# 移動距離がmax_distを超えないようにクリッピング
+		diff = new_pos - original[1:-1]
+		dist = np.linalg.norm(diff, axis=1, keepdims=True)
+		
+		# 距離がmax_distを超えていたら、距離をmax_distに制限する
+		mask = dist > max_dist
+		new_pos[mask.flatten()] = original[1:-1][mask.flatten()] + \
+								  (diff[mask.flatten()] / dist[mask.flatten()] * max_dist)
+		
+		smoothed[1:-1] = new_pos
+		
+	return smoothed
 
 
 def get_last_action(unit_record: UnitRecord) -> UnitAction:

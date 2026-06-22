@@ -127,6 +127,11 @@ class Map:
 				if i == len(path) - 2:
 					finished = True
 
+		if len(trajectories) >= 3:
+			trajectories_np = np.array([[p.easting, p.northing] for p in trajectories])
+			trajectories_np = smooth_linestring(trajectories_np, max_dist=mobility_map.resolution[0])
+			trajectories = [UTMLocation(easting=p[0], northing=p[1]) for p in trajectories_np]
+
 		trajectories = self.geo_transformer.to_geo(trajectories)
 		return trajectories, finished
 
@@ -166,7 +171,7 @@ class Map:
 				data=np.zeros((height, width)),
 				left_bottom=UTMLocation(easting=min_x, northing=min_y),
 				right_top=UTMLocation(easting=max_x, northing=max_y),
-				epsg=None
+				epsg=self.geo_transformer.epsg
 			)
 			road = building = waterway = water = vegetation = None
 
