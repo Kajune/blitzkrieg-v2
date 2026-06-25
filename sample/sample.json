@@ -496,7 +496,7 @@
           "id": "9669e8fb-df8e-4f6d-a4c8-13d56a9abeaa",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.15925237707943,
@@ -509,7 +509,7 @@
           "id": "c01570dc-0992-4e71-a077-5e6c3bab1c37",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.1574634688146,
@@ -522,7 +522,7 @@
           "id": "77f52dcf-d7dc-4dd3-b783-62e0c3a79162",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.156235763909315,
@@ -535,7 +535,7 @@
           "id": "b1c28afa-9760-4c4f-9b2b-9123f40da222",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.15434155428284,
@@ -548,7 +548,7 @@
           "id": "e0fe9164-45f8-4011-afb1-9c9f373baffd",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.153534747901304,
@@ -561,7 +561,7 @@
           "id": "5563161f-04a9-4032-b69c-99fe004988a6",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.153639983969995,
@@ -574,7 +574,7 @@
           "id": "be9c018a-ed8b-4856-9b40-46ea782b027e",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition": null,
           "targetUnitId": "17814282004810.6020167574218004",
           "finished": false
@@ -583,12 +583,16 @@
           "id": "c4951f08-0121-452b-b50f-a7f48a3db2cd",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition": null,
           "targetUnitId": "17814282004810.9803027017030309",
           "finished": false
         }
-      ]
+      ],
+      "detectedUnits":
+      [],
+      "attackingUnits":
+      []
     },
     {
       "id": "17814281980030.6736423249235365",
@@ -687,7 +691,7 @@
           "id": "a8ab54f6-4f83-462d-a0a8-33756f6fd929",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.154941922982005,
@@ -700,7 +704,7 @@
           "id": "d7490242-c35a-483a-a4e4-eeeb534f3172",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.15234610176174,
@@ -713,7 +717,7 @@
           "id": "1f77d04e-b2fe-41c0-ab5f-feb93dd0e003",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.14968003700579,
@@ -726,7 +730,7 @@
           "id": "fc792fee-5e74-4853-9da0-453ed61646d3",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.14925907142762,
@@ -739,7 +743,7 @@
           "id": "3ebfe775-e3bd-44cc-a855-c450b13c6937",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.148276809942885,
@@ -752,7 +756,7 @@
           "id": "aefebb88-8fa5-416a-bda8-04f193d0d82c",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.147434862090655,
@@ -765,7 +769,7 @@
           "id": "ab025f54-942d-42ea-9c52-dcfb853709d7",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition":
           {
             "lat": 35.14757518733763,
@@ -778,7 +782,7 @@
           "id": "ecab7b23-279a-4cdc-ade7-00ecbb7e590c",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition": null,
           "targetUnitId": "17814282004810.9826535377017692",
           "finished": false
@@ -787,12 +791,16 @@
           "id": "9d28639d-d049-46c1-842b-28791081d3de",
           "moveSpeed": "MEDIUM",
           "moveMode": "COMBAT",
-          "fire": true,
+          "fireMode": "ON",
           "targetPosition": null,
           "targetUnitId": "17814282004810.52705404250676",
           "finished": false
         }
-      ]
+      ],
+      "detectedUnits":
+      [],
+      "attackingUnits":
+      []
     },
     {
       "id": "17814281980030.9641943614830386",
@@ -886,6 +894,10 @@
         "lon": 138.76447589369786
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     },
     {
@@ -915,6 +927,10 @@
         "lon": 138.8209333419795
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     },
     {
@@ -944,6 +960,10 @@
         "lon": 138.8205900192256
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     },
     {
@@ -973,6 +993,10 @@
         "lon": 138.83037471771192
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     },
     {
@@ -1091,6 +1115,10 @@
         "lon": 138.8319103821791
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     },
     {
@@ -1376,6 +1404,10 @@
         "lon": 138.76517684287725
       },
       "actions":
+      [],
+      "detectedUnits":
+      [],
+      "attackingUnits":
       []
     }
   ],

@@ -47,7 +47,7 @@ def get_last_action(unit_record: UnitRecord) -> UnitAction:
 			id=None,
 			moveSpeed=action.moveSpeed,
 			moveMode=action.moveMode,
-			fire=action.fire,
+			fireMode=action.fireMode,
 			targetPosition=None,
 			targetUnitId=None,
 			finished=False
@@ -57,7 +57,7 @@ def get_last_action(unit_record: UnitRecord) -> UnitAction:
 			id=None,
 			moveSpeed=MoveSpeed.MEDIUM,
 			moveMode=MoveMode.DEFENSE,
-			fire=False,
+			fireMode=FireMode.ON,
 			targetPosition=None,
 			targetUnitId=None,
 			finished=False

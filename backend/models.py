@@ -212,6 +212,11 @@ class MoveMode(Enum):
 	ARTILLERY = 'ARTILLERY'
 
 
+class FireMode(Enum):
+	ON = 'ON'
+	OFF = 'OFF'
+
+
 class UnitType(Enum):
 	COMBINED = 'combined'
 	INFANTRY = 'infantry'
@@ -264,6 +269,16 @@ class Vehicle(Equipment):
 	personnel_capacity: int
 
 
+class DetectLog(msgspec.Struct):
+	unitId: str
+	awareness: float
+
+
+class AttackLog(msgspec.Struct):
+	unitId: str
+	intensity: float
+
+
 class Unit(msgspec.Struct):
 	id: str
 	templateId: str
@@ -282,7 +297,7 @@ class UnitAction(msgspec.Struct):
 	id: str
 	moveSpeed: MoveSpeed
 	moveMode: MoveMode
-	fire: bool
+	fireMode: FireMode
 	targetPosition: Optional[GeoLocation]
 	targetUnitId: Optional[str]
 	finished: bool
@@ -291,6 +306,8 @@ class UnitAction(msgspec.Struct):
 class PlacedUnit(Unit):
 	position: GeoLocation
 	actions: List[UnitAction]
+	detectedUnits: List[DetectLog]
+	attackingUnits: List[AttackLog]
 
 
 #
@@ -338,7 +355,8 @@ class SimSetting(msgspec.Struct):
 class UnitRecord(msgspec.Struct):
 	trajectory: List[GeoLocation]
 	actions: List[UnitAction]
-	detectedUnits: Dict[str, float]
+	detectedUnits: List[DetectLog]
+	attackingUnits: List[AttackLog]
 
 
 class SimRequest(msgspec.Struct):
@@ -370,6 +388,7 @@ class MobilityCoeff(msgspec.Struct):
 
 
 class IntelligenceCoeff(msgspec.Struct):
+	temporal_discovery_advantage: float
 	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]
 	exposure_distance_scale_by_move_speed: Dict[MoveSpeed, float]
 	discovery_distance_scale_by_move_mode: Dict[MoveMode, float]

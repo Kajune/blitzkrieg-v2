@@ -100,6 +100,7 @@
 	},
 	"intelligence":
 	{
+		"temporal_discovery_advantage": 2.0,
 		"discovery_distance_scale_by_move_speed":
 		{
 			"LOW": 1.0,

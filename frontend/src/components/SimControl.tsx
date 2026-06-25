@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
 import type { UnitRecord } from '../types/simTypes';
-import type { Force, DisplayForce } from '../types/unitTypes';
+import type { Force, DisplayForce, DetectLog, AttackLog } from '../types/unitTypes';
 import { FORCES, DISPLAY_FORCES } from '../types/unitTypes';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -13,7 +13,7 @@ export const SimControl = ({
 	updateDetectionPolygons,
 }: { 
 	showMenu: boolean,
-	updateDetectionPolygons: (unitId: string, detectedUnits: Record<string, number>) => void,
+	updateDetectionPolygons: (unitId: string, detectedUnits: DetectLog[]) => void,
 }) => {
 	const {
 		simUuid,
@@ -145,9 +145,9 @@ export const SimControl = ({
 		Object.entries(unitRecords).forEach(([unitId, record]) => {
 			const unit = placedUnitsRef.current.find(u => u.id === unitId);
 			if (unit) {
-				Object.keys(record.detectedUnits).forEach(targetId => {
-					if (!newDatalink[unit.force].includes(targetId)) {
-						newDatalink[unit.force].push(targetId);
+				record.detectedUnits.forEach(log => {
+					if (!newDatalink[unit.force].includes(log.unitId)) {
+						newDatalink[unit.force].push(log.unitId);
 					}
 				});
 			}
@@ -224,7 +224,9 @@ export const SimControl = ({
 						actions: unit.actions.map(a => ({
 							...a,
 							finished: finishedIds.has(a.id) ? true : a.finished
-						}))
+						})),
+						detectedUnits: record.detectedUnits,
+						attackingUnits: record.attackingUnits,
 					};
 
 				} else {
@@ -232,6 +234,8 @@ export const SimControl = ({
 						...unit,
 						position: record.trajectory[record.trajectory.length - 1],
 						actions: record.actions,
+						detectedUnits: record.detectedUnits,
+						attackingUnits: record.attackingUnits,
 					};
 				}
 			})

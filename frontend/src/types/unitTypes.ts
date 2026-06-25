@@ -55,20 +55,34 @@ export type MoveSpeed = typeof MOVE_SPEEDS[number];
 export const MOVE_MODES = ['MARCH', 'COMBAT', 'DEFENSE', 'ARTIRELLY'] as const;
 export type MoveMode = typeof MOVE_MODES[number];
 
+export const FIRE_MODES = ['ON', 'OFF'] as const;
+export type FireMode = typeof FIRE_MODES[number];
+
+export interface DetectLog {
+	unitId: string;
+	awareness: number;
+}
+
+export interface AttackLog {
+	unitId: string;
+	intensity: number;
+}
+
 export interface UnitAction {
 	id: string;
 	moveSpeed: MoveSpeed;
 	moveMode: MoveMode;
-	fire: boolean;
+	fireMode: FireMode;
 	targetPosition: GeoLocation | null;
 	targetUnitId: string | null;
 	finished: boolean;
 }
 
-
 export interface PlacedUnit extends Unit {
 	position: GeoLocation;
 	actions: UnitAction[];
+	detectedUnits: DetectLog[];
+	attackingUnits: AttackLog[];
 }
 
 export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>> => {

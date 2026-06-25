@@ -10,7 +10,7 @@ import type { GeoJsonObject } from 'geojson';
 import { useAppStore } from '../contexts/AppContext';
 import type { MapElement } from '../types/mapElement'
 import { getMapElementColor } from '../types/mapElement'
-import type { Unit, PlacedUnit, Force } from '../types/unitTypes';
+import type { Unit, PlacedUnit, Force, DetectLog, AttackLog } from '../types/unitTypes';
 import { getTotalPersonnel, getSymbolSize } from '../types/unitTypes';
 import '../App.module.css';
 
@@ -71,7 +71,7 @@ export const useMapEditor = (
 		}
 	};
 
-	const updateDetectionPolygons = (unitId: string, detectedUnits: Record<string, number>) => {
+	const updateDetectionPolygons = (unitId: string, detectedUnits: DetectLog[]) => {
 		const existingLayers = detectionLayerMap.current.get(unitId) || [];
 		existingLayers.forEach(layer => layer.remove());
 
@@ -93,8 +93,8 @@ export const useMapEditor = (
 			return;
 		}
 
-		const newPolygons: L.Polygon[] = Object.entries(detectedUnits).map(([targetUnitId, detectionRate]) => {
-			const targetMarker = unitLayerMap.current.get(targetUnitId);
+		const newPolygons: L.Polygon[] = detectedUnits.map((log) => {
+			const targetMarker = unitLayerMap.current.get(log.unitId);
 			if (!targetMarker) return null;
 			const targetPos = targetMarker.getLatLng();
 
@@ -125,7 +125,8 @@ export const useMapEditor = (
 				sourcePos.lng + dist * (unitLng * Math.cos(-halfWidth) + unitLat * Math.sin(-halfWidth))
 			] as [number, number];
 
-			const opacity = Math.min(0.5, detectionRate * 0.5);
+			// awareness を使って不透明度を計算
+			const opacity = Math.min(0.5, log.awareness * 0.5);
 
 			return L.polygon([
 				[sourcePos.lat, sourcePos.lng],
@@ -350,6 +351,8 @@ export const useMapEditor = (
 			current_equipments: unitData.full_equipments,
 			position: { lat: latLng.lat, lon: latLng.lng },
 			actions: [],
+			detectedUnits: [],
+			attackingUnits: [],
 		};
 
 		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
@@ -487,7 +490,7 @@ export const useMapEditor = (
 				id: crypto.randomUUID(),
 				moveSpeed: 'MEDIUM' as const,
 				moveMode: 'COMBAT' as const,
-				fire: true,
+				fireMode: 'ON' as const,
 				targetPosition: targetUnitId ? null : { lat: e.latlng.lat, lon: e.latlng.lng },
 				targetUnitId: targetUnitId,
 				finished: false,

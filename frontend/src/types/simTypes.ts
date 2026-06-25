@@ -1,4 +1,4 @@
-import type { GeoLocation, UnitAction } from './unitTypes';
+import type { GeoLocation, UnitAction, DetectLog, AttackLog } from './unitTypes';
 
 export interface SimConfig {
 	startDateTime: Date;
@@ -9,7 +9,8 @@ export interface SimConfig {
 export interface UnitRecord {
 	trajectory: GeoLocation[];
 	actions: UnitAction[];
-	detectedUnits: Record<string, number>;
+	detectedUnits: DetectLog[];
+	attackingUnits: AttackLog[];
 }
 
 export interface SimRecord {

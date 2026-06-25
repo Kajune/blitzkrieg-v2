@@ -6,6 +6,7 @@ from models import *
 from geometry import *
 from gis import *
 from utils import *
+from los import compute_multi_mva_maps, compute_pairs_los
 from functools import lru_cache
 import pyastar2d
 import cv2, time, copy
@@ -44,6 +45,33 @@ class Map:
 			self.gis = None
 		self.alt_mesh, self.map_geometries = self._prepare_map(debug=debug)
 		self.slope_mesh = compute_slope_mesh(self.alt_mesh)
+
+
+	def get_elevation(self, pts: np.ndarray) -> np.ndarray:
+		"""
+		pts: (N, 2) の numpy 配列 (easting, northing)
+		戻り値: (N,) の numpy 配列 (各点の標高)
+		"""
+		# UTMLocationのリストに変換してから to_image_coord を利用
+		# pts は np.array なので、各行を UTMLocation に変換する
+		utm_locations = [UTMLocation(easting=p[0], northing=p[1]) for p in pts]
+		
+		# 画像座標 (pixel_x, pixel_y) に変換
+		px_coords = self.alt_mesh.to_image_coord(utm_locations)
+		
+		# 整数化して範囲内にクリップ（画像外参照を防ぐ）
+		px_x = np.clip(np.round(px_coords[:, 0]).astype(int), 0, self.alt_mesh.data.shape[0] - 1)
+		px_y = np.clip(np.round(px_coords[:, 1]).astype(int), 0, self.alt_mesh.data.shape[1] - 1)
+		
+		# 標高を取得
+		elevations = self.alt_mesh.data[px_x, px_y]
+		
+		return elevations
+
+
+	def compute_visibility(self, pts1 : np.ndarray, pts2 : np.ndarray) -> List[bool]:
+		pair_results = compute_pairs_los(self.alt_mesh.data, *self.alt_mesh.resolution, pts1, pts2)
+		return [r > 0 for r in pair_results]
 
 
 	def compute_maneuver(self, 

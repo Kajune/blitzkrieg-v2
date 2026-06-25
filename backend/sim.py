@@ -128,6 +128,24 @@ class Simulation:
 		exposure_distribution = {}
 		sensors_dict = {}
 
+
+		def get_visibility_ratio(u1_id, u2_id, n_samples=10):
+			dist1 = deployment_distribution[u1_id]
+			dist2 = deployment_distribution[u2_id]
+
+			xy1 = np.random.normal(dist1["mean"], dist1["sigma"], (n_samples, 2))
+			xy2 = np.random.normal(dist2["mean"], dist2["sigma"], (n_samples, 2))
+			
+			z1 = self.map.get_elevation(xy1) 
+			z2 = self.map.get_elevation(xy2)
+			
+			pts1 = np.hstack([xy1, z1.reshape(-1, 1)])
+			pts2 = np.hstack([xy2, z2.reshape(-1, 1)])
+			
+			visible_results = self.map.compute_visibility(pts1, pts2)
+			return np.mean(visible_results)
+
+
 		for unit_id, record in updated_units.items():
 			unit = placed_units[unit_id]
 			equipments = []
@@ -159,9 +177,12 @@ class Simulation:
 				vehicle_type_one_hot = [1 if vehicle.type == vt else 0 for vt in VehicleType]
 				vehicle_types.append(vehicle_type_one_hot)
 
-			exposure_distribution[unit_id] = (np.array(vehicle_types) \
-				* self.coeffs.intelligence.exposure_distance_scale_by_move_mode[last_action.moveMode]
-				* self.coeffs.intelligence.exposure_distance_scale_by_move_speed[last_action.moveSpeed])
+			if len(unit.attackingUnits) > 0:
+				exposure_distribution[unit_id] = np.array(vehicle_types)
+			else:
+				exposure_distribution[unit_id] = (np.array(vehicle_types) \
+					* self.coeffs.intelligence.exposure_distance_scale_by_move_mode[last_action.moveMode]
+					* self.coeffs.intelligence.exposure_distance_scale_by_move_speed[last_action.moveSpeed])
 
 		# Step3: 部隊間距離を計算し、発見距離分布*被発見距離分布外なら計算から除外
 		unit_positions = [placed_units[unit_id].position for unit_id in updated_units]
@@ -188,8 +209,9 @@ class Simulation:
 
 				R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2].T
 
-				# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつfire == trueならば、R_effは諸元上の最大距離となる)
-				if last_action1.moveMode in [MoveMode.DEFENSE, MoveMode.ARTILLERY] and last_action2.moveMode == MoveMode.ARTILLERY and last_action2.fire:
+				# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつ射撃実績があれば、R_effは諸元上の最大距離となる)
+				if last_action1.moveMode in [MoveMode.DEFENSE, MoveMode.ARTILLERY] and last_action2.moveMode == MoveMode.ARTILLERY \
+					and len(unit2.attackingUnits) > 0:
 					for si, sensor in enumerate(sensors):
 						if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
 							R_eff[unit_id1][si] = sensor.sensor_range
@@ -197,16 +219,21 @@ class Simulation:
 				discovery_prob = (R_eff / unit_distances[ui,uj]) ** 2
 				discovery_prob = np.clip(discovery_prob, 0, 1)
 
-				# TODO: LOS考慮
+				visibility_ratio = get_visibility_ratio(unit_id1, unit_id2)
+				discovery_prob *= visibility_ratio
 
-				# TODO: 前の時刻で発見済みならプラス
+				# 前の時刻で発見済みならプラス
+				if unit_id2 in [det_log.unitId for det_log in unit1.detectedUnits]:
+					discovery_prob *= self.coeffs.intelligence.temporal_discovery_advantage
 
 				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
 				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
 
 				# Step5: 発見できたのか、できたとしたらその割合はいくらなのか記録
 				if np.random.rand() <= unit_discovery_prob:
-					updated_units[unit_id1].detectedUnits[unit_id2] = float(unit_awareness_ratio)
+					updated_units[unit_id1].detectedUnits.append(
+						DetectLog(unitId=unit_id2, awareness=float(unit_awareness_ratio))
+					)
 
 		return updated_units
 
@@ -227,7 +254,8 @@ class Simulation:
 			updated_units[unit.id] = UnitRecord(
 				trajectory=[unit.position],
 				actions=list(unit.actions),
-				detectedUnits={},
+				detectedUnits=[],
+				attackingUnits=[],
 			)
 
 		placed_units = {u.id: u for u in placed_units}

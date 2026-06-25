@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import ms from 'milsymbol';
-import type { PlacedUnit, MoveSpeed, MoveMode } from '../types/unitTypes';
-import { getTotalPersonnel, getTotalEquipments, MOVE_SPEEDS, MOVE_MODES } from '../types/unitTypes';
+import type { PlacedUnit, MoveSpeed, MoveMode, FireMode } from '../types/unitTypes';
+import { getTotalPersonnel, getTotalEquipments, MOVE_SPEEDS, MOVE_MODES, FIRE_MODES } from '../types/unitTypes';
 import { useAppStore } from '../contexts/AppContext';
 
 interface Props {
@@ -175,9 +175,12 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 													</select>
 												</td>
 												<td>
-													<input type="checkbox" className="form-check-input" 
-														checked={action.fire} 
-														onChange={(e) => handleActionChange(idx, 'fire', e.target.checked)} />
+													<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
+														style={textStyle}
+														value={action.fireMode} 
+														onChange={(e) => handleActionChange(idx, 'fireMode', e.target.value as FireMode)}>
+														{FIRE_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+													</select>
 												</td>
 												<td className="text-muted">
 													{action.targetUnitId ? (
