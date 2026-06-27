@@ -232,6 +232,15 @@ class SensorType(Enum):
 	RADAR_ANTI_AIR = 'RadarAntiAir'
 
 
+class WeaponType(Enum):
+	SMALL_ARM = 'SmallArm'
+	CANNON = 'Cannon'
+	HOWITZER = 'Howitzer'
+	AA_GUN = 'AAGun'
+	AT_MISSILE = 'ATMissile'
+	AA_MISSILE = 'AAMissile'
+
+
 class VehicleType(Enum):
 	FOOT = 'Foot'
 	GROUND_SOFT = 'GroundSoft'
@@ -256,8 +265,9 @@ class Sensor(Equipment):
 
 class Weapon(Equipment):
 	fire_range: float
+	type: WeaponType
 	fire_type: FireType
-	fire_power: Dict[VehicleType, float]
+	fire_power: float
 
 
 class Vehicle(Equipment):
@@ -276,7 +286,8 @@ class DetectLog(msgspec.Struct, frozen=True, cache_hash=True):
 
 class AttackLog(msgspec.Struct, frozen=True, cache_hash=True):
 	unitId: str
-	intensity: float
+	firePower: float
+	weaponType: WeaponType
 
 
 class Unit(msgspec.Struct):
@@ -308,6 +319,7 @@ class PlacedUnit(Unit):
 	actions: List[UnitAction]
 	detectedUnits: List[DetectLog]
 	attackingUnits: List[AttackLog]
+	suppressionRate: float
 
 
 #
@@ -352,11 +364,41 @@ class SimSetting(msgspec.Struct, frozen=True, cache_hash=True):
 	mapElements: List[MapElement]
 
 
+class PersonnelEquipmentsRecord(msgspec.Struct):
+	current_personnel: int
+	current_equipments: Dict[str, int]
+	lower_units: Dict[str, 'PersonnelEquipmentsRecord']
+
+	def add_personnel_damage(self, personnel_damage : int) -> int:
+		for record in self.lower_units.values():
+			personnel_damage = record.add_personnel_damage(personnel_damage)
+
+		remaining_personnel_damage = max(personnel_damage - self.current_personnel, 0)
+		self.current_personnel = max(self.current_personnel - personnel_damage, 0)
+
+		return remaining_personnel_damage
+
+	def add_equipment_damage(self, equipment_name: str, equipment_damage: int) -> int:
+		for record in self.lower_units.values():
+			equipment_damage = record.add_equipment_damage(equipment_name, equipment_damage)
+
+		if equipment_name in self.current_equipments:
+			current_amount = self.current_equipments[equipment_name]
+			apply_damage = min(current_amount, equipment_damage)
+			
+			self.current_equipments[equipment_name] -= apply_damage
+			equipment_damage -= apply_damage
+
+		return equipment_damage
+
+
 class UnitRecord(msgspec.Struct):
 	trajectory: List[GeoLocation]
 	actions: List[UnitAction]
 	detectedUnits: List[DetectLog]
 	attackingUnits: List[AttackLog]
+	suppressionRate: float
+	personnelEquipments: PersonnelEquipmentsRecord
 
 
 class SimRequest(msgspec.Struct):
@@ -389,15 +431,31 @@ class MobilityCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 
 class IntelligenceCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 	temporal_discovery_advantage: float
+
 	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]
-	exposure_distance_scale_by_move_speed: Dict[MoveSpeed, float]
 	discovery_distance_scale_by_move_mode: Dict[MoveMode, float]
-	exposure_distance_scale_by_move_mode: Dict[MoveMode, float]
 	discovery_distance_scale_by_vehicle_type: Dict[SensorType, Dict[VehicleType, float]]
+
+	exposure_distance_scale_by_move_speed: Dict[MoveSpeed, float]
+	exposure_distance_scale_by_move_mode: Dict[MoveMode, float]
+
+
+class CombatCoeff(msgspec.Struct, frozen=True, cache_hash=True):
+	fire_power_efficiency: float
+	damage_speed: float
+	suppression_factor: float
+
+	range_scale_by_move_speed: Dict[MoveSpeed, float]
+	range_scale_by_move_mode: Dict[MoveMode, float]
+
+	damage_scale_by_move_speed: Dict[MoveSpeed, float]
+	damage_scale_by_move_mode: Dict[MoveMode, float]
+	damage_scale_by_target_type: Dict[WeaponType, Dict[VehicleType, float]]
 
 
 class Coefficients(msgspec.Struct, frozen=True, cache_hash=True):
 	unit_deployment: UnitDeploymentCoeff
 	mobility: MobilityCoeff
 	intelligence: IntelligenceCoeff
+	combat: CombatCoeff
 

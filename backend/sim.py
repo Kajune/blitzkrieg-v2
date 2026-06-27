@@ -156,8 +156,8 @@ class Simulation:
 
 		for unit_id, record in updated_units.items():
 			unit = placed_units[unit_id]
-			equipments = []
 
+			equipments = []
 			for eq_name, eq_num in get_current_equipments(unit).items():
 				equipments += [eq_name] * eq_num
 
@@ -172,9 +172,8 @@ class Simulation:
 
 			discovery_distribution[unit_id] = np.sqrt((np.array(discovery_ranges) ** 2)
 				* self.coeffs.intelligence.discovery_distance_scale_by_move_mode[last_action.moveMode]
-				* self.coeffs.intelligence.discovery_distance_scale_by_move_speed[last_action.moveSpeed])
-
-			# TODO: 発見部隊が火制中なら発見率にペナルティ
+				* self.coeffs.intelligence.discovery_distance_scale_by_move_speed[last_action.moveSpeed]
+				* (1 - unit.suppressionRate))
 
 			vehicle_types = []
 			for vehicle in vehicles:
@@ -219,7 +218,7 @@ class Simulation:
 						if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
 							R_eff[unit_id1][si] = sensor.sensor_range
 
-				discovery_prob = (R_eff / unit_distances[ui,uj]) ** 2
+				discovery_prob = (R_eff / (unit_distances[ui,uj] + 1e-3)) ** 2
 				discovery_prob = np.clip(discovery_prob, 0, 1)
 
 				# 前の時刻で発見済みならプラス
@@ -250,6 +249,97 @@ class Simulation:
 		updated_units : Dict[str, UnitRecord], 
 		deployment_distribution : Dict[str, Dict]
 	) -> Dict[str, UnitRecord]:
+		attack_logs_per_target = {}
+
+		# 火力の計算
+		for unit_id, record in updated_units.items():
+			unit = placed_units[unit_id]
+			last_action = get_last_action(record)
+
+			if not record.detectedUnits or record.suppressionRate >= 1.0 or last_action.fireMode == FireMode.OFF:
+				continue
+
+			equipments = []
+			for eq_name, eq_num in get_current_equipments(unit).items():
+				equipments += [eq_name] * eq_num
+
+			weapons = self._filter_equipments(tuple(equipments), Weapon)
+			if last_action.moveMode != MoveMode.ARTILLERY:
+				weapons = [w for w in weapons if w.type not in [WeaponType.HOWITZER]]
+			
+			if not weapons:
+				continue
+
+			efficiency = (get_current_personnel(unit) / get_full_personnel(unit)) / (len(record.detectedUnits) ** self.coeffs.combat.fire_power_efficiency)
+
+			for detect_log in record.detectedUnits:
+				target_unit = placed_units[detect_log.unitId]
+				pos1 = deployment_distribution[unit_id]["mean"]
+				pos2 = deployment_distribution[detect_log.unitId]["mean"]
+				dist = np.linalg.norm(pos1 - pos2)
+
+				attack_logs = {}
+
+				for weapon in weapons:
+					effective_range = (weapon.fire_range 
+						* self.coeffs.combat.range_scale_by_move_mode[last_action.moveMode]
+						* self.coeffs.combat.range_scale_by_move_speed[last_action.moveSpeed]
+						* (1 - record.suppressionRate))
+					
+					hit_prob = np.clip(1 - 0.5 * (dist / effective_range) ** 2, 0, 1)
+					total_fire_power = hit_prob * weapon.fire_power * detect_log.awareness * efficiency
+
+					if total_fire_power > 0:
+						if weapon.type not in attack_logs:
+							attack_logs[weapon.type] = 0
+						attack_logs[weapon.type] += total_fire_power
+
+				for weapon_type, fire_power in attack_logs.items():
+					updated_units[unit_id].attackingUnits.append(
+						AttackLog(unitId=detect_log.unitId, firePower=float(fire_power), weaponType=weapon_type)
+					)
+
+					if detect_log.unitId not in attack_logs_per_target:
+						attack_logs_per_target[detect_log.unitId] = {}
+					if weapon_type not in attack_logs_per_target[detect_log.unitId]:
+						attack_logs_per_target[detect_log.unitId][weapon_type] = 0
+					attack_logs_per_target[detect_log.unitId][weapon_type] += float(fire_power)
+
+		# 損耗の付与
+		for target_id, logs in attack_logs_per_target.items():
+			record = updated_units[target_id]
+			last_action = get_last_action(record)
+			
+#			flank_bonus = self._calculate_flank_bonus(target_id, updated_units)
+			
+			damage_coeff = (self.coeffs.combat.damage_speed
+				* self.coeffs.combat.damage_scale_by_move_mode[last_action.moveMode]
+				* self.coeffs.combat.damage_scale_by_move_speed[last_action.moveSpeed])
+#				* flank_bonus)
+
+			total_suppression = 0
+			
+			for weapon_type, fire_power in logs.items():
+				damage = fire_power * damage_coeff
+				
+				# 人員損耗計算
+				p_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][VehicleType.FOOT])
+				record.personnelEquipments.add_personnel_damage(p_damage)
+				
+				# 装備損耗計算
+				for eq_name in record.personnelEquipments.current_equipments:
+					if eq_name not in self.vehicles:
+						continue
+					vehicle = self.vehicles[eq_name]
+
+					e_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][vehicle.type])
+					record.personnelEquipments.add_equipment_damage(eq_name, e_damage)
+
+				total_suppression += (damage * self.coeffs.combat.suppression_factor)
+				
+			# 抑制率の更新
+			record.suppressionRate = float(np.clip(record.suppressionRate, 0, 1.0))
+
 		return updated_units
 
 
@@ -263,6 +353,8 @@ class Simulation:
 				actions=list(unit.actions),
 				detectedUnits=[],
 				attackingUnits=[],
+				suppressionRate=0,
+				personnelEquipments=get_personnel_equipments(unit),
 			)
 
 		placed_units = {u.id: u for u in placed_units}

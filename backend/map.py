@@ -153,11 +153,10 @@ class Map:
 			overlap_ratio += calculate_distribution_overlap(deplyment_distribution[unit.id], dist)
 		base_speed *= np.exp(-overlap_ratio * lam_overlap)
 
-		# TODO: 火制されているときの機動速度低下もいつか入れる
 		speed_cap = self.coeffs.mobility.move_speed_cap[action.moveSpeed] * 1000 / 3600
 		actual_speed = (1 - mobility_map.data)
 		np.clip(actual_speed, 0, 1, out=actual_speed)
-		actual_speed *= base_speed
+		actual_speed *= base_speed * (1 - unit.suppressionRate)
 		np.clip(actual_speed, 0.5, speed_cap, out=actual_speed)
 
 		total_t = 0

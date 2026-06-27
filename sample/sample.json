@@ -592,7 +592,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814281980030.6736423249235365",
@@ -800,7 +801,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814281980030.9641943614830386",
@@ -898,7 +900,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814282004810.6020167574218004",
@@ -931,7 +934,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814282004810.9826535377017692",
@@ -964,7 +968,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814282004810.52705404250676",
@@ -997,7 +1002,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814282004810.9803027017030309",
@@ -1119,7 +1125,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     },
     {
       "id": "17814281980030.6502102140978757",
@@ -1408,7 +1415,8 @@
       "detectedUnits":
       [],
       "attackingUnits":
-      []
+      [],
+      "suppressionRate": 0
     }
   ],
   "mapElements":

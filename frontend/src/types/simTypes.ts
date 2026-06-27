@@ -6,11 +6,19 @@ export interface SimConfig {
 	tickInterval: number;
 }
 
+export interface PersonnelEquipmentsRecord {
+	current_personnel: number;
+	current_equipments: { [key: string]: number };
+	lower_units: Record<string, PersonnelEquipmentsRecord>;
+}
+
 export interface UnitRecord {
 	trajectory: GeoLocation[];
 	actions: UnitAction[];
 	detectedUnits: DetectLog[];
 	attackingUnits: AttackLog[];
+	suppressionRate: number;
+	personnelEquipments: PersonnelEquipmentsRecord;
 }
 
 export interface SimRecord {

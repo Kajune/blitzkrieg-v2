@@ -3,30 +3,24 @@
 	[
 		{
 			"name": "拳銃",
-			"fire_range": 20,
+			"type": "SmallArm",
+			"fire_range": 50,
 			"fire_type": "Direct",
-			"fire_power":
-			{
-				"GroundSoft": 0.05
-			}
+			"fire_power": 0.05
 		},
 		{
 			"name": "自動銃",
-			"fire_range": 200,
+			"type": "SmallArm",
+			"fire_range": 400,
 			"fire_type": "Direct",
-			"fire_power":
-			{
-				"GroundSoft": 0.25
-			}
+			"fire_power": 0.25
 		},
 		{
 			"name": "89式小銃",
-			"fire_range": 200,
+			"type": "SmallArm",
+			"fire_range": 400,
 			"fire_type": "Direct",
-			"fire_power":
-			{
-				"GroundSoft": 0.25
-			}
+			"fire_power": 0.25
 		}
 	],
 	"sensors":

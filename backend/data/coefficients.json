@@ -170,5 +170,88 @@
 				"Aircraft": 1.0
 			}
 		}
+	},
+	"combat":
+	{
+		"fire_power_efficiency": 0.5,
+		"damage_speed": 0.1,
+		"suppression_factor": 1.0,
+		"range_scale_by_move_speed":
+		{
+			"LOW": 1.0,
+			"MEDIUM": 0.8,
+			"HIGH": 0.5
+		},
+		"damage_scale_by_move_speed":
+		{
+			"LOW": 1.0,
+			"MEDIUM": 1.0,
+			"HIGH": 1.0
+		},
+		"range_scale_by_move_mode":
+		{
+			"MARCH": 0.5,
+			"COMBAT": 0.8,
+			"DEFENSE": 1.0,
+			"ARTILLERY": 1.0
+		},
+		"damage_scale_by_move_mode":
+		{
+			"MARCH": 1.0,
+			"COMBAT": 0.5,
+			"DEFENSE": 0.25,
+			"ARTILLERY": 0.75
+		},
+		"damage_scale_by_target_type":
+		{
+			"SmallArm":
+			{
+				"Foot": 0.5,
+				"GroundSoft": 0.5,
+				"GroundHardWheeled": 0.0,
+				"GroundHardTracked": 0.0,
+				"Aircraft": 0.0
+			},
+			"Cannon":
+			{
+				"Foot": 1.0,
+				"GroundSoft": 1.0,
+				"GroundHardWheeled": 0.9,
+				"GroundHardTracked": 0.8,
+				"Aircraft": 0.0
+			},
+			"Howitzer":
+			{
+				"Foot": 1.0,
+				"GroundSoft": 0.9,
+				"GroundHardWheeled": 0.5,
+				"GroundHardTracked": 0.4,
+				"Aircraft": 0.0
+			},
+			"AAGun":
+			{
+				"Foot": 1.0,
+				"GroundSoft": 0.25,
+				"GroundHardWheeled": 0.1,
+				"GroundHardTracked": 0.1,
+				"Aircraft": 0.5
+			},
+			"ATMissile":
+			{
+				"Foot": 0.0,
+				"GroundSoft": 1.0,
+				"GroundHardWheeled": 0.8,
+				"GroundHardTracked": 0.7,
+				"Aircraft": 0.0
+			},
+			"AAMissile":
+			{
+				"Foot": 0.0,
+				"GroundSoft": 0.0,
+				"GroundHardWheeled": 0.0,
+				"GroundHardTracked": 0.0,
+				"Aircraft": 1.0
+			}
+		}
 	}
 }

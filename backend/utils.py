@@ -100,8 +100,20 @@ def aggregate_unit_property(unit: Unit, fetch_fn, aggr_dict: Dict[str, int] = No
 	return aggr_dict
 
 
+def get_personnel_equipments(unit: Unit) -> PersonnelEquipmentsRecord:
+	return PersonnelEquipmentsRecord(
+		current_personnel=unit.current_personnel,
+		current_equipments=unit.current_equipments,
+		lower_units={lower_unit.id: get_personnel_equipments(lower_unit) for lower_unit in unit.lower_units}
+	)
+
+
 def get_current_personnel(unit: Unit) -> int:
 	return aggregate_unit_property(unit, lambda unit: {"personnel": unit.current_personnel})["personnel"]
+
+
+def get_full_personnel(unit: Unit) -> int:
+	return aggregate_unit_property(unit, lambda unit: {"personnel": unit.full_personnel})["personnel"]
 
 
 def get_current_equipments(unit: Unit) -> Dict[str, int]:

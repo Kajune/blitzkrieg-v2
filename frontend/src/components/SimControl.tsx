@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
-import type { UnitRecord } from '../types/simTypes';
-import type { Force, DisplayForce, DetectLog, AttackLog } from '../types/unitTypes';
+import type { UnitRecord, PersonnelEquipmentsRecord } from '../types/simTypes';
+import type { Unit, PlacedUnit, Force, DisplayForce, DetectLog, AttackLog } from '../types/unitTypes';
 import { FORCES, DISPLAY_FORCES } from '../types/unitTypes';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -10,10 +10,10 @@ type SimMode = 'playing' | 'recording' | null;
 
 export const SimControl = ({ 
 	showMenu,
-	updateDetectionPolygons,
+	updateDetectionAttackPolygons,
 }: { 
 	showMenu: boolean,
-	updateDetectionPolygons: (unitId: string, detectedUnits: DetectLog[]) => void,
+	updateDetectionAttackPolygons: (unitId: string, detectedUnits: DetectLog[], attackingUnits: AttackLog[]) => void,
 }) => {
 	const {
 		simUuid,
@@ -166,7 +166,7 @@ export const SimControl = ({
 				if (marker) {
 					const last_position = unitRecord.trajectory[unitRecord.trajectory.length - 1];
 					marker.setLatLng([last_position.lat, last_position.lon]);
-					updateDetectionPolygons(unitId, unitRecord.detectedUnits);
+					updateDetectionAttackPolygons(unitId, unitRecord.detectedUnits, unitRecord.attackingUnits);
 				}
 			});
 			return;
@@ -192,10 +192,27 @@ export const SimControl = ({
 				const startPos = startPositions.get(unitId);
 				
 				if (marker && startPos) {
-					const currentIndex = Math.round((unitRecord.trajectory.length - 1) * progress);
-					const targetPos = unitRecord.trajectory[currentIndex];
-					marker.setLatLng([targetPos.lat, targetPos.lon]);
-					updateDetectionPolygons(unitId, unitRecord.detectedUnits);
+					const trajectory = unitRecord.trajectory;
+					// 全体の中での現在の位置を浮動小数点数で取得
+					const totalSteps = trajectory.length - 1;
+					const floatIndex = totalSteps * progress;
+					
+					// 前後のインデックスを特定
+					const index1 = Math.floor(floatIndex);
+					const index2 = Math.min(index1 + 1, totalSteps);
+					
+					// 2点間の進行度 (0.0 ～ 1.0)
+					const lerpProgress = floatIndex - index1;
+					
+					const pos1 = trajectory[index1];
+					const pos2 = trajectory[index2];
+					
+					// 線形補間計算
+					const lat = pos1.lat + (pos2.lat - pos1.lat) * lerpProgress;
+					const lon = pos1.lon + (pos2.lon - pos1.lon) * lerpProgress;
+					
+					marker.setLatLng([lat, lon]);
+					updateDetectionAttackPolygons(unitId, unitRecord.detectedUnits, unitRecord.attackingUnits);
 				}
 			});
 
@@ -210,32 +227,51 @@ export const SimControl = ({
 	};
 
 	const updatePlacedUnits = (unitRecords: Record<string, UnitRecord>) => {
+		// 再帰的にUnitオブジェクトを更新する関数
+		const updateUnitRecursive = (unit: Unit, record: PersonnelEquipmentsRecord): Unit => {
+			return {
+				...unit,
+				current_personnel: record.current_personnel,
+				current_equipments: { ...record.current_equipments },
+				lower_units: unit.lower_units.map(subUnit => {
+					const subRecord = record.lower_units[subUnit.id];
+					// lower_unitsが存在しない場合はそのまま返すか、適宜ハンドリング
+					return subRecord ? updateUnitRecursive(subUnit, subRecord) : subUnit;
+				})
+			};
+		};
+
 		setPlacedUnits((prev) =>
 			prev.map((unit) => {
 				const record = unitRecords[unit.id];
 				if (!record) return unit;
 
+				// ベースの更新
+				let updatedUnit = {
+					...unit,
+					position: record.trajectory[record.trajectory.length - 1],
+					detectedUnits: record.detectedUnits,
+					attackingUnits: record.attackingUnits,
+					suppressionRate: record.suppressionRate,
+				};
+
+				// 人員・装備を再帰的に反映
+				updatedUnit = updateUnitRecursive(updatedUnit, record.personnelEquipments) as PlacedUnit;
+
+				// actionsの処理
 				if (mode === 'recording') {
 					const finishedIds = new Set(record.actions.filter(a => a.finished).map(a => a.id));
-
 					return {
-						...unit,
-						position: record.trajectory[record.trajectory.length - 1],
+						...updatedUnit,
 						actions: unit.actions.map(a => ({
 							...a,
 							finished: finishedIds.has(a.id) ? true : a.finished
 						})),
-						detectedUnits: record.detectedUnits,
-						attackingUnits: record.attackingUnits,
 					};
-
 				} else {
 					return {
-						...unit,
-						position: record.trajectory[record.trajectory.length - 1],
+						...updatedUnit,
 						actions: record.actions,
-						detectedUnits: record.detectedUnits,
-						attackingUnits: record.attackingUnits,
 					};
 				}
 			})

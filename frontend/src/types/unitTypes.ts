@@ -65,7 +65,8 @@ export interface DetectLog {
 
 export interface AttackLog {
 	unitId: string;
-	intensity: number;
+	firePower: number;
+	weaponType: string;
 }
 
 export interface UnitAction {
@@ -83,6 +84,7 @@ export interface PlacedUnit extends Unit {
 	actions: UnitAction[];
 	detectedUnits: DetectLog[];
 	attackingUnits: AttackLog[];
+	suppressionRate: number;
 }
 
 export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>> => {

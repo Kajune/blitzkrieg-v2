@@ -71,7 +71,7 @@ export const useMapEditor = (
 		}
 	};
 
-	const updateDetectionPolygons = (unitId: string, detectedUnits: DetectLog[]) => {
+	const updateDetectionAttackPolygons = (unitId: string, detectedUnits: DetectLog[], attackingUnits: AttackLog[]) => {
 		const existingLayers = detectionLayerMap.current.get(unitId) || [];
 		existingLayers.forEach(layer => layer.remove());
 
@@ -93,28 +93,25 @@ export const useMapEditor = (
 			return;
 		}
 
+		// 攻撃対象となっているユニットIDのセットを作成
+		const attackingTargetIds = new Set(attackingUnits.map(a => a.unitId));
+
 		const newPolygons: L.Polygon[] = detectedUnits.map((log) => {
 			const targetMarker = unitLayerMap.current.get(log.unitId);
 			if (!targetMarker) return null;
 			const targetPos = targetMarker.getLatLng();
 
-			// ベクトル (lat: 緯度方向, lng: 経度方向)
 			const latDiff = targetPos.lat - sourcePos.lat;
 			const lngDiff = targetPos.lng - sourcePos.lng;
 			
-			// 距離に関係なく、現在の敵までの位置ベクトルを正規化して使うのが確実
 			const dist = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
 			if (dist === 0) return null;
 
-			// 正規化ベクトル
 			const unitLat = latDiff / dist;
 			const unitLng = lngDiff / dist;
 
-			// 扇形の幅（ラジアン）
 			const halfWidth = 0.05;
 
-			// 扇形の頂点計算
-			// 回転行列を適用して幅を出す
 			const p1 = [
 				sourcePos.lat + dist * (unitLat * Math.cos(halfWidth) - unitLng * Math.sin(halfWidth)),
 				sourcePos.lng + dist * (unitLng * Math.cos(halfWidth) + unitLat * Math.sin(halfWidth))
@@ -125,16 +122,18 @@ export const useMapEditor = (
 				sourcePos.lng + dist * (unitLng * Math.cos(-halfWidth) + unitLat * Math.sin(-halfWidth))
 			] as [number, number];
 
-			// awareness を使って不透明度を計算
 			const opacity = Math.min(0.5, log.awareness * 0.5);
+			
+			// 攻撃中なら赤、そうでなければ黄色
+			const color = attackingTargetIds.has(log.unitId) ? 'red' : 'yellow';
 
 			return L.polygon([
 				[sourcePos.lat, sourcePos.lng],
 				p1,
 				p2
 			], {
-				color: 'yellow',
-				fillColor: 'yellow',
+				color: color,
+				fillColor: color,
 				fillOpacity: opacity,
 				weight: 0,
 				interactive: false
@@ -178,19 +177,8 @@ export const useMapEditor = (
 	};
 
 	const createLayerFromUnit = (unit: PlacedUnit): L.Marker => {
-		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
-		const symbolSize = getSymbolSize(totalPersonnel);
-		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
-		
-		const sSize = symbol.getSize();
-
 		const layer = L.marker([unit.position.lat, unit.position.lon], {
-			icon: L.divIcon({
-				className: 'milsymbol-icon',
-				html: symbol.asSVG(),
-				iconSize: [sSize.width, sSize.height],
-				iconAnchor: [sSize.width / 2, sSize.height / 2]
-			}),
+			icon: createUnitIcon(unit),
 			draggable: isUnitPlacementOpen
 		}).addTo(mapInstance.current!);
 
@@ -298,6 +286,62 @@ export const useMapEditor = (
 		setPoints([]);
 	};
 
+	const createUnitIcon = (unit: PlacedUnit): L.DivIcon => {
+		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
+		const symbolSize = getSymbolSize(totalPersonnel);
+		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
+		const sSize = symbol.getSize();
+
+		// 抑制率が0.5以上なら警告マークを表示するHTMLを作成
+		const isSuppressed = unit.suppressionRate >= 0.5;
+		const html = `
+			<div style="position: relative; width: ${sSize.width}px; height: ${sSize.height}px;">
+				${symbol.asSVG()}
+				${isSuppressed ? `
+					<div style="
+						position: absolute; 
+						top: -10px; 
+						right: -10px; 
+						background: yellow; 
+						color: black; 
+						border-radius: 50%; 
+						width: 20px; 
+						height: 20px; 
+						display: flex; 
+						align-items: center; 
+						justify-content: center; 
+						font-weight: bold; 
+						font-size: 12px;
+					">!</div>
+				` : ''}
+			</div>
+		`;
+
+		return L.divIcon({
+			className: 'milsymbol-icon',
+			html: html,
+			iconSize: [sSize.width, sSize.height],
+			iconAnchor: [sSize.width / 2, sSize.height / 2]
+		});
+	};
+
+	useEffect(() => {
+		// placedUnitsが更新されるたびに、該当するマーカーのアイコンを再設定する
+		placedUnits.forEach((unit) => {
+			const marker = unitLayerMap.current.get(unit.id);
+			if (marker) {
+				const currentIcon = marker.getIcon();
+				const newIcon = createUnitIcon(unit);
+				
+				// アイコンのHTMLを比較して、変更がある場合のみ更新する
+				// (無駄な再描画を防ぐため)
+				if ((currentIcon as any).options.html !== (newIcon as any).options.html) {
+					marker.setIcon(newIcon);
+				}
+			}
+		});
+	}, [placedUnits]);
+
 	const handleDrop = (e: React.DragEvent) => {
 		e.preventDefault();
 		const unitData: Unit = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -312,24 +356,26 @@ export const useMapEditor = (
 
 		const rect = mapRef.current?.getBoundingClientRect();
 		if (!rect) return;
-		
+
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
 		const latLng = mapInstance.current.containerPointToLatLng([x, y]);
+		
+		const newPlacedUnit: PlacedUnit = {
+			...unitData,
+			current_personnel: unitData.full_personnel,
+			current_equipments: unitData.full_equipments,
+			position: { lat: latLng.lat, lon: latLng.lng },
+			actions: [],
+			detectedUnits: [],
+			attackingUnits: [],
+			suppressionRate: 0,
+		};
 
-		const totalPersonnel = getTotalPersonnel(unitData, 'full_personnel');
-		const symbolSize = getSymbolSize(totalPersonnel);
-
-		const symbol = new ms.Symbol(unitData.sidc, { size: symbolSize });
-		const icon = L.divIcon({
-			className: '',
-			html: symbol.asSVG(),
-			iconSize: [symbolSize, symbolSize],
-			iconAnchor: [symbolSize / 2, symbolSize / 2]
-		});
+		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
 
 		const layer = L.marker(latLng, {
-			icon,
+			icon: createUnitIcon(newPlacedUnit),
 			draggable: isUnitPlacementOpen
 		}).addTo(mapInstance.current);
 
@@ -344,18 +390,6 @@ export const useMapEditor = (
 				)
 			);
 		});
-
-		const newPlacedUnit: PlacedUnit = {
-			...unitData,
-			current_personnel: unitData.full_personnel,
-			current_equipments: unitData.full_equipments,
-			position: { lat: latLng.lat, lon: latLng.lng },
-			actions: [],
-			detectedUnits: [],
-			attackingUnits: [],
-		};
-
-		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
 
 		layer.on('click', () => {
 			setSelectedUnitId(newPlacedUnit.id);
@@ -644,7 +678,7 @@ export const useMapEditor = (
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
-		updateDetectionPolygons,
+		updateDetectionAttackPolygons,
 	};
 };
 
