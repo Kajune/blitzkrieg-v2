@@ -245,7 +245,7 @@ class FireType(Enum):
 	INDIRECT = 'Indirect'
 
 
-class Equipment(msgspec.Struct):
+class Equipment(msgspec.Struct, frozen=True, cache_hash=True):
 	name: str
 
 
@@ -269,12 +269,12 @@ class Vehicle(Equipment):
 	personnel_capacity: int
 
 
-class DetectLog(msgspec.Struct):
+class DetectLog(msgspec.Struct, frozen=True, cache_hash=True):
 	unitId: str
 	awareness: float
 
 
-class AttackLog(msgspec.Struct):
+class AttackLog(msgspec.Struct, frozen=True, cache_hash=True):
 	unitId: str
 	intensity: float
 
@@ -327,7 +327,7 @@ class GeometryType(Enum):
 	POINT = 'point'
 
 
-class MapElement(msgspec.Struct):
+class MapElement(msgspec.Struct, frozen=True, cache_hash=True):
 	id: str
 	type: ElementType
 	force: Optional[Force]
@@ -339,13 +339,13 @@ class MapElement(msgspec.Struct):
 # シミュレーション関係
 #
 
-class SimConfig(msgspec.Struct):
+class SimConfig(msgspec.Struct, frozen=True, cache_hash=True):
 	startDateTime: datetime
 	endDateTime: datetime
 	tickInterval: float
 
 
-class SimSetting(msgspec.Struct):
+class SimSetting(msgspec.Struct, frozen=True, cache_hash=True):
 	simConfig: SimConfig
 	units: List[Unit]
 	placedUnits: List[PlacedUnit]
@@ -374,20 +374,20 @@ class SimResponse(msgspec.Struct):
 	unitRecords: Dict[str, UnitRecord]
 
 
-class UnitDeploymentCoeff(msgspec.Struct):
+class UnitDeploymentCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 	base_area: float
 	scale_factor: float
 	scaling_table: Dict[UnitType, Dict[MoveMode, float]]
 
 
-class MobilityCoeff(msgspec.Struct):
+class MobilityCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 	cost: Dict[VehicleType, Dict[str, float]]
 	cost_scale: Dict[MoveSpeed, float]
 	move_speed_cap: Dict[MoveSpeed, float]
 	speed_scale_by_move_mode: Dict[MoveMode, float]
 
 
-class IntelligenceCoeff(msgspec.Struct):
+class IntelligenceCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 	temporal_discovery_advantage: float
 	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]
 	exposure_distance_scale_by_move_speed: Dict[MoveSpeed, float]
@@ -396,7 +396,7 @@ class IntelligenceCoeff(msgspec.Struct):
 	discovery_distance_scale_by_vehicle_type: Dict[SensorType, Dict[VehicleType, float]]
 
 
-class Coefficients(msgspec.Struct):
+class Coefficients(msgspec.Struct, frozen=True, cache_hash=True):
 	unit_deployment: UnitDeploymentCoeff
 	mobility: MobilityCoeff
 	intelligence: IntelligenceCoeff

@@ -98,15 +98,38 @@ class Map:
 				tpos = UTMLocation.from_shapely(tpos_utm_shapely)
 
 		mobility_map = self._compute_mobility_map(unit, deplyment_distribution[unit.id])
-		speed = self._compute_speed(unit)
-
 		upos_px, tpos_px = mobility_map.to_image_coord([upos, tpos])
-		upos_px, tpos_px = mobility_map.clip_to_image_size([upos_px, tpos_px])
+		
+		speed = self._compute_speed(unit) * 1000 / 3600
+		max_dist_px = (speed * self._sim_setting.simConfig.tickInterval) / mobility_map.resolution[0]
 
-		cost_map = mobility_map.data.astype(np.float32) * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
-		path_px = pyastar2d.astar_path(cost_map, 
-			(int(round(upos_px[0])), int(round(upos_px[1]))), 
-			(int(round(tpos_px[0])), int(round(tpos_px[1]))), 
+		dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)
+		
+		target_px = tpos_px
+		if dist_px > max_dist_px:
+			scale = dist_px / max_dist_px
+			new_shape = (int(mobility_map.data.shape[1] / scale), int(mobility_map.data.shape[0] / scale))
+			low_res_map = cv2.resize(mobility_map.data, new_shape, interpolation=cv2.INTER_NEAREST)
+			cost_map = low_res_map * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1			
+
+			low_res_path = pyastar2d.astar_path(
+				cost_map,
+				(int(upos_px[0] / scale), int(upos_px[1] / scale)),
+				(int(tpos_px[0] / scale), int(tpos_px[1] / scale)),
+				allow_diagonal=True
+			)
+			
+			for p in low_res_path:
+				p_orig = (p[0] * scale, p[1] * scale)
+				if np.sqrt((p_orig[0] - upos_px[0])**2 + (p_orig[1] - upos_px[1])**2) > max_dist_px:
+					target_px = (int(p_orig[0]), int(p_orig[1]))
+					break
+
+		cost_map = mobility_map.data * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
+		path_px = pyastar2d.astar_path(
+			cost_map,
+			(int(round(upos_px[0])), int(round(upos_px[1]))),
+			(int(round(target_px[0])), int(round(target_px[1]))),
 			allow_diagonal=True
 		)
 
@@ -119,7 +142,7 @@ class Map:
 		path = mobility_map.from_image_coord(path_px)
 		path[0] = upos
 		path[-1] = tpos
-		base_speed = speed * 1000 / 3600 * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
+		base_speed = speed * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
 
 		# 渋滞ペナルティ
 		overlap_ratio = 0
@@ -132,7 +155,10 @@ class Map:
 
 		# TODO: 火制されているときの機動速度低下もいつか入れる
 		speed_cap = self.coeffs.mobility.move_speed_cap[action.moveSpeed] * 1000 / 3600
-		actual_speed = np.clip(np.clip(1 - mobility_map.data, 0, 1) * base_speed, 0.5, speed_cap)
+		actual_speed = (1 - mobility_map.data)
+		np.clip(actual_speed, 0, 1, out=actual_speed)
+		actual_speed *= base_speed
+		np.clip(actual_speed, 0.5, speed_cap, out=actual_speed)
 
 		total_t = 0
 		new_position = path[0]
@@ -164,11 +190,12 @@ class Map:
 		return trajectories, finished
 
 
-	def _prepare_map(self, map_resolution=10.0, debug=False):
+	def _prepare_map(self, map_resolution=20.0, debug=False):
 		start_time = time.time()
 
 		if self.gis is not None:
 			terrain = self.gis.load_dem(self.common_ao_geom)
+			terrain.data = terrain.data.astype(np.float32)
 			terrain = self.geo_transformer.convert_to_utm_mesh(terrain)
 			terrain = terrain.resize_by_resolution(map_resolution, map_resolution)
 			print(f"Terrain preparation: {time.time() - start_time:.4f} seconds")
@@ -196,7 +223,7 @@ class Map:
 			height = int((max_y - min_y) / map_resolution)
 			
 			terrain = UTMMesh(
-				data=np.zeros((height, width)),
+				data=np.zeros((height, width), dtype=np.float32),
 				left_bottom=UTMLocation(easting=min_x, northing=min_y),
 				right_top=UTMLocation(easting=max_x, northing=max_y),
 				epsg=self.geo_transformer.epsg
@@ -353,8 +380,9 @@ class Map:
 				mobility_map.data += self.map_geometries[f][k]["mesh"].data * coeffs[k]
 
 		# aoは絶対
-		mobility_map.data[self.map_geometries[force]["ao"]["mesh"].data == 0] = 1
+		mobility_map.data[self.map_geometries[force]["ao"]["mesh"].data == 0] = 1.0
 
+		mobility_map.data = mobility_map.data.astype(np.float32)
 		return mobility_map
 
 

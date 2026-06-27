@@ -1,7 +1,8 @@
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Set
 from models import *
 from scipy.stats import multivariate_normal
 import numpy as np
+from functools import lru_cache
 
 
 def smooth_linestring(coords, alpha=0.5, iterations=5, max_dist=1.0):
@@ -115,18 +116,19 @@ def get_deployment_area(unit: Unit, move_mode: MoveMode, coeff: UnitDeploymentCo
 	)["area"]
 
 
-def filter_eqipments(equipments: List[Equipment], filter_class) -> List[Equipment]:
+def filter_equipments(equipments: Tuple[Equipment], filter_class, equipments_master : Dict[str, Equipment]) -> List[Equipment]:
 	eq_list = []
+	equipments_master = dict(equipments_master)
 
 	for equipment in equipments:
 		if isinstance(equipment, filter_class):
 			eq_list.append(equipment)
 
 		if hasattr(equipment, "weapons"):
-			eq_list += filter_eqipments(equipment.weapons, filter_class)
+			eq_list += filter_equipments([equipments_master[w] for w in equipment.weapons], filter_class, equipments_master)
 
 		if hasattr(equipment, "sensors"):
-			eq_list += filter_eqipments(equipment.sensors, filter_class)
+			eq_list += filter_equipments([equipments_master[s] for s in equipment.sensors], filter_class, equipments_master)
 
 	return eq_list
 

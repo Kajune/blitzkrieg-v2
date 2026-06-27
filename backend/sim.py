@@ -7,6 +7,7 @@ from geometry import *
 from gis import *
 from map import *
 from utils import *
+from functools import lru_cache
 import json, msgspec, copy
 
 
@@ -43,16 +44,18 @@ class Simulation:
 		self.weapons = {w.name: w for w in self.weapons}
 		self.sensors = {s.name: s for s in self.sensors}
 		self.vehicles = {v.name: v for v in self.vehicles}
-		for vehicle in self.vehicles.values():
-			vehicle.sensors = [
-				self.sensors.get(s) if isinstance(s, str) else s 
-				for s in vehicle.sensors
-			]
-			vehicle.weapons = [
-				self.weapons.get(w) if isinstance(w, str) else w 
-				for w in vehicle.weapons
-			]
 		self.equipments = {**self.weapons, **self.sensors, **self.vehicles}
+
+		self.distance_scales = {sensor.name: 
+			np.array([
+				self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
+				for vehicle_type in VehicleType
+			]) * sensor.sensor_range for sensor in self.sensors.values()
+		}
+
+		self.vehicle_type_one_hot = {}
+		for vi, vt in enumerate(VehicleType):
+			self.vehicle_type_one_hot[vt] = np.eye(len(VehicleType))[vi]
 
 		# Unit
 		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
@@ -61,6 +64,11 @@ class Simulation:
 
 		# Map
 		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)
+
+
+	@lru_cache(maxsize=None)
+	def _filter_equipments(self, equipments : Tuple[str], filter_class):
+		return filter_equipments([self.equipments[eq_name] for eq_name in equipments], filter_class, self.equipments)
 
 
 	def compute_deployment_distribution(self, placed_units : Dict[str, PlacedUnit], updated_units : Dict[str, UnitRecord]) -> Dict[str, Dict]:
@@ -151,20 +159,16 @@ class Simulation:
 			equipments = []
 
 			for eq_name, eq_num in get_current_equipments(unit).items():
-				equipments += [self.equipments[eq_name]] * eq_num
+				equipments += [eq_name] * eq_num
 
 			last_action = get_last_action(record)
-			sensors = filter_eqipments(equipments, Sensor)
-			vehicles = filter_eqipments(equipments, Vehicle)
+			sensors = self._filter_equipments(tuple(equipments), Sensor)
+			vehicles = self._filter_equipments(tuple(equipments), Vehicle)
 			sensors_dict[unit_id] = sensors
 
 			discovery_ranges = []
 			for sensor in sensors:
-				distance_scales = np.array([
-					self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
-					for vehicle_type in VehicleType
-				])
-				discovery_ranges.append(distance_scales * sensor.sensor_range)
+				discovery_ranges.append(self.distance_scales[sensor.name])
 
 			discovery_distribution[unit_id] = np.sqrt((np.array(discovery_ranges) ** 2)
 				* self.coeffs.intelligence.discovery_distance_scale_by_move_mode[last_action.moveMode]
@@ -174,8 +178,7 @@ class Simulation:
 
 			vehicle_types = []
 			for vehicle in vehicles:
-				vehicle_type_one_hot = [1 if vehicle.type == vt else 0 for vt in VehicleType]
-				vehicle_types.append(vehicle_type_one_hot)
+				vehicle_types.append(self.vehicle_type_one_hot[vehicle.type])
 
 			if len(unit.attackingUnits) > 0:
 				exposure_distribution[unit_id] = np.array(vehicle_types)
@@ -219,12 +222,16 @@ class Simulation:
 				discovery_prob = (R_eff / unit_distances[ui,uj]) ** 2
 				discovery_prob = np.clip(discovery_prob, 0, 1)
 
-				visibility_ratio = get_visibility_ratio(unit_id1, unit_id2)
-				discovery_prob *= visibility_ratio
-
 				# 前の時刻で発見済みならプラス
 				if unit_id2 in [det_log.unitId for det_log in unit1.detectedUnits]:
 					discovery_prob *= self.coeffs.intelligence.temporal_discovery_advantage
+
+				max_range = np.max(R_eff)
+				if max_range < unit_distances[ui, uj]:
+					discovery_prob = np.zeros_like(discovery_prob)
+				else:
+					visibility_ratio = get_visibility_ratio(unit_id1, unit_id2)
+					discovery_prob *= visibility_ratio
 
 				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
 				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
