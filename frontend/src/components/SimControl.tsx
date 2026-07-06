@@ -185,7 +185,7 @@ export const SimControl = ({
 
 		const animateFrame = (now: number) => {
 			const elapsed = now - startTime;
-			const progress = Math.min(elapsed / duration, 1);
+			const progress = Math.max(Math.min(elapsed / duration, 1), 0);
 
 			Object.entries(unitRecords).forEach(([unitId, unitRecord]) => {
 				const marker = unitLayerMap.current.get(unitId);
@@ -206,7 +206,7 @@ export const SimControl = ({
 					
 					const pos1 = trajectory[index1];
 					const pos2 = trajectory[index2];
-					
+
 					// 線形補間計算
 					const lat = pos1.lat + (pos2.lat - pos1.lat) * lerpProgress;
 					const lon = pos1.lon + (pos2.lon - pos1.lon) * lerpProgress;

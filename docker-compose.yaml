@@ -1,0 +1,19 @@
+services:
+  blitzkrieg:
+    image: kajune/blitzkrieg:latest
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - .:/app
+    working_dir: /app/backend
+    command: python3 app.py
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "5000:5000"
