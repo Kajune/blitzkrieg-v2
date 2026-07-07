@@ -32,6 +32,20 @@
 				"COMBAT": 1.5,
 				"DEFENSE": 1.5,
 				"ARTILLERY": 3.0
+			},
+			"anti_air":
+			{
+				"MARCH": 1.0,
+				"COMBAT": 1.5,
+				"DEFENSE": 1.5,
+				"ARTILLERY": 3.0
+			},
+			"air":
+			{
+				"MARCH": 3.0,
+				"COMBAT": 3.0,
+				"DEFENSE": 3.0,
+				"ARTILLERY": 3.0
 			}
 		}
 	},

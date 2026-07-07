@@ -222,6 +222,8 @@ class UnitType(Enum):
 	INFANTRY = 'infantry'
 	TANK = 'tank'
 	ARTILLERY = 'artillery'
+	ANTIAIR = 'anti_air'
+	AIR = 'air'
 
 
 class SensorType(Enum):

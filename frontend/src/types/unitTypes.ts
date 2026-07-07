@@ -156,7 +156,7 @@ export const getSymbolSize = (
 	const clampedPersonnel = Math.min(Math.max(totalPersonnel, minPersonnel), maxPersonnel);
 	
 	const t = (clampedPersonnel - minPersonnel) / (maxPersonnel - minPersonnel);
-	const size = minSize + (maxSize - minSize) * t;
-	
+	const size = minSize + (maxSize - minSize) * Math.sqrt(t);
+
 	return Math.round(size);
 };

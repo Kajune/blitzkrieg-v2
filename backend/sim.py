@@ -25,6 +25,29 @@ class Simulation:
 		except Exception as e:
 			print(e)
 
+		self._load_equipments()
+
+		self.distance_scales = {sensor.name: 
+			np.array([
+				self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
+				for vehicle_type in VehicleType
+			]) * sensor.sensor_range for sensor in self.sensors.values()
+		}
+
+		self.vehicle_type_one_hot = {}
+		for vi, vt in enumerate(VehicleType):
+			self.vehicle_type_one_hot[vt] = np.eye(len(VehicleType))[vi]
+
+		# Unit
+		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
+			for eq_name in get_current_equipments(unit):
+				assert eq_name in self.equipments, f"Unknown equipment: {eq_name}"
+
+		# Map
+		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)
+
+
+	def _load_equipments(self):
 		self.weapons = []
 		self.sensors = []
 		self.vehicles = []
@@ -48,24 +71,16 @@ class Simulation:
 		self.vehicles = {v.name: v for v in self.vehicles}
 		self.equipments = {**self.weapons, **self.sensors, **self.vehicles}
 
-		self.distance_scales = {sensor.name: 
-			np.array([
-				self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
-				for vehicle_type in VehicleType
-			]) * sensor.sensor_range for sensor in self.sensors.values()
-		}
+		for v_name, vehicle in self.vehicles.items():
+			for weapon_item in vehicle.weapons:
+				weapon_name = weapon_item if isinstance(weapon_item, str) else weapon_item.name
+				if weapon_name not in self.weapons:
+					raise ValueError(f"Vehicle '{v_name}' references undefined weapon: {weapon_name}")
 
-		self.vehicle_type_one_hot = {}
-		for vi, vt in enumerate(VehicleType):
-			self.vehicle_type_one_hot[vt] = np.eye(len(VehicleType))[vi]
-
-		# Unit
-		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
-			for eq_name in get_current_equipments(unit):
-				assert eq_name in self.equipments, f"Unknown equipment: {eq_name}"
-
-		# Map
-		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)
+			for sensor_item in vehicle.sensors:
+				sensor_name = sensor_item if isinstance(sensor_item, str) else sensor_item.name
+				if sensor_name not in self.sensors:
+					raise ValueError(f"Vehicle '{v_name}' references undefined sensor: {sensor_name}")
 
 
 	@lru_cache(maxsize=None)

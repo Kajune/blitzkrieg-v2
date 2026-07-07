@@ -121,6 +121,13 @@
 			"fire_power": 7.0
 		},
 		{
+			"name": "120mm迫撃砲",
+			"type": "Howitzer",
+			"fire_range": 5000,
+			"fire_type": "Indirect",
+			"fire_power": 10.0
+		},
+		{
 			"name": "155mm榴弾砲",
 			"type": "Howitzer",
 			"fire_range": 30000,
@@ -191,6 +198,22 @@
 			"sensors":
 			[
 				"戦車用射撃統制装置(FCS)"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "82式指揮通信車",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"12.7mm重機関銃M2"
+			],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
 			],
 			"required_personnel": 4,
 			"personnel_capacity": 4

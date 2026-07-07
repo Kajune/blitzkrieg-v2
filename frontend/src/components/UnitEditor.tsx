@@ -8,6 +8,8 @@ import { useAppStore } from '../contexts/AppContext';
 const createUnitStructure = (templateId: string, force: Force): Unit => {
 	const template = UNIT_TEMPLATES[force].find(t => t.id === templateId);
 	if (!template) {
+		alert("未定義の部隊IDが指定されました: " + templateId);
+		console.log(templateId, UNIT_TEMPLATES[force]);
 		return { 
 			id: '', 
 			templateId: '不明', 
