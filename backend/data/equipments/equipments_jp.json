@@ -1,0 +1,375 @@
+{
+	"weapons":
+	[
+		{
+			"name": "9mm拳銃",
+			"type": "SmallArm",
+			"fire_range": 50,
+			"fire_type": "Direct",
+			"fire_power": 0.05
+		},
+		{
+			"name": "20式小銃",
+			"type": "SmallArm",
+			"fire_range": 500,
+			"fire_type": "Direct",
+			"fire_power": 0.3
+		},
+		{
+			"name": "89式小銃",
+			"type": "SmallArm",
+			"fire_range": 400,
+			"fire_type": "Direct",
+			"fire_power": 0.25
+		},
+		{
+			"name": "MINIMI 5.56mm機関銃",
+			"type": "SmallArm",
+			"fire_range": 800,
+			"fire_type": "Direct",
+			"fire_power": 0.8
+		},
+		{
+			"name": "12.7mm重機関銃M2",
+			"type": "SmallArm",
+			"fire_range": 1800,
+			"fire_type": "Direct",
+			"fire_power": 1.5
+		},
+		{
+			"name": "7.62mm機関銃",
+			"type": "SmallArm",
+			"fire_range": 800,
+			"fire_type": "Direct",
+			"fire_power": 0.7
+		},
+		{
+			"name": "25mm機関砲",
+			"type": "AAGun",
+			"fire_range": 2500,
+			"fire_type": "Direct",
+			"fire_power": 2.5
+		},
+		{
+			"name": "30mm機関砲",
+			"type": "AAGun",
+			"fire_range": 3000,
+			"fire_type": "Direct",
+			"fire_power": 3.0
+		},
+		{
+			"name": "35mm機関砲",
+			"type": "AAGun",
+			"fire_range": 4000,
+			"fire_type": "Direct",
+			"fire_power": 4.0
+		},
+		{
+			"name": "105mmライフル砲",
+			"type": "Cannon",
+			"fire_range": 3000,
+			"fire_type": "Direct",
+			"fire_power": 10.0
+		},
+		{
+			"name": "120mm滑腔砲",
+			"type": "Cannon",
+			"fire_range": 3500,
+			"fire_type": "Direct",
+			"fire_power": 15.0
+		},
+		{
+			"name": "01式軽対戦車誘導弾",
+			"type": "ATMissile",
+			"fire_range": 1000,
+			"fire_type": "Direct",
+			"fire_power": 5.0
+		},
+		{
+			"name": "79式対舟艇対戦車誘導弾",
+			"type": "ATMissile",
+			"fire_range": 4000,
+			"fire_type": "Direct",
+			"fire_power": 8.0
+		},
+		{
+			"name": "中距離多目的誘導弾",
+			"type": "ATMissile",
+			"fire_range": 10000,
+			"fire_type": "Indirect",
+			"fire_power": 12.0
+		},
+		{
+			"name": "ヘルファイア対戦車ミサイル",
+			"type": "ATMissile",
+			"fire_range": 8000,
+			"fire_type": "Direct",
+			"fire_power": 12.0
+		},
+		{
+			"name": "短SAM誘導弾",
+			"type": "AAMissile",
+			"fire_range": 7000,
+			"fire_type": "Direct",
+			"fire_power": 6.0
+		},
+		{
+			"name": "近SAM誘導弾",
+			"type": "AAMissile",
+			"fire_range": 10000,
+			"fire_type": "Direct",
+			"fire_power": 7.0
+		},
+		{
+			"name": "155mm榴弾砲",
+			"type": "Howitzer",
+			"fire_range": 30000,
+			"fire_type": "Indirect",
+			"fire_power": 25.0
+		}
+	],
+	"sensors":
+	[
+		{
+			"name": "戦車用射撃統制装置(FCS)",
+			"type": "OpticalThermal",
+			"sensor_range": 5000
+		},
+		{
+			"name": "ヘリ用目標捕捉・監視装置(TADS/PNVS)",
+			"type": "OpticalThermal",
+			"sensor_range": 8000
+		},
+		{
+			"name": "対空射撃統制レーダー",
+			"type": "RadarAntiAir",
+			"sensor_range": 20000
+		},
+		{
+			"name": "対砲兵レーダー",
+			"type": "RadarCounterBattery",
+			"sensor_range": 40000
+		},
+		{
+			"name": "装甲車用ペリスコープ(EO)",
+			"type": "OpticalVisual",
+			"sensor_range": 2000
+		},
+		{
+			"name": "装甲車用ペリスコープ(IR)",
+			"type": "OpticalThermal",
+			"sensor_range": 2000
+		}
+	],
+	"vehicles":
+	[
+		{
+			"name": "10式戦車",
+			"type": "GroundHardTracked",
+			"max_speed": 70,
+			"weapons":
+			[
+				"120mm滑腔砲",
+				"12.7mm重機関銃M2"
+			],
+			"sensors":
+			[
+				"戦車用射撃統制装置(FCS)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "16式機動戦闘車",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"105mmライフル砲",
+				"12.7mm重機関銃M2"
+			],
+			"sensors":
+			[
+				"戦車用射撃統制装置(FCS)"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "87式偵察警戒車(87RCV)",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"25mm機関砲",
+				"7.62mm機関銃"
+			],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 5,
+			"personnel_capacity": 5
+		},
+		{
+			"name": "89式装甲戦闘車",
+			"type": "GroundHardTracked",
+			"max_speed": 70,
+			"weapons":
+			[
+				"35mm機関砲",
+				"79式対舟艇対戦車誘導弾"
+			],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 10
+		},
+		{
+			"name": "96式装輪装甲車",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"12.7mm重機関銃M2"
+			],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)",
+				"装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 2,
+			"personnel_capacity": 10
+		},
+		{
+			"name": "99式自走155mm榴弾砲",
+			"type": "GroundHardTracked",
+			"max_speed": 50,
+			"weapons":
+			[
+				"155mm榴弾砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "19式装輪自走155mm榴弾砲",
+			"type": "GroundHardWheeled",
+			"max_speed": 90,
+			"weapons":
+			[
+				"155mm榴弾砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 3,
+			"personnel_capacity": 5
+		},
+		{
+			"name": "87式自走高射機関砲",
+			"type": "GroundHardTracked",
+			"max_speed": 53,
+			"weapons":
+			[
+				"35mm機関砲"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "81式短距離地対空誘導弾(短SAM)",
+			"type": "GroundHardWheeled",
+			"max_speed": 80,
+			"weapons":
+			[
+				"短SAM誘導弾"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "11式短距離地対空誘導弾(近SAM)",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"近SAM誘導弾"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "中距離多目的誘導弾発射装置",
+			"type": "GroundSoft",
+			"max_speed": 105,
+			"weapons":
+			[
+				"中距離多目的誘導弾"
+			],
+			"sensors":
+			[],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "軽装甲機動車(LAV)",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"12.7mm重機関銃M2"
+			],
+			"sensors":
+			[
+				"装甲車用ペリスコープ(EO)"
+			],
+			"required_personnel": 1,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "高機動車",
+			"type": "GroundSoft",
+			"max_speed": 105,
+			"weapons":
+			[],
+			"sensors":
+			[],
+			"required_personnel": 1,
+			"personnel_capacity": 10
+		},
+		{
+			"name": "AH-64D アパッチ・ロングボウ",
+			"type": "Aircraft",
+			"max_speed": 290,
+			"weapons":
+			[
+				"30mm機関砲",
+				"ヘルファイア対戦車ミサイル"
+			],
+			"sensors":
+			[
+				"ヘリ用目標捕捉・監視装置(TADS/PNVS)"
+			],
+			"required_personnel": 2,
+			"personnel_capacity": 2
+		}
+	]
+}

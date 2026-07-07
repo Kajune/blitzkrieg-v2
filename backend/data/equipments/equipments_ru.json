@@ -1,0 +1,361 @@
+{
+	"weapons":
+	[
+		{
+			"name": "マカロフ PM",
+			"type": "SmallArm",
+			"fire_range": 50,
+			"fire_type": "Direct",
+			"fire_power": 0.05
+		},
+		{
+			"name": "AK-12",
+			"type": "SmallArm",
+			"fire_range": 500,
+			"fire_type": "Direct",
+			"fire_power": 0.3
+		},
+		{
+			"name": "AK-74M",
+			"type": "SmallArm",
+			"fire_range": 400,
+			"fire_type": "Direct",
+			"fire_power": 0.25
+		},
+		{
+			"name": "PKM 機関銃",
+			"type": "SmallArm",
+			"fire_range": 800,
+			"fire_type": "Direct",
+			"fire_power": 0.8
+		},
+		{
+			"name": "NSV 12.7mm重機関銃",
+			"type": "SmallArm",
+			"fire_range": 1800,
+			"fire_type": "Direct",
+			"fire_power": 1.5
+		},
+		{
+			"name": "14.5mm重機関銃",
+			"type": "SmallArm",
+			"fire_range": 2000,
+			"fire_type": "Direct",
+			"fire_power": 1.8
+		},
+		{
+			"name": "7.62mm機関銃",
+			"type": "SmallArm",
+			"fire_range": 800,
+			"fire_type": "Direct",
+			"fire_power": 0.7
+		},
+		{
+			"name": "30mm 2A42機関砲",
+			"type": "Cannon",
+			"fire_range": 4000,
+			"fire_type": "Direct",
+			"fire_power": 4.0
+		},
+		{
+			"name": "100mm低圧砲",
+			"type": "Cannon",
+			"fire_range": 4000,
+			"fire_type": "Direct",
+			"fire_power": 8.0
+		},
+		{
+			"name": "125mm滑腔砲",
+			"type": "Cannon",
+			"fire_range": 3500,
+			"fire_type": "Direct",
+			"fire_power": 16.0
+		},
+		{
+			"name": "RPG-7",
+			"type": "ATMissile",
+			"fire_range": 500,
+			"fire_type": "Direct",
+			"fire_power": 4.5
+		},
+		{
+			"name": "9M133 コルネット",
+			"type": "ATMissile",
+			"fire_range": 8000,
+			"fire_type": "Indirect",
+			"fire_power": 12.0
+		},
+		{
+			"name": "9M311ミサイル",
+			"type": "AAMissile",
+			"fire_range": 8000,
+			"fire_type": "Direct",
+			"fire_power": 6.0
+		},
+		{
+			"name": "9M330ミサイル",
+			"type": "AAMissile",
+			"fire_range": 12000,
+			"fire_type": "Direct",
+			"fire_power": 7.0
+		},
+		{
+			"name": "9M33ミサイル",
+			"type": "AAMissile",
+			"fire_range": 15000,
+			"fire_type": "Direct",
+			"fire_power": 7.5
+		},
+		{
+			"name": "アタカ対戦車ミサイル",
+			"type": "ATMissile",
+			"fire_range": 6000,
+			"fire_type": "Direct",
+			"fire_power": 10.0
+		},
+		{
+			"name": "152mm 2A65 榴弾砲",
+			"type": "Howitzer",
+			"fire_range": 28000,
+			"fire_type": "Indirect",
+			"fire_power": 25.0
+		},
+		{
+			"name": "152mm榴弾砲",
+			"type": "Howitzer",
+			"fire_range": 25000,
+			"fire_type": "Indirect",
+			"fire_power": 22.0
+		}
+	],
+	"sensors":
+	[
+		{
+			"name": "T-90用射撃統制装置(FCS)",
+			"type": "OpticalThermal",
+			"sensor_range": 5000
+		},
+		{
+			"name": "ヘリ用照準・監視装置(GOES-451)",
+			"type": "OpticalThermal",
+			"sensor_range": 8000
+		},
+		{
+			"name": "対空射撃統制レーダー",
+			"type": "RadarAntiAir",
+			"sensor_range": 20000
+		},
+		{
+			"name": "対砲兵レーダー",
+			"type": "RadarCounterBattery",
+			"sensor_range": 40000
+		},
+		{
+			"name": "ロシア装甲車用ペリスコープ(EO)",
+			"type": "OpticalVisual",
+			"sensor_range": 2000
+		},
+		{
+			"name": "ロシア装甲車用ペリスコープ(IR)",
+			"type": "OpticalThermal",
+			"sensor_range": 2000
+		}
+	],
+	"vehicles":
+	[
+		{
+			"name": "T-90A 戦車",
+			"type": "GroundHardTracked",
+			"max_speed": 60,
+			"weapons":
+			[
+				"125mm滑腔砲",
+				"NSV 12.7mm重機関銃"
+			],
+			"sensors":
+			[
+				"T-90用射撃統制装置(FCS)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "2S25 スプルート-SD",
+			"type": "GroundHardTracked",
+			"max_speed": 70,
+			"weapons":
+			[
+				"125mm滑腔砲",
+				"PKM 機関銃"
+			],
+			"sensors":
+			[
+				"T-90用射撃統制装置(FCS)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "BRDM-2M 偵察車両",
+			"type": "GroundHardWheeled",
+			"max_speed": 100,
+			"weapons":
+			[
+				"14.5mm重機関銃",
+				"7.62mm機関銃"
+			],
+			"sensors":
+			[
+				"ロシア装甲車用ペリスコープ(EO)",
+				"ロシア装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "BMP-3 歩兵戦闘車",
+			"type": "GroundHardTracked",
+			"max_speed": 70,
+			"weapons":
+			[
+				"100mm低圧砲",
+				"30mm 2A42機関砲"
+			],
+			"sensors":
+			[
+				"ロシア装甲車用ペリスコープ(EO)",
+				"ロシア装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 10
+		},
+		{
+			"name": "BTR-82A 装輪装甲車",
+			"type": "GroundHardWheeled",
+			"max_speed": 90,
+			"weapons":
+			[
+				"30mm 2A42機関砲"
+			],
+			"sensors":
+			[
+				"ロシア装甲車用ペリスコープ(EO)",
+				"ロシア装甲車用ペリスコープ(IR)"
+			],
+			"required_personnel": 3,
+			"personnel_capacity": 10
+		},
+		{
+			"name": "2S19 ムスタ-S 152mm自走榴弾砲",
+			"type": "GroundHardTracked",
+			"max_speed": 60,
+			"weapons":
+			[
+				"152mm榴弾砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 5,
+			"personnel_capacity": 5
+		},
+		{
+			"name": "2S35 コアリツィヤ-SV",
+			"type": "GroundHardWheeled",
+			"max_speed": 80,
+			"weapons":
+			[
+				"152mm榴弾砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "2K22 ツングスカ",
+			"type": "GroundHardTracked",
+			"max_speed": 65,
+			"weapons":
+			[
+				"30mm機関砲",
+				"9M311ミサイル"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "9K330 トール",
+			"type": "GroundHardTracked",
+			"max_speed": 65,
+			"weapons":
+			[
+				"9M330ミサイル"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "9K33 オーサ",
+			"type": "GroundHardWheeled",
+			"max_speed": 80,
+			"weapons":
+			[
+				"9M33ミサイル"
+			],
+			"sensors":
+			[
+				"対空射撃統制レーダー"
+			],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "コルネット搭載GAZ-2975",
+			"type": "GroundSoft",
+			"max_speed": 110,
+			"weapons":
+			[
+				"9M133 コルネット"
+			],
+			"sensors":
+			[],
+			"required_personnel": 3,
+			"personnel_capacity": 3
+		},
+		{
+			"name": "GAZ-2330 ティーグル",
+			"type": "GroundSoft",
+			"max_speed": 125,
+			"weapons":
+			[],
+			"sensors":
+			[],
+			"required_personnel": 2,
+			"personnel_capacity": 9
+		},
+		{
+			"name": "Mi-28N ナイトハンター",
+			"type": "Aircraft",
+			"max_speed": 300,
+			"weapons":
+			[
+				"30mm機関砲",
+				"アタカ対戦車ミサイル"
+			],
+			"sensors":
+			[
+				"ヘリ用照準・監視装置(GOES-451)"
+			],
+			"required_personnel": 2,
+			"personnel_capacity": 2
+		}
+	]
+}

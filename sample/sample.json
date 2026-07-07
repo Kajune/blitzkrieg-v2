@@ -33,11 +33,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -52,13 +52,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -74,13 +74,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -96,13 +96,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -120,11 +120,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -139,13 +139,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -161,13 +161,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -183,13 +183,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -207,11 +207,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -226,13 +226,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -248,13 +248,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -270,13 +270,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -296,13 +296,13 @@
       "current_personnel": 20,
       "full_equipments":
       {
-        "96WAPC": 3,
-        "拳銃": 10
+        "96式装輪装甲車": 3,
+        "9mm拳銃": 10
       },
       "current_equipments":
       {
-        "96WAPC": 3,
-        "拳銃": 10
+        "96式装輪装甲車": 3,
+        "9mm拳銃": 10
       },
       "lower_units":
       [
@@ -317,12 +317,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -339,12 +339,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -361,12 +361,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -383,12 +383,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -410,11 +410,11 @@
       "current_personnel": 20,
       "full_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "current_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "lower_units":
       [
@@ -429,13 +429,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -451,13 +451,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -473,13 +473,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -606,11 +606,11 @@
       "current_personnel": 20,
       "full_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "current_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "lower_units":
       [
@@ -625,13 +625,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -647,13 +647,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -669,13 +669,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -815,11 +815,11 @@
       "current_personnel": 20,
       "full_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "current_equipments":
       {
-        "拳銃": 20
+        "マカロフ PM": 20
       },
       "lower_units":
       [
@@ -834,13 +834,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -856,13 +856,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -878,13 +878,13 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "current_equipments":
           {
-            "装甲戦闘車": 20,
-            "自動銃": 180
+            "BMP-3 歩兵戦闘車": 20,
+            "AK-12": 180
           },
           "lower_units":
           []
@@ -914,12 +914,12 @@
       "current_personnel": 200,
       "full_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "current_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "lower_units":
@@ -948,12 +948,12 @@
       "current_personnel": 200,
       "full_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "current_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "lower_units":
@@ -982,12 +982,12 @@
       "current_personnel": 200,
       "full_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "current_equipments":
       {
-        "96WAPC": 20,
+        "96式装輪装甲車": 20,
         "89式小銃": 180
       },
       "lower_units":
@@ -1016,13 +1016,13 @@
       "current_personnel": 20,
       "full_equipments":
       {
-        "96WAPC": 3,
-        "拳銃": 10
+        "96式装輪装甲車": 3,
+        "9mm拳銃": 10
       },
       "current_equipments":
       {
-        "96WAPC": 3,
-        "拳銃": 10
+        "96式装輪装甲車": 3,
+        "9mm拳銃": 10
       },
       "lower_units":
       [
@@ -1037,12 +1037,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -1059,12 +1059,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -1081,12 +1081,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -1103,12 +1103,12 @@
           "current_personnel": 200,
           "full_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "current_equipments":
           {
-            "96WAPC": 20,
+            "96式装輪装甲車": 20,
             "89式小銃": 180
           },
           "lower_units":
@@ -1154,11 +1154,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -1173,13 +1173,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1195,13 +1195,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1217,13 +1217,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1241,11 +1241,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -1260,13 +1260,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1282,13 +1282,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1304,13 +1304,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1328,11 +1328,11 @@
           "current_personnel": 20,
           "full_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "current_equipments":
           {
-            "拳銃": 20
+            "マカロフ PM": 20
           },
           "lower_units":
           [
@@ -1347,13 +1347,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1369,13 +1369,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []
@@ -1391,13 +1391,13 @@
               "current_personnel": 200,
               "full_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "current_equipments":
               {
-                "装甲戦闘車": 20,
-                "自動銃": 180
+                "BMP-3 歩兵戦闘車": 20,
+                "AK-12": 180
               },
               "lower_units":
               []

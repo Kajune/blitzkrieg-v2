@@ -8,7 +8,7 @@ from gis import *
 from map import *
 from utils import *
 from functools import lru_cache
-import json, msgspec, copy
+import json, msgspec, copy, glob
 
 
 class Simulation:
@@ -30,14 +30,16 @@ class Simulation:
 		self.vehicles = []
 
 		try:
-			with open("data/equipments.json") as f:
-				equipments = json.load(f)
-				for weapon in equipments["weapons"]:
-					self.weapons.append(msgspec.convert(weapon, Weapon))
-				for sensor in equipments["sensors"]:
-					self.sensors.append(msgspec.convert(sensor, Sensor))
-				for vehicle in equipments["vehicles"]:
-					self.vehicles.append(msgspec.convert(vehicle, Vehicle))
+			eq_files = sorted(glob.glob("data/equipments/*.json"))
+			for eq_file in eq_files:
+				with open(eq_file) as f:
+					equipments = json.load(f)
+					for weapon in equipments["weapons"]:
+						self.weapons.append(msgspec.convert(weapon, Weapon))
+					for sensor in equipments["sensors"]:
+						self.sensors.append(msgspec.convert(sensor, Sensor))
+					for vehicle in equipments["vehicles"]:
+						self.vehicles.append(msgspec.convert(vehicle, Vehicle))
 		except Exception as e:
 			print(e)
 

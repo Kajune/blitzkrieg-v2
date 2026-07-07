@@ -17,3 +17,7 @@ services:
               capabilities: [gpu]
     ports:
       - "5000:5000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      POSTGRES_HOST: "host.docker.internal"

@@ -90,7 +90,7 @@ def aggregate_unit_property(unit: Unit, fetch_fn, aggr_dict: Dict[str, int] = No
 		aggr_dict = {}
 
 	for k, v in fetch_fn(unit).items():
-		if k not in aggr_dict and v > 0:
+		if k not in aggr_dict:
 			aggr_dict[k] = 0
 		aggr_dict[k] += v
 
