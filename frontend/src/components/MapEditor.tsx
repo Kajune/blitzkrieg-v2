@@ -24,6 +24,7 @@ L.Marker.prototype.options.icon = L.icon({
 export const useMapEditor = (
 	showLabels: boolean,
 	showDetectionPolygons: boolean,
+	showMobilityMap: boolean,
 	isUnitPlacementOpen: boolean,
 ) => {
 	const mapInstance = useRef<L.Map | null>(null);
@@ -32,6 +33,7 @@ export const useMapEditor = (
 		mapElements, setMapElements, 
 		placedUnits, setPlacedUnits,
 		simDatalink, displayForce,
+		mobilityMap,
 	} = useAppStore();
 	const [pendingElement, setPendingElement] = useState<MapElement | null>(null);
 	const [points, setPoints] = useState<L.LatLng[]>([]);
@@ -45,6 +47,8 @@ export const useMapEditor = (
 	const pointsRef = useRef(points);
 	const showLabelsRef = useRef(showLabels);
 	const showDetectionPolygonsRef = useRef(showDetectionPolygons);
+	const showMobilityMapRef = useRef(showMobilityMap);
+	const mobilityLayerRef = useRef<L.Layer | null>(null);
 	const { unitLayerMap, actionLayerMap, detectionLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
@@ -204,7 +208,8 @@ export const useMapEditor = (
 		pointsRef.current = points;
 		showLabelsRef.current = showLabels;
 		showDetectionPolygonsRef.current = showDetectionPolygons;
-	}, [pendingElement, points, showLabels, showDetectionPolygons]);
+		showMobilityMapRef.current = showMobilityMap;
+	}, [pendingElement, points, showLabels, showDetectionPolygons, showMobilityMap]);
 
 	useEffect(() => {
 		if (!mapInstance.current) return;
@@ -651,6 +656,43 @@ export const useMapEditor = (
 			}
 		});
 	}, [displayForce, placedUnits, mapElements, showDetectionPolygons]);
+
+	useEffect(() => {
+		const map = mapInstance.current;
+		if (!map) return;
+
+		if (mobilityLayerRef.current) {
+			map.removeLayer(mobilityLayerRef.current);
+			mobilityLayerRef.current = null;
+		}
+
+		if (showMobilityMap && mobilityMap) {
+			// データ構造を判定して、単一のFeatureとして扱う
+			const feature = ('features' in mobilityMap) 
+				? (mobilityMap.features as any[])[0] 
+				: mobilityMap;
+
+			if (feature && feature.geometry && feature.properties?.mesh_data) {
+				const coords = feature.geometry.coordinates[0];
+				const lngs = coords.map((c: number[]) => c[0]);
+				const lats = coords.map((c: number[]) => c[1]);
+				
+				const bounds = L.latLngBounds(
+					L.latLng(Math.min(...lats), Math.min(...lngs)),
+					L.latLng(Math.max(...lats), Math.max(...lngs))
+				);
+
+				const imageUrl = `data:${feature.properties.mime_type};base64,${feature.properties.mesh_data}`;
+
+				const overlay = L.imageOverlay(imageUrl, bounds, {
+					opacity: 0.7,
+					interactive: false
+				}).addTo(map);
+
+				mobilityLayerRef.current = overlay;
+			}
+		}
+	}, [mobilityMap, showMobilityMap]);
 
 	useEffect(() => {
 		mapElements.forEach((el) => {

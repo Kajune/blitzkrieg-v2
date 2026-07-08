@@ -34,6 +34,21 @@ def register_simulation():
 		return jsonify({"success": False, "errors": str(e)}), 400
 
 
+@app.route('/api/mobility_map', methods=['GET'])
+def get_mobility_map():
+	try:
+		sim_id = request.args.get("sim_id")
+
+		if sim_id is None or sim_id not in sim_instances:
+			return jsonify({"success": False, "errors": "Invalid Sim ID"}), 400
+
+		sim_instance = sim_instances[sim_id]
+		mobility_map = sim_instance.map.get_natural_mobility_map(return_geo_mesh=True)
+		return jsonify({"success": True, "mobility_map": mobility_map.get_geojson()})
+	except Exception as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
+
+
 @app.route('/api/simulate', methods=['POST'])
 def simulate():
 	try:

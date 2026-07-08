@@ -23,6 +23,7 @@ function AppContent() {
 	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
 	const [showLabels, setShowLabels] = useState(true);
 	const [showDetectionPolygons, setShowDetectionPolygons] = useState(true);
+	const [showMobilityMap, setShowMobilityMap] = useState(false);
 
 	const { 
 		simConfig, setSimConfig, 
@@ -49,7 +50,7 @@ function AppContent() {
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionAttackPolygons,
-	} = useMapEditor(showLabels, showDetectionPolygons, isUnitPlacementOpen);
+	} = useMapEditor(showLabels, showDetectionPolygons, showMobilityMap, isUnitPlacementOpen);
 
 	const exportData = () => {
 		const payload = {
@@ -171,6 +172,21 @@ function AppContent() {
 				onClick={() => setShowDetectionPolygons(!showDetectionPolygons)}
 			>
 				{showDetectionPolygons ? '探知非表示' : '探知表示'}
+			</button>
+
+			<button 
+				className="btn btn-secondary btn-sm position-absolute"
+				style={{ 
+					bottom: 80, 
+					left: 220, 
+					zIndex: 1000,
+					borderRadius: '20px',
+					padding: '5px 10px',
+					fontSize: '0.8rem'
+				}}
+				onClick={() => setShowMobilityMap(!showMobilityMap)}
+			>
+				{showMobilityMap ? '機動障害図非表示' : '機動障害図表示'}
 			</button>
 
 			<div 

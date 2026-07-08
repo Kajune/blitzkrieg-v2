@@ -11,6 +11,8 @@ from shapely.geometry import Point
 import numpy as np
 import cv2
 import math
+import base64
+import json
 
 #
 # 共通
@@ -146,6 +148,46 @@ class BaseMesh(Generic[T]):
 		return set_coordinates(geom, coords)
 
 
+	def _get_base_polygon(self) -> dict:
+		x1 = getattr(self.left_bottom, 'lon', getattr(self.left_bottom, 'easting', 0))
+		y1 = getattr(self.left_bottom, 'lat', getattr(self.left_bottom, 'northing', 0))
+		x2 = getattr(self.right_top, 'lon', getattr(self.right_top, 'easting', 0))
+		y2 = getattr(self.right_top, 'lat', getattr(self.right_top, 'northing', 0))
+
+		return {
+			"type": "Feature",
+			"geometry": {
+				"type": "Polygon",
+				"coordinates": [[
+					[x1, y1], [x2, y1], [x2, y2], [x1, y2], [x1, y1]
+				]]
+			},
+			"properties": {"epsg": self.epsg}
+		}
+
+
+	def get_geojson(self) -> dict:
+		geojson = self._get_base_polygon()
+		
+		if self.data is None or self.data.size == 0:
+			return geojson
+
+		data_to_encode = self.data
+		if self.data.dtype != np.uint8:
+			data_to_encode = (self.data * 255).clip(0, 255).astype(np.uint8)
+
+		_, buffer = cv2.imencode('.png', data_to_encode)
+		img_str = base64.b64encode(buffer).decode('utf-8')
+		
+		geojson["properties"].update({
+			"mesh_data": img_str,
+			"encoding": "base64",
+			"mime_type": "image/png",
+			"shape": self.data.shape
+		})
+		
+		return geojson
+
 
 @dataclass
 class GeoMesh(BaseMesh[GeoLocation]):
@@ -167,7 +209,6 @@ class GeoMesh(BaseMesh[GeoLocation]):
 		d_y = (self.right_top.lat - self.left_bottom.lat) / height
 		start_x, start_y = self.left_bottom.lon, self.left_bottom.lat
 		return d_x, d_y, start_x, start_y
-
 
 
 @dataclass

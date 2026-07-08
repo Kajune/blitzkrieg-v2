@@ -43,7 +43,7 @@ class Map:
 			self.gis = PostGIS()
 		except Exception as e:
 			self.gis = None
-		self.alt_mesh, self.map_geometries = self._prepare_map(debug=debug)
+		self.alt_mesh, self.map_geometries, self.cached_map_geometries = self._prepare_map(debug=debug)
 		self.slope_mesh = compute_slope_mesh(self.alt_mesh)
 
 
@@ -307,7 +307,7 @@ class Map:
 					if geometries[force][geom_name]["mesh"] is not None:
 						cv2.imwrite(f"{force}_{geom_name}.png", geometries[force][geom_name]["mesh"].data * 255)
 
-		return terrain, geometries
+		return terrain, geometries, cached_geometries
 
 
 	def _get_unit_mobility_composition(self, unit: PlacedUnit) -> dict:
@@ -382,6 +382,31 @@ class Map:
 		mobility_map.data[self.map_geometries[force]["ao"]["mesh"].data == 0] = 1.0
 
 		mobility_map.data = mobility_map.data.astype(np.float32)
+		return mobility_map
+
+
+	def get_natural_mobility_map(self, return_geo_mesh : bool = False, climb_power: float = 30.0) -> Union[UTMMesh, GeoMesh]:
+		# 基本は斜度
+		mobility_map = copy.deepcopy(self.slope_mesh)
+		mobility_map.data /= climb_power
+
+		# vegetation, fortificationは加算
+		for k in ["vegetation", "fortification"]:
+			mobility_map.data += self.cached_map_geometries[k]["mesh"].data
+
+		# water, waterway, buildingは大きい方で上書き
+		for k in ["water", "waterway", "building"]:
+			mobility_map.data = np.maximum(mobility_map.data, self.cached_map_geometries[k]["mesh"].data)
+
+		# roadは小さい方で上書き
+		for k in ["road"]:
+			mobility_map.data = np.minimum(mobility_map.data, (1 - self.cached_map_geometries[k]["mesh"].data))
+
+		mobility_map.data = mobility_map.data.astype(np.float32)
+
+		if return_geo_mesh:
+			mobility_map = self.geo_transformer.convert_to_geo_mesh(mobility_map)
+
 		return mobility_map
 
 

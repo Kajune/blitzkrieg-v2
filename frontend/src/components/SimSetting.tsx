@@ -14,7 +14,8 @@ export const SimSetting = ({
 	const { 
 		simConfig, setSimConfig, 
 		simUuid, setSimUuid,
-		units, placedUnits, mapElements
+		units, placedUnits, mapElements,
+		setMobilityMap,
 	} = useAppStore();
 	const [isSending, setIsSending] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
@@ -69,6 +70,16 @@ export const SimSetting = ({
 			const data = await response.json();
 			if (data.success) {
 				setSimUuid(data.uuid);
+
+				const mobilityResponse = await fetch(`/api/mobility_map?sim_id=${encodeURIComponent(data.uuid)}`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				});
+				
+				const mobilityData = await mobilityResponse.json();
+				setMobilityMap(mobilityData.mobility_map);
 			} else {
 				console.log(data.errors);
 			}
