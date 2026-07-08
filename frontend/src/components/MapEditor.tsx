@@ -368,6 +368,11 @@ export const useMapEditor = (
 		
 		const newPlacedUnit: PlacedUnit = {
 			...unitData,
+			currentMoveMode: null,
+			currentMoveSpeed: null,
+			currentFireMode: null,
+			currentTargetPos: null,
+			currentPath: null,
 			current_personnel: unitData.full_personnel,
 			current_equipments: unitData.full_equipments,
 			position: { lat: latLng.lat, lon: latLng.lng },

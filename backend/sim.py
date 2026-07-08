@@ -132,10 +132,26 @@ class Simulation:
 					continue
 
 				unit = placed_units[unit_id]
-				trajectories, finished = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deployment_distribution)
+
+				if target_pos == unit.currentTargetPos \
+					and action.moveSpeed == unit.currentMoveSpeed \
+					and action.moveMode == unit.currentMoveMode \
+					and unit.currentPath is not None:
+					path = unit.currentPath
+				else:
+					path = None
+
+				trajectories, finished, path = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deployment_distribution, path=path)
 				record.trajectory += trajectories
 				record.actions[ai].finished = finished
+				record.currentTargetPos = target_pos
+				record.currentPath = path
 				break
+
+			last_action = get_last_action(record)
+			record.currentMoveSpeed = last_action.moveSpeed
+			record.currentMoveMode = last_action.moveMode
+			record.currentFireMode = last_action.fireMode
 
 		return updated_units
 
@@ -372,6 +388,11 @@ class Simulation:
 		
 		for unit in placed_units:
 			updated_units[unit.id] = UnitRecord(
+				currentMoveSpeed=unit.currentMoveSpeed,
+				currentMoveMode=unit.currentMoveMode,
+				currentFireMode=unit.currentFireMode,
+				currentTargetPos=unit.currentTargetPos,
+				currentPath=unit.currentPath,
 				trajectory=[unit.position],
 				actions=list(unit.actions),
 				detectedUnits=[],

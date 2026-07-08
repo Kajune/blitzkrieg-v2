@@ -1,4 +1,4 @@
-import type { GeoLocation, UnitAction, DetectLog, AttackLog } from './unitTypes';
+import type { GeoLocation, MoveSpeed, MoveMode, FireMode, UnitAction, DetectLog, AttackLog } from './unitTypes';
 
 export interface SimConfig {
 	startDateTime: Date;
@@ -19,6 +19,11 @@ export interface UnitRecord {
 	attackingUnits: AttackLog[];
 	suppressionRate: number;
 	personnelEquipments: PersonnelEquipmentsRecord;
+	currentMoveSpeed: MoveSpeed | null;
+	currentMoveMode: MoveMode | null;
+	currentFireMode: FireMode | null;
+	currentTargetPos: GeoLocation | null;
+	currentPath: GeoLocation[] | null;
 }
 
 export interface SimRecord {

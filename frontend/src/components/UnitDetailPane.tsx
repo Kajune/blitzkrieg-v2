@@ -73,7 +73,8 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 									<span className="text-info" style={{ fontSize: '0.8rem' }}>{unit.type}</span>
 								</div>
 								<div className="text-muted mt-1" style={{ fontSize: '0.7rem' }}>
-									LOC: {unit.position.lat.toFixed(4)}, {unit.position.lon.toFixed(4)}
+									LOC: {unit.position.lat.toFixed(4)}, {unit.position.lon.toFixed(4)}<br/>
+									MoveMode: {unit.currentMoveMode}, MoveSpeed: {unit.currentMoveSpeed}, FireMode: {unit.currentFireMode}
 								</div>
 							</div>
 						</div>

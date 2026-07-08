@@ -85,6 +85,11 @@ export interface PlacedUnit extends Unit {
 	detectedUnits: DetectLog[];
 	attackingUnits: AttackLog[];
 	suppressionRate: number;
+	currentMoveSpeed: MoveSpeed | null;
+	currentMoveMode: MoveMode | null;
+	currentFireMode: FireMode | null;
+	currentTargetPos: GeoLocation | null;
+	currentPath: GeoLocation[] | null;
 }
 
 export const fetchUnitTemplates = async (): Promise<Record<Force,UnitTemplate[]>> => {

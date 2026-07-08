@@ -364,6 +364,11 @@ class PlacedUnit(Unit):
 	detectedUnits: List[DetectLog]
 	attackingUnits: List[AttackLog]
 	suppressionRate: float
+	currentMoveSpeed: Optional[MoveSpeed] = None
+	currentMoveMode: Optional[MoveMode] = None
+	currentFireMode: Optional[FireMode] = None
+	currentTargetPos: Optional[GeoLocation] = None
+	currentPath: Optional[List[GeoLocation]] = None
 
 
 #
@@ -451,6 +456,11 @@ class UnitRecord(msgspec.Struct):
 	attackingUnits: List[AttackLog]
 	suppressionRate: float
 	personnelEquipments: PersonnelEquipmentsRecord
+	currentMoveSpeed: Optional[MoveSpeed] = None
+	currentMoveMode: Optional[MoveMode] = None
+	currentFireMode: Optional[FireMode] = None
+	currentTargetPos: Optional[GeoLocation] = None
+	currentPath: Optional[List[GeoLocation]] = None
 
 
 class SimRequest(msgspec.Struct):

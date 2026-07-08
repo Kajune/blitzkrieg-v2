@@ -188,7 +188,7 @@
 	"combat":
 	{
 		"fire_power_efficiency": 0.5,
-		"damage_speed": 0.1,
+		"damage_speed": 0.05,
 		"suppression_factor": 1.0,
 		"range_scale_by_move_speed":
 		{

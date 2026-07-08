@@ -80,9 +80,12 @@ class Map:
 		upos: GeoLocation, 
 		tpos: GeoLocation, 
 		deplyment_distribution: Dict[str, Dict],
+		path: Optional[List[GeoLocation]],
 	) -> Tuple[List[UTMLocation], bool]:
 		upos = self.geo_transformer.to_utm(upos)
 		tpos = self.geo_transformer.to_utm(tpos)
+		if path is not None:
+			path = self.geo_transformer.to_utm(path)
 
 		# tposがAOをはみ出しているときは、はみ出さないぎりぎりの場所でクリップ
 		ao_geom = self.map_geometries[unit.force]["ao"]["geom"]
@@ -99,49 +102,52 @@ class Map:
 
 		mobility_map = self._compute_mobility_map(unit, deplyment_distribution[unit.id])
 		upos_px, tpos_px = mobility_map.to_image_coord([upos, tpos])
-		
+
 		speed = self._compute_speed(unit) * 1000 / 3600
 		max_dist_px = (speed * self._sim_setting.simConfig.tickInterval) / mobility_map.resolution[0]
 
-		dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)
-		
-		target_px = tpos_px
-		if dist_px > max_dist_px:
-			scale = dist_px / max_dist_px
-			new_shape = (int(mobility_map.data.shape[1] / scale), int(mobility_map.data.shape[0] / scale))
-			low_res_map = cv2.resize(mobility_map.data, new_shape, interpolation=cv2.INTER_NEAREST)
-			cost_map = low_res_map * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1			
+		if path is None:
+			dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)
+			
+			target_px = tpos_px
+			if dist_px > max_dist_px:
+				scale = dist_px / max_dist_px
+				new_shape = (int(mobility_map.data.shape[1] / scale), int(mobility_map.data.shape[0] / scale))
+				low_res_map = cv2.resize(mobility_map.data, new_shape, interpolation=cv2.INTER_LINEAR)
+				cost_map = low_res_map * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1			
 
-			low_res_path = pyastar2d.astar_path(
+				low_res_path = pyastar2d.astar_path(
+					cost_map,
+					(int(upos_px[0] / scale), int(upos_px[1] / scale)),
+					(int(tpos_px[0] / scale), int(tpos_px[1] / scale)),
+					allow_diagonal=True
+				)
+				
+				for p in low_res_path:
+					p_orig = (p[0] * scale, p[1] * scale)
+					if np.sqrt((p_orig[0] - upos_px[0])**2 + (p_orig[1] - upos_px[1])**2) > max_dist_px:
+						target_px = (int(p_orig[0]), int(p_orig[1]))
+						break
+
+			cost_map = mobility_map.data * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
+			path_px = pyastar2d.astar_path(
 				cost_map,
-				(int(upos_px[0] / scale), int(upos_px[1] / scale)),
-				(int(tpos_px[0] / scale), int(tpos_px[1] / scale)),
+				(int(round(upos_px[0])), int(round(upos_px[1]))),
+				(int(round(target_px[0])), int(round(target_px[1]))),
 				allow_diagonal=True
 			)
-			
-			for p in low_res_path:
-				p_orig = (p[0] * scale, p[1] * scale)
-				if np.sqrt((p_orig[0] - upos_px[0])**2 + (p_orig[1] - upos_px[1])**2) > max_dist_px:
-					target_px = (int(p_orig[0]), int(p_orig[1]))
-					break
 
-		cost_map = mobility_map.data * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
-		path_px = pyastar2d.astar_path(
-			cost_map,
-			(int(round(upos_px[0])), int(round(upos_px[1]))),
-			(int(round(target_px[0])), int(round(target_px[1]))),
-			allow_diagonal=True
-		)
+			if len(path_px) <= 1:
+				return self.geo_transformer.to_geo([tpos]), True
 
-		if len(path_px) <= 1:
-			return self.geo_transformer.to_geo([tpos]), True
+			path = mobility_map.from_image_coord(path_px)
+			path[0] = upos
+			path[-1] = tpos
+		else:
+			path_px = mobility_map.to_image_coord(path)
 
 		trajectories = []
 		finished = False
-
-		path = mobility_map.from_image_coord(path_px)
-		path[0] = upos
-		path[-1] = tpos
 		base_speed = speed * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
 
 		# 渋滞ペナルティ
@@ -161,9 +167,10 @@ class Map:
 
 		total_t = 0
 		new_position = path[0]
+		i = 0
 		for i in range(len(path) - 1):
 			d = path[i].distance(path[i+1])
-			s = actual_speed[path_px[i][0], path_px[i][1]]
+			s = actual_speed[int(path_px[i][0]), int(path_px[i][1])]
 			t = d / s
 
 			if total_t + t > self._sim_setting.simConfig.tickInterval:
@@ -186,7 +193,7 @@ class Map:
 			trajectories = [UTMLocation(easting=p[0], northing=p[1]) for p in trajectories_np]
 
 		trajectories = self.geo_transformer.to_geo(trajectories)
-		return trajectories, finished
+		return trajectories, finished, self.geo_transformer.to_geo(path[i:]) if len(path) > i else []
 
 
 	def _prepare_map(self, map_resolution=20.0, debug=False):

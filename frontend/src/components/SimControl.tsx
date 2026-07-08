@@ -250,6 +250,11 @@ export const SimControl = ({
 				let updatedUnit = {
 					...unit,
 					position: record.trajectory[record.trajectory.length - 1],
+					currentMoveSpeed: record.currentMoveSpeed,
+					currentMoveMode: record.currentMoveMode,
+					currentFireMode: record.currentFireMode,
+					currentTargetPos: record.currentTargetPos,
+					currentPath: record.currentPath,
 					detectedUnits: record.detectedUnits,
 					attackingUnits: record.attackingUnits,
 					suppressionRate: record.suppressionRate,
