@@ -120,14 +120,16 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 											const cTot = isP ? currentTotalPersonnel : (currentTotalEquipments[key] || 0);
 											const fTot = isP ? fullTotalPersonnel : (fullTotalEquipments[key] || 0);
 											
-											const ratio = fSelf > 0 ? (cSelf / fSelf) : 1;
-											const color = ratio < 0.5 ? 'text-danger' : ratio < 1 ? 'text-warning' : 'text-success';
+											const selfRatio = fSelf > 0 ? (cSelf / fSelf) : 1;
+											const selfColor = selfRatio < 0.5 ? 'text-danger' : selfRatio < 0.75 ? 'text-warning' : 'text-success';
+											const totRatio = fTot > 0 ? (cTot / fTot) : 1;
+											const totColor = totRatio < 0.5 ? 'text-danger' : totRatio < 0.75 ? 'text-warning' : 'text-success';
 
 											return (
 												<tr key={key}>
 													<td className="ps-2">{isP ? '人員' : key}</td>
-													<td className={`text-center ${color}`}>{cSelf}/{fSelf}</td>
-													<td className="text-center text-white">{cTot}/{fTot}</td>
+													<td className={`text-center ${selfColor}`}>{cSelf}/{fSelf}</td>
+													<td className={`text-center ${totColor}`}>{cTot}/{fTot}</td>
 												</tr>
 											);
 										})}

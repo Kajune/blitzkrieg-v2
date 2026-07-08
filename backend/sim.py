@@ -326,7 +326,13 @@ class Simulation:
 		for target_id, logs in attack_logs_per_target.items():
 			record = updated_units[target_id]
 			last_action = get_last_action(record)
-			
+			all_current_equipments = record.personnelEquipments.all_current_equipments()
+			total_vehicles_count = 0
+			for eq_name, eq_count in all_current_equipments.items():
+				if eq_name not in self.vehicles:
+					continue
+				total_vehicles_count += eq_count
+
 #			flank_bonus = self._calculate_flank_bonus(target_id, updated_units)
 			
 			damage_coeff = (self.coeffs.combat.damage_speed
@@ -344,12 +350,12 @@ class Simulation:
 				record.personnelEquipments.add_personnel_damage(p_damage)
 				
 				# 装備損耗計算
-				for eq_name in record.personnelEquipments.current_equipments:
+				for eq_name, eq_count in all_current_equipments.items():
 					if eq_name not in self.vehicles:
 						continue
 					vehicle = self.vehicles[eq_name]
 
-					e_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][vehicle.type])
+					e_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][vehicle.type] * eq_count / total_vehicles_count)
 					record.personnelEquipments.add_equipment_damage(eq_name, e_damage)
 
 				total_suppression += (damage * self.coeffs.combat.suppression_factor)

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from collections import Counter
 from enum import Enum
 from datetime import datetime
 from typing import TypeVar, Generic, Union, List, Dict, Type, Optional, cast
@@ -370,6 +371,14 @@ class PersonnelEquipmentsRecord(msgspec.Struct):
 	current_personnel: int
 	current_equipments: Dict[str, int]
 	lower_units: Dict[str, 'PersonnelEquipmentsRecord']
+
+	def all_current_equipments(self) -> Dict[str, int]:
+		total_equipments = Counter(self.current_equipments)
+		
+		for record in self.lower_units.values():
+			total_equipments.update(record.all_current_equipments())
+			
+		return dict(total_equipments)
 
 	def add_personnel_damage(self, personnel_damage : int) -> int:
 		for record in self.lower_units.values():
