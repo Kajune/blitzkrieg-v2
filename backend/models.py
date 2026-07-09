@@ -492,6 +492,7 @@ class MobilityCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 
 
 class IntelligenceCoeff(msgspec.Struct, frozen=True, cache_hash=True):
+	personnel_sensor: Sensor
 	temporal_discovery_advantage: float
 
 	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]

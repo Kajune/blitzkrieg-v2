@@ -114,6 +114,12 @@
 	},
 	"intelligence":
 	{
+		"personnel_sensor":
+		{
+			"name": "目視",
+			"type": "OpticalVisual",
+			"sensor_range": 2000
+		},
 		"temporal_discovery_advantage": 2.0,
 		"discovery_distance_scale_by_move_speed":
 		{
@@ -188,7 +194,7 @@
 	"combat":
 	{
 		"fire_power_efficiency": 0.5,
-		"damage_speed": 0.05,
+		"damage_speed": 0.2,
 		"suppression_factor": 1.0,
 		"range_scale_by_move_speed":
 		{

@@ -8,15 +8,21 @@ interface Props {
 	unitId: string | null;
 	onClose: () => void;
 	onDelete: (unit: PlacedUnit) => void;
+	onDeployChildren: (unit: PlacedUnit) => void;
 }
 
-export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
+export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: Props) => {
 	const symbolRef = useRef<HTMLDivElement>(null);
 	const tableStyle = { fontSize: '0.65rem', fontFamily: 'monospace' };
 	const textStyle = { fontSize: '0.65rem' };
-	const { placedUnits, setPlacedUnits } = useAppStore();
+	const { placedUnits, setPlacedUnits, simDatalink, displayForce, simUuid } = useAppStore();
 
 	const unit = placedUnits.find(u => u.id === unitId);
+
+	// 権限・表示制御のロジック
+	const isOwn = displayForce === 'GOD' || (unit && unit.force === displayForce);
+	const isShared = !isOwn && unitId && (simDatalink[displayForce].includes(unitId) ?? false);
+	const canView = unit && (isOwn || isShared);
 
 	useEffect(() => {
 		if (unit && symbolRef.current) {
@@ -26,7 +32,11 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 		}
 	}, [unit]);
 
-	if (!unit) return null;
+	// 権限がない場合は何も表示しない
+	if (!canView) return null;
+
+	// データリンク経由の場合は詳細な操作ボタンや命令リストを隠す
+	const showFullDetails = isOwn;
 
 	const fullTotalPersonnel = getTotalPersonnel(unit, 'full_personnel');
 	const currentTotalPersonnel = getTotalPersonnel(unit, 'current_personnel');
@@ -99,119 +109,132 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete }: Props) => {
 						</div>
 						
 						{/* 統計 */}
-						<div className="mt-3">
-							<div className="d-flex align-items-center mb-1">
-								<div className="bg-primary" style={{ width: '3px', height: '0.8rem', marginRight: '6px' }}></div>
-								<small className="text-uppercase fw-bold">人員・装備品現況</small>
-							</div>
-							<div className="table-responsive border border-secondary rounded">
-								<table className="table table-sm table-dark table-hover mb-0 align-middle" style={tableStyle}>
-									<thead className="border-bottom border-secondary">
-										<tr className="text-muted">
-											<th className="ps-2">Item</th>
-											<th className="text-center">Single</th>
-											<th className="text-center">Total</th>
-										</tr>
-									</thead>
-									<tbody>
-										{resourceKeys.map((key) => {
-											const isP = key === 'Personnel';
-											const cSelf = isP ? unit.current_personnel : (unit.current_equipments[key] || 0);
-											const fSelf = isP ? unit.full_personnel : (unit.full_equipments[key] || 0);
-											const cTot = isP ? currentTotalPersonnel : (currentTotalEquipments[key] || 0);
-											const fTot = isP ? fullTotalPersonnel : (fullTotalEquipments[key] || 0);
-											
-											const selfRatio = fSelf > 0 ? (cSelf / fSelf) : 1;
-											const selfColor = selfRatio < 0.5 ? 'text-danger' : selfRatio < 0.75 ? 'text-warning' : 'text-success';
-											const totRatio = fTot > 0 ? (cTot / fTot) : 1;
-											const totColor = totRatio < 0.5 ? 'text-danger' : totRatio < 0.75 ? 'text-warning' : 'text-success';
-
-											return (
-												<tr key={key}>
-													<td className="ps-2">{isP ? '人員' : key}</td>
-													<td className={`text-center ${selfColor}`}>{cSelf}/{fSelf}</td>
-													<td className={`text-center ${totColor}`}>{cTot}/{fTot}</td>
+						{showFullDetails && (
+							<>
+								<div className="mt-3">
+									<div className="d-flex align-items-center mb-1">
+										<div className="bg-primary" style={{ width: '3px', height: '0.8rem', marginRight: '6px' }}></div>
+										<small className="text-uppercase fw-bold">人員・装備品現況</small>
+									</div>
+									<div className="table-responsive border border-secondary rounded">
+										<table className="table table-sm table-dark table-hover mb-0 align-middle" style={tableStyle}>
+											<thead className="border-bottom border-secondary">
+												<tr className="text-muted">
+													<th className="ps-2">Item</th>
+													<th className="text-center">Single</th>
+													<th className="text-center">Total</th>
 												</tr>
-											);
-										})}
-									</tbody>
-								</table>
-							</div>
-						</div>
+											</thead>
+											<tbody>
+												{resourceKeys.map((key) => {
+													const isP = key === 'Personnel';
+													const cSelf = isP ? unit.current_personnel : (unit.current_equipments[key] || 0);
+													const fSelf = isP ? unit.full_personnel : (unit.full_equipments[key] || 0);
+													const cTot = isP ? currentTotalPersonnel : (currentTotalEquipments[key] || 0);
+													const fTot = isP ? fullTotalPersonnel : (fullTotalEquipments[key] || 0);
+													
+													const selfRatio = fSelf > 0 ? (cSelf / fSelf) : 1;
+													const selfColor = selfRatio < 0.5 ? 'text-danger' : selfRatio < 0.75 ? 'text-warning' : 'text-success';
+													const totRatio = fTot > 0 ? (cTot / fTot) : 1;
+													const totColor = totRatio < 0.5 ? 'text-danger' : totRatio < 0.75 ? 'text-warning' : 'text-success';
 
-						<div className="mt-4">
-							<div className="d-flex align-items-center mb-2">
-								<div className="bg-warning" style={{ width: '3px', height: '0.8rem', marginRight: '6px' }}></div>
-								<small className="text-uppercase fw-bold">命令リスト</small>
-							</div>
+													return (
+														<tr key={key}>
+															<td className="ps-2">{isP ? '人員' : key}</td>
+															<td className={`text-center ${selfColor}`}>{cSelf}/{fSelf}</td>
+															<td className={`text-center ${totColor}`}>{cTot}/{fTot}</td>
+														</tr>
+													);
+												})}
+											</tbody>
+										</table>
+									</div>
+								</div>
 
-							<div className="table-responsive border border-secondary rounded">
-								<table className="table table-sm table-dark table-hover mb-0" style={tableStyle}>
-									<thead>
-										<tr className="text-muted border-secondary">
-											<th className="ps-2">速度</th>
-											<th>要領</th>
-											<th>射撃</th>
-											<th>目標</th>
-											<th className="text-center">削除</th>
-										</tr>
-									</thead>
-									<tbody>
-										{unit.actions
-											.filter((action) => !action.finished)
-											.map((action, idx) => (
-											<tr key={idx} className="align-middle">
-												<td className="ps-1">
-													<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
-														style={textStyle}
-														value={action.moveSpeed} 
-														onChange={(e) => handleActionChange(idx, 'moveSpeed', e.target.value as MoveSpeed)}>
-														{MOVE_SPEEDS.map(s => <option key={s} value={s}>{s}</option>)}
-													</select>
-												</td>
-												<td>
-													<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
-														style={textStyle}
-														value={action.moveMode} 
-														onChange={(e) => handleActionChange(idx, 'moveMode', e.target.value as MoveMode)}>
-														{MOVE_MODES.map(m => <option key={m} value={m}>{m}</option>)}
-													</select>
-												</td>
-												<td>
-													<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
-														style={textStyle}
-														value={action.fireMode} 
-														onChange={(e) => handleActionChange(idx, 'fireMode', e.target.value as FireMode)}>
-														{FIRE_MODES.map(m => <option key={m} value={m}>{m}</option>)}
-													</select>
-												</td>
-												<td className="text-muted">
-													{action.targetUnitId ? (
-														<span className="fw-bold">
-															{placedUnits.find(u => u.id === action.targetUnitId)?.name || '不明'}
-														</span>
-													) : action.targetPosition ? (
-														`${action.targetPosition.lat.toFixed(2)}/${action.targetPosition.lon.toFixed(2)}`
-													) : (
-														'-'
-													)}
-												</td>
-												<td className="text-center">
-													<button className="btn btn-link btn-sm text-danger p-0" 
-														style={textStyle}
-														onClick={() => deleteAction(idx)}>✕</button>
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
-						</div>
+								<div className="mt-4">
+									<div className="d-flex align-items-center mb-2">
+										<div className="bg-warning" style={{ width: '3px', height: '0.8rem', marginRight: '6px' }}></div>
+										<small className="text-uppercase fw-bold">命令リスト</small>
+									</div>
+
+									<div className="table-responsive border border-secondary rounded">
+										<table className="table table-sm table-dark table-hover mb-0" style={tableStyle}>
+											<thead>
+												<tr className="text-muted border-secondary">
+													<th className="ps-2">速度</th>
+													<th>要領</th>
+													<th>射撃</th>
+													<th>目標</th>
+													<th className="text-center">削除</th>
+												</tr>
+											</thead>
+											<tbody>
+												{unit.actions
+													.filter((action) => !action.finished)
+													.map((action, idx) => (
+													<tr key={idx} className="align-middle">
+														<td className="ps-1">
+															<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
+																style={textStyle}
+																value={action.moveSpeed} 
+																onChange={(e) => handleActionChange(idx, 'moveSpeed', e.target.value as MoveSpeed)}>
+																{MOVE_SPEEDS.map(s => <option key={s} value={s}>{s}</option>)}
+															</select>
+														</td>
+														<td>
+															<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
+																style={textStyle}
+																value={action.moveMode} 
+																onChange={(e) => handleActionChange(idx, 'moveMode', e.target.value as MoveMode)}>
+																{MOVE_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+															</select>
+														</td>
+														<td>
+															<select className="form-select form-select-sm bg-dark text-white border-0 p-0" 
+																style={textStyle}
+																value={action.fireMode} 
+																onChange={(e) => handleActionChange(idx, 'fireMode', e.target.value as FireMode)}>
+																{FIRE_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+															</select>
+														</td>
+														<td className="text-muted">
+															{action.targetUnitId ? (
+																<span className="fw-bold">
+																	{placedUnits.find(u => u.id === action.targetUnitId)?.name || '不明'}
+																</span>
+															) : action.targetPosition ? (
+																`${action.targetPosition.lat.toFixed(2)}/${action.targetPosition.lon.toFixed(2)}`
+															) : (
+																'-'
+															)}
+														</td>
+														<td className="text-center">
+															<button className="btn btn-link btn-sm text-danger p-0" 
+																style={textStyle}
+																onClick={() => deleteAction(idx)}>✕</button>
+														</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</>
+						)}
 					</div>
 
-					<button className="btn btn-sm btn-outline-danger w-100 mt-2" onClick={() => onDelete(unit)}>
-						部隊を削除
-					</button>
+					{showFullDetails && (
+						<>
+							{unit.lower_units.length > 0 && (
+								<button className="btn btn-sm btn-outline-warning w-100 mt-2" onClick={() => onDeployChildren(unit)} disabled={simUuid === null}>
+									隷下部隊を展開
+								</button>
+							)}
+							<button className="btn btn-sm btn-outline-danger w-100 mt-2" onClick={() => onDelete(unit)}>
+								部隊を削除
+							</button>
+						</>
+					)}
 				</div>
 			</div>
 		</div>

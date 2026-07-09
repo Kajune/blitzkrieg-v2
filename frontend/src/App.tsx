@@ -50,6 +50,7 @@ function AppContent() {
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionAttackPolygons,
+		deployChildren,
 	} = useMapEditor(showLabels, showDetectionPolygons, showMobilityMap, isUnitPlacementOpen);
 
 	const exportData = () => {
@@ -222,6 +223,9 @@ function AppContent() {
 				onDelete={(unit) => {
 					removeUnitFromMap(unit.id);
 					setSelectedUnitId(null);
+				}}
+				onDeployChildren={(unit) => {
+					deployChildren(unit);
 				}}
 			/>
 

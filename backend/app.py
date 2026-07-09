@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from dataclasses import asdict
 import msgspec
 import uuid, json
-from models import SimSetting, SimRequest
+from models import SimSetting, SimRequest, PlacedUnit
 from sim import Simulation
 
 
@@ -45,6 +45,24 @@ def get_mobility_map():
 		sim_instance = sim_instances[sim_id]
 		mobility_map = sim_instance.map.get_natural_mobility_map(return_geo_mesh=True)
 		return jsonify({"success": True, "mobility_map": mobility_map.get_geojson()})
+	except Exception as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
+
+
+@app.route('/api/deploy_child_units', methods=['POST'])
+def deploy_child_units():
+	try:
+		sim_id = request.json["sim_id"]
+
+		if sim_id is None or sim_id not in sim_instances:
+			return jsonify({"success": False, "errors": "Invalid Sim ID"}), 400
+
+		unit = msgspec.convert(request.json["unit"], PlacedUnit)
+		sim_instance = sim_instances[sim_id]
+		deployed_units = sim_instance.deploy_child_units(unit)
+		deployed_units = [msgspec.to_builtins(unit) for unit in deployed_units]
+
+		return jsonify({"success": True, "deployedUnits": deployed_units})
 	except Exception as e:
 		return jsonify({"success": False, "errors": str(e)}), 400
 

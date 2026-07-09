@@ -34,6 +34,7 @@ export const useMapEditor = (
 		placedUnits, setPlacedUnits,
 		simDatalink, displayForce,
 		mobilityMap,
+		simUuid,
 	} = useAppStore();
 	const [pendingElement, setPendingElement] = useState<MapElement | null>(null);
 	const [points, setPoints] = useState<L.LatLng[]>([]);
@@ -145,6 +146,39 @@ export const useMapEditor = (
 		}).filter((p): p is L.Polygon => p !== null);
 
 		detectionLayerMap.current.set(unitId, newPolygons);
+	};
+
+	const deployChildren = async (unit: PlacedUnit) => {
+		if (simUuid === null) {
+			return;
+		}
+
+		try {
+			const response = await fetch('/api/deploy_child_units', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					sim_id: simUuid,
+					unit: unit,
+				})
+			});
+			const result = await response.json();
+
+			if (result.success && result.deployedUnits) {
+				removeUnitFromMap(unit.id);
+				const newUnits: PlacedUnit[] = result.deployedUnits;
+				setPlacedUnits((prev) => [...prev, ...newUnits]);
+				newUnits.forEach((childUnit) => {
+					createLayerFromUnit(childUnit);
+				});				
+				setSelectedUnitId(null);
+			} else {
+				console.log(result.errors);
+			}
+		} catch (err) {
+			console.error('部隊の展開に失敗しました', err);
+		}
+
 	};
 
 	const createLayerFromElement = (el: MapElement, geoJsonData : GeoJsonObject): L.Layer => {
@@ -362,6 +396,9 @@ export const useMapEditor = (
 		const rect = mapRef.current?.getBoundingClientRect();
 		if (!rect) return;
 
+		const isUnitControllable = displayForce === 'GOD' || unitData.force === displayForce;
+		if (!isUnitControllable) return;
+
 		const x = e.clientX - rect.left;
 		const y = e.clientY - rect.top;
 		const latLng = mapInstance.current.containerPointToLatLng([x, y]);
@@ -523,6 +560,12 @@ export const useMapEditor = (
 			const currentId = selectedUnitIdRef.current;
 			if (!currentId) return;
 
+			const sourceUnit = placedUnits.find((u) => u.id === currentId);
+			if (!sourceUnit) return;
+
+			const isUnitControllable = displayForce === 'GOD' || sourceUnit.force === displayForce;
+			if (!isUnitControllable) return;
+
 			let targetUnitId: string | null = null;
 			unitLayerMap.current.forEach((layer, unitId) => {
 				if (unitId !== currentId && layer.getLatLng().equals(e.latlng, 0.001)) {
@@ -553,7 +596,7 @@ export const useMapEditor = (
 
 		map.on('contextmenu', handleContextMenu);
 		return () => { map.off('contextmenu', handleContextMenu); };
-	}, []);
+	}, [placedUnits, displayForce]);
 
 	useEffect(() => {
 		const map = mapInstance.current;
@@ -726,6 +769,7 @@ export const useMapEditor = (
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionAttackPolygons,
+		deployChildren,
 	};
 };
 

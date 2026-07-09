@@ -31,7 +31,7 @@ class Simulation:
 			np.array([
 				self.coeffs.intelligence.discovery_distance_scale_by_vehicle_type[sensor.type][vehicle_type] 
 				for vehicle_type in VehicleType
-			]) * sensor.sensor_range for sensor in self.sensors.values()
+			]) * sensor.sensor_range for sensor in list(self.sensors.values()) + [self.coeffs.intelligence.personnel_sensor]
 		}
 
 		self.vehicle_type_one_hot = {}
@@ -197,6 +197,7 @@ class Simulation:
 			last_action = get_last_action(record)
 			sensors = self._filter_equipments(tuple(equipments), Sensor)
 			vehicles = self._filter_equipments(tuple(equipments), Vehicle)
+			sensors += [self.coeffs.intelligence.personnel_sensor] * get_current_personnel(unit)
 			sensors_dict[unit_id] = sensors
 
 			discovery_ranges = []
@@ -418,3 +419,43 @@ class Simulation:
 			endDateTime=sim_request.current_time + sim_request.delta_time,
 			unitRecords=updated_units,
 		)
+
+
+	def deploy_child_units(self, unit: PlacedUnit) -> List[PlacedUnit]:
+		existing_unit_ids = {u.id for u in self._sim_setting.placedUnits}
+
+		deployed_units = []
+
+		for child in unit.lower_units:
+			if child.id in existing_unit_ids:
+				continue
+			
+			offset_lat = np.random.uniform(-0.0015, 0.0015)
+			offset_lon = np.random.uniform(-0.0015, 0.0015)
+			
+			new_placed_unit = PlacedUnit(
+				id=child.id,
+				templateId=child.templateId,
+				force=unit.force,
+				name=child.name,
+				sidc=child.sidc,
+				type=child.type,
+				full_personnel=child.full_personnel,
+				current_personnel=child.current_personnel,
+				full_equipments=child.full_equipments,
+				current_equipments=child.current_equipments,
+				lower_units=child.lower_units,
+				position={
+					"lat": unit.position.lat + offset_lat,
+					"lon": unit.position.lon + offset_lon
+				},
+				actions=[],
+				detectedUnits=[],
+				attackingUnits=[],
+				suppressionRate=0.0
+			)
+			
+			deployed_units.append(new_placed_unit)
+			existing_unit_ids.add(new_placed_unit.id)
+
+		return deployed_units

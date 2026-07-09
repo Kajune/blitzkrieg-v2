@@ -106,7 +106,7 @@ class Map:
 		speed = self._compute_speed(unit) * 1000 / 3600
 		max_dist_px = (speed * self._sim_setting.simConfig.tickInterval) / mobility_map.resolution[0]
 
-		if path is None:
+		if path is None or len(path) <= 2:
 			dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)
 			
 			target_px = tpos_px
