@@ -159,7 +159,8 @@ export const useMapEditor = (
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					sim_id: simUuid,
-					unit: unit,
+					placed_units: placedUnits,
+					deploy_unit_id: unit.id,
 				})
 			});
 			const result = await response.json();

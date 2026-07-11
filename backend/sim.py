@@ -422,8 +422,15 @@ class Simulation:
 		)
 
 
-	def deploy_child_units(self, unit: PlacedUnit) -> List[PlacedUnit]:
-		existing_unit_ids = {u.id for u in self._sim_setting.placedUnits}
+	def deploy_child_units(self, deploy_request: UnitDeploymentRequest) -> List[PlacedUnit]:
+		self._sim_setting.placedUnits = deploy_request.placed_units
+
+		existing_unit_ids = {u.id: u for u in self._sim_setting.placedUnits}
+		if deploy_request.deploy_unit_id not in existing_unit_ids:
+			return []
+
+		unit = existing_unit_ids[deploy_request.deploy_unit_id]
+
 		children = [c for c in unit.lower_units if c.id not in existing_unit_ids]
 		if not children:
 			return []

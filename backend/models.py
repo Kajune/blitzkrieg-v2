@@ -406,7 +406,7 @@ class SimConfig(msgspec.Struct, frozen=True, cache_hash=True):
 	tickInterval: float
 
 
-class SimSetting(msgspec.Struct, frozen=True, cache_hash=True):
+class SimSetting(msgspec.Struct):
 	simConfig: SimConfig
 	units: List[Unit]
 	placedUnits: List[PlacedUnit]
@@ -476,6 +476,12 @@ class SimResponse(msgspec.Struct):
 	startDateTime: int
 	endDateTime: int
 	unitRecords: Dict[str, UnitRecord]
+
+
+class UnitDeploymentRequest(msgspec.Struct):
+	sim_id: str
+	placed_units: List[PlacedUnit]
+	deploy_unit_id: str
 
 
 class UnitDeploymentCoeff(msgspec.Struct, frozen=True, cache_hash=True):

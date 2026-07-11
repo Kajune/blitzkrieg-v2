@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from dataclasses import asdict
 import msgspec
 import uuid, json
-from models import SimSetting, SimRequest, PlacedUnit
+from models import SimSetting, SimRequest, UnitDeploymentRequest, PlacedUnit
 from sim import Simulation
 
 
@@ -51,20 +51,22 @@ def get_mobility_map():
 
 @app.route('/api/deploy_child_units', methods=['POST'])
 def deploy_child_units():
-#	try:
-	sim_id = request.json["sim_id"]
+	try:
+		deploy_request = msgspec.convert(request.json, UnitDeploymentRequest)
+	except msgspec.ValidationError as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
 
-	if sim_id is None or sim_id not in sim_instances:
+	if deploy_request.sim_id is None or deploy_request.sim_id not in sim_instances:
 		return jsonify({"success": False, "errors": "Invalid Sim ID"}), 400
 
-	unit = msgspec.convert(request.json["unit"], PlacedUnit)
-	sim_instance = sim_instances[sim_id]
-	deployed_units = sim_instance.deploy_child_units(unit)
-	deployed_units = [msgspec.to_builtins(unit) for unit in deployed_units]
+	try:
+		sim_instance = sim_instances[deploy_request.sim_id]
+		deployed_units = sim_instance.deploy_child_units(deploy_request)
+		deployed_units = [msgspec.to_builtins(unit) for unit in deployed_units]
 
-	return jsonify({"success": True, "deployedUnits": deployed_units})
-#	except Exception as e:
-#		return jsonify({"success": False, "errors": str(e)}), 400
+		return jsonify({"success": True, "deployedUnits": deployed_units})
+	except Exception as e:
+		return jsonify({"success": False, "errors": str(e)}), 400
 
 
 @app.route('/api/simulate', methods=['POST'])
