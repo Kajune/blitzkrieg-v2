@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ms from 'milsymbol';
 import type { PlacedUnit, MoveSpeed, MoveMode, FireMode } from '../types/unitTypes';
 import { getTotalPersonnel, getTotalEquipments, MOVE_SPEEDS, MOVE_MODES, FIRE_MODES } from '../types/unitTypes';
@@ -8,7 +8,7 @@ interface Props {
 	unitId: string | null;
 	onClose: () => void;
 	onDelete: (unit: PlacedUnit) => void;
-	onDeployChildren: (unit: PlacedUnit) => void;
+	onDeployChildren: (unit: PlacedUnit) => Promise<void>;
 }
 
 export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: Props) => {
@@ -24,6 +24,8 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 	const isShared = !isOwn && unitId && (simDatalink[displayForce].includes(unitId) ?? false);
 	const canView = unit && (isOwn || isShared);
 
+	const [isDeploying, setIsDeploying] = useState(false);
+
 	useEffect(() => {
 		if (unit && symbolRef.current) {
 			const symbol = new ms.Symbol(unit.sidc, { size: 40 });
@@ -31,6 +33,17 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 			symbolRef.current.appendChild(symbol.asDOM());
 		}
 	}, [unit]);
+
+	const handleDeployClick = async () => {
+		setIsDeploying(true);
+		try {
+			if (unit) {
+				await onDeployChildren(unit);
+			}
+		} finally {
+			setIsDeploying(false);
+		}
+	};
 
 	// 権限がない場合は何も表示しない
 	if (!canView) return null;
@@ -226,8 +239,12 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 					{showFullDetails && (
 						<>
 							{unit.lower_units.length > 0 && (
-								<button className="btn btn-sm btn-outline-warning w-100 mt-2" onClick={() => onDeployChildren(unit)} disabled={simUuid === null}>
-									隷下部隊を展開
+								<button 
+									className="btn btn-sm btn-outline-warning w-100 mt-2" 
+									onClick={handleDeployClick} 
+									disabled={simUuid === null || isDeploying}
+								>
+									{isDeploying ? '隷下部隊展開中...' : '隷下部隊を展開'}
 								</button>
 							)}
 							<button className="btn btn-sm btn-outline-danger w-100 mt-2" onClick={() => onDelete(unit)}>

@@ -186,7 +186,7 @@
       "id": "HMCo",
       "name": "迫撃砲中隊",
       "sidc": "10061000151308030000",
-      "type": "infantry",
+      "type": "artillery",
       "personnel": 15,
       "equipments":
       {
@@ -203,7 +203,7 @@
       "id": "HMPt",
       "name": "迫撃砲小隊",
       "sidc": "10061000141308030000",
-      "type": "infantry",
+      "type": "artillery",
       "personnel": 20,
       "equipments":
       {
@@ -653,7 +653,7 @@
       "id": "HMCo",
       "name": "重迫撃砲中隊",
       "sidc": "10031000151308030000",
-      "type": "infantry",
+      "type": "artillery",
       "personnel": 15,
       "equipments":
       {
@@ -670,7 +670,7 @@
       "id": "HMPt",
       "name": "重迫撃砲小隊",
       "sidc": "10031000141308030000",
-      "type": "infantry",
+      "type": "artillery",
       "personnel": 20,
       "equipments":
       {

@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
 from shapely.geometry import GeometryCollection
+import scipy.optimize
 from models import *
 from geometry import *
 from gis import *
@@ -423,39 +424,118 @@ class Simulation:
 
 	def deploy_child_units(self, unit: PlacedUnit) -> List[PlacedUnit]:
 		existing_unit_ids = {u.id for u in self._sim_setting.placedUnits}
+		children = [c for c in unit.lower_units if c.id not in existing_unit_ids]
+		if not children:
+			return []
+
+		n = len(children)
+		
+		# 1. 展開範囲を計算し、ランダムな初期座標を生成
+		dummy_record = UnitRecord(
+			trajectory=[unit.position], actions=unit.actions, detectedUnits=unit.detectedUnits,
+			attackingUnits=unit.attackingUnits, suppressionRate=unit.suppressionRate,
+			personnelEquipments=get_personnel_equipments(unit)
+		)
+		last_action = get_last_action(dummy_record)
+		dist_info = self.compute_deployment_distribution({unit.id: unit}, {unit.id: dummy_record})[unit.id]
+		mean, sigma = dist_info["mean"], dist_info["sigma"][0]
+		
+		# 敵ユニット位置（UTM）
+		enemies = [self.map.geo_transformer.to_utm(e.position) for e in self._sim_setting.placedUnits if e.force != unit.force]
+		enemy_coords = np.array([[e.easting, e.northing] for e in enemies]) if enemies else None
+
+		# Typeによる優先順位
+		type_order = [UnitType.INFANTRY, UnitType.COMBINED, UnitType.TANK, UnitType.ARTILLERY, UnitType.ANTIAIR, UnitType.AIR]
+		children_sorted = sorted(children, key=lambda c: type_order.index(c.type) if c.type in type_order else 99)
+
+		# 機動障害図
+		mobility_map = self.map.get_natural_mobility_map()
+
+		def objective(coords_flat):
+			coords = coords_flat.reshape((n, 2))
+			
+			# 2. 敵部隊との距離計算
+			if enemy_coords is not None:
+				# 各座標から敵までの最小距離を計算
+				dists = np.array([np.min(np.linalg.norm(c - enemy_coords, axis=1)) for c in coords])
+				# 3. 敵に近い順に部隊の割り当てインデックスを決定
+				assignment_indices = np.argsort(dists)
+			else:
+				assignment_indices = np.arange(n)
+			
+			# 4. 割り当てに基づきコスト計算
+			cost = 0
+			
+			for i in range(n):
+				# 割り当てられたユニット
+				child = children_sorted[assignment_indices[i]]
+				coord = coords[i]
+				
+				# そのユニットの展開範囲（compute_deployment_distributionの計算ロジックを流用）
+				# 簡略化のため、UnitTypeごとの展開範囲倍率をsigmaにかける
+				unit_range = sigma * self.coeffs.unit_deployment.scaling_table[child.type][last_action.moveMode]
+
+				# 重なり具合のコスト（他のユニットの展開範囲との重複）
+				for j in range(i + 1, n):
+					other_child = children_sorted[assignment_indices[j]]
+					other_range = sigma * self.coeffs.unit_deployment.scaling_table[other_child.type][last_action.moveMode]
+					dist = np.linalg.norm(coord - coords[j])
+					if dist < (unit_range + other_range):
+						cost += (unit_range + other_range - dist)
+				
+				# 機動障害との重なりコスト
+				sample_pts = np.random.normal(coord, unit_range / 2, (5, 2))
+				sample_locs = [UTMLocation(easting=p[0], northing=p[1]) for p in sample_pts]
+				pxs = mobility_map.to_image_coord(sample_locs)
+
+				sample_costs = []
+				for px in pxs:
+					if 0 <= px[0] < mobility_map.data.shape[0] and 0 <= px[1] < mobility_map.data.shape[1]:
+						sample_costs.append(mobility_map.data[int(px[0]), int(px[1])])
+				if sample_costs:
+					cost += np.mean(sample_costs)
+
+			return cost
+
+		# GAによる最適化
+		bounds = [(mean[0]-sigma*3, mean[0]+sigma*3), (mean[1]-sigma*3, mean[1]+sigma*3)] * n
+		result = scipy.optimize.differential_evolution(objective, bounds, maxiter=10, disp=True)
+		
+		# 最終的な割り当ての確定
+		final_coords_np = result.x.reshape((n, 2))
+		
+		# 1. 座標を「敵に近い順」に並べ替える
+		if enemy_coords is not None:
+			dists = np.array([np.min(np.linalg.norm(c - enemy_coords, axis=1)) for c in final_coords_np])
+			sorted_coords_np = final_coords_np[np.argsort(dists)]
+		else:
+			sorted_coords_np = final_coords_np
+
+		# 2. 座標をUTMLocationに変換してからgeoに変換
+		final_coords_utm = [UTMLocation(easting=c[0], northing=c[1]) for c in sorted_coords_np]
+		final_coords_geo = self.map.geo_transformer.to_geo(final_coords_utm)
 
 		deployed_units = []
+		for i in range(n):
+			child = children_sorted[i]
 
-		for child in unit.lower_units:
-			if child.id in existing_unit_ids:
-				continue
-			
-			offset_lat = np.random.uniform(-0.0015, 0.0015)
-			offset_lon = np.random.uniform(-0.0015, 0.0015)
-			
-			new_placed_unit = PlacedUnit(
-				id=child.id,
-				templateId=child.templateId,
-				force=unit.force,
-				name=child.name,
+			deployed_units.append(PlacedUnit(
+				id=child.id, 
+				templateId=child.templateId, 
+				force=unit.force, 
+				name=child.name, 
 				sidc=child.sidc,
-				type=child.type,
-				full_personnel=child.full_personnel,
+				type=child.type, 
+				full_personnel=child.full_personnel, 
 				current_personnel=child.current_personnel,
-				full_equipments=child.full_equipments,
+				full_equipments=child.full_equipments, 
 				current_equipments=child.current_equipments,
-				lower_units=child.lower_units,
-				position={
-					"lat": unit.position.lat + offset_lat,
-					"lon": unit.position.lon + offset_lon
-				},
-				actions=[],
+				lower_units=child.lower_units, 
+				position=final_coords_geo[i],
+				actions=[], 
 				detectedUnits=[],
-				attackingUnits=[],
+				attackingUnits=[], 
 				suppressionRate=0.0
-			)
-			
-			deployed_units.append(new_placed_unit)
-			existing_unit_ids.add(new_placed_unit.id)
-
+			))
+		
 		return deployed_units

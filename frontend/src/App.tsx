@@ -225,7 +225,7 @@ function AppContent() {
 					setSelectedUnitId(null);
 				}}
 				onDeployChildren={(unit) => {
-					deployChildren(unit);
+					return deployChildren(unit);
 				}}
 			/>
 
