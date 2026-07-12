@@ -1,0 +1,966 @@
+[
+  {
+    "id": "iR_5ea57733-0501-4cfb-9229-db5050fb2a9d",
+    "templateId": "iR",
+    "name": "普通科連隊",
+    "force": "BLUFOR",
+    "sidc": "10031000171211040000",
+    "type": "infantry",
+    "full_personnel": 60,
+    "current_personnel": 60,
+    "full_equipments": {
+      "9mm拳銃": 15,
+      "20式小銃": 45,
+      "高機動車": 4
+    },
+    "current_equipments": {
+      "9mm拳銃": 15,
+      "20式小銃": 45,
+      "高機動車": 4
+    },
+    "lower_units": [
+      {
+        "id": "HSCo/iR_84ffe56a-2fef-45c3-bf59-e1ab7408d52a",
+        "templateId": "HSCo/iR",
+        "name": "普通科連隊本部管理中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151211040000",
+        "type": "infantry",
+        "full_personnel": 40,
+        "current_personnel": 40,
+        "full_equipments": {
+          "20式小銃": 40,
+          "高機動車": 5
+        },
+        "current_equipments": {
+          "20式小銃": 40,
+          "高機動車": 5
+        },
+        "lower_units": [
+          {
+            "id": "RHQ_a7afe452-bef8-45d9-b73d-e6f0d9ee8d8b",
+            "templateId": "RHQ",
+            "name": "連隊本部班",
+            "force": "BLUFOR",
+            "sidc": "10031000000000000000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "89式小銃": 30,
+              "82式指揮通信車": 2
+            },
+            "current_equipments": {
+              "89式小銃": 30,
+              "82式指揮通信車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "IntPt_ae03e55a-721f-4850-a826-50ce4ff71def",
+            "templateId": "IntPt",
+            "name": "情報小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141510000000",
+            "type": "infantry",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "20式小銃": 20,
+              "軽装甲機動車(LAV)": 2
+            },
+            "current_equipments": {
+              "20式小銃": 20,
+              "軽装甲機動車(LAV)": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "SigPt_629580fa-f321-4302-b9a7-e84c258284ba",
+            "templateId": "SigPt",
+            "name": "通信小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141110000000",
+            "type": "combined",
+            "full_personnel": 25,
+            "current_personnel": 25,
+            "full_equipments": {
+              "20式小銃": 25,
+              "高機動車": 6
+            },
+            "current_equipments": {
+              "20式小銃": 25,
+              "高機動車": 6
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "iCo_b398f2ca-d4bc-4223-a7af-edc1aaaa76dc",
+        "templateId": "iCo",
+        "name": "普通科中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151211040000",
+        "type": "infantry",
+        "full_personnel": 15,
+        "current_personnel": 15,
+        "full_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "current_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "lower_units": [
+          {
+            "id": "iPt_9d96fd44-6174-4629-abc1-1294b06786dc",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_ed76b70e-dc8b-4528-8cd8-82726979e09d",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_c6090de8-e866-465a-9889-b9040a2ea94a",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_0bc333ff-1f5c-4f3f-854f-f02b6d75e008",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "ATPt_e224c267-8653-4840-af5c-1267f0336bf1",
+            "templateId": "ATPt",
+            "name": "対戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141204020000",
+            "type": "infantry",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "current_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "iCo_4e71f99a-94eb-47fe-ab8f-32c0d3edff25",
+        "templateId": "iCo",
+        "name": "普通科中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151211040000",
+        "type": "infantry",
+        "full_personnel": 15,
+        "current_personnel": 15,
+        "full_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "current_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "lower_units": [
+          {
+            "id": "iPt_9ccf1b36-0ffa-4472-9ca8-9fa7da1a4785",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_9fdb5514-0958-4483-9b7d-5f3a16935116",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_6f8443ec-bb51-490a-8dd2-8ce509e62346",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_cf7e8c30-76fe-45dc-a84a-652720c457a5",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "ATPt_53cec95c-fcc0-48b3-a308-6d19894b6d64",
+            "templateId": "ATPt",
+            "name": "対戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141204020000",
+            "type": "infantry",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "current_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "iCo_7dec7fd6-4f30-4c3a-95be-b9fadcced6ec",
+        "templateId": "iCo",
+        "name": "普通科中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151211040000",
+        "type": "infantry",
+        "full_personnel": 15,
+        "current_personnel": 15,
+        "full_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "current_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "lower_units": [
+          {
+            "id": "iPt_b1c202d3-0ab8-41b4-a6fe-1bc32c4bb0b7",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_58be9e6f-0520-4dec-8451-af843a4f6d3b",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_0d39e1ec-1f42-44f6-a284-14954d77aee9",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_079d6af8-69cd-4d03-9be1-160203fc2a4a",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "ATPt_3ede7122-457c-4646-b945-c742790494ef",
+            "templateId": "ATPt",
+            "name": "対戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141204020000",
+            "type": "infantry",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "current_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "iCo_8351768c-364c-4a05-bb6f-868059f48d7a",
+        "templateId": "iCo",
+        "name": "普通科中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151211040000",
+        "type": "infantry",
+        "full_personnel": 15,
+        "current_personnel": 15,
+        "full_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "current_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "lower_units": [
+          {
+            "id": "iPt_df089648-1508-4aab-bf9a-5ee27dce8786",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_9877196e-7022-4f29-8c21-94dc60893278",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_c784e618-b8b3-4c96-92ef-ae09bcdc6ae7",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "iPt_e9e1fee7-f17a-4e6d-93a7-c6839a46ef1e",
+            "templateId": "iPt",
+            "name": "普通科小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141211040000",
+            "type": "infantry",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "軽装甲機動車(LAV)": 2,
+              "高機動車": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "ATPt_9a8d17ae-f03c-4c85-89d6-9ca41fb2b319",
+            "templateId": "ATPt",
+            "name": "対戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141204020000",
+            "type": "infantry",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "current_equipments": {
+              "89式小銃": 20,
+              "01式軽対戦車誘導弾": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "HMCo_2e633be7-ea3f-4e6f-af57-a24a17f6e936",
+        "templateId": "HMCo",
+        "name": "重迫撃砲中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151308030000",
+        "type": "artillery",
+        "full_personnel": 15,
+        "current_personnel": 15,
+        "full_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "current_equipments": {
+          "9mm拳銃": 3,
+          "20式小銃": 12,
+          "高機動車": 2
+        },
+        "lower_units": [
+          {
+            "id": "HMPt_bfa4379b-321a-41d7-bc39-d40ac248a6e4",
+            "templateId": "HMPt",
+            "name": "重迫撃砲小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141308030000",
+            "type": "artillery",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "current_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "HMPt_521e4020-a669-4142-8c00-f8295ec765a8",
+            "templateId": "HMPt",
+            "name": "重迫撃砲小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141308030000",
+            "type": "artillery",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "current_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "HMPt_eaa44a69-f2eb-4a06-baa1-f033f96950a7",
+            "templateId": "HMPt",
+            "name": "重迫撃砲小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141308030000",
+            "type": "artillery",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "current_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "lower_units": []
+          },
+          {
+            "id": "HMPt_69e865d9-319a-4d8c-b114-37c2980c46fd",
+            "templateId": "HMPt",
+            "name": "重迫撃砲小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141308030000",
+            "type": "artillery",
+            "full_personnel": 20,
+            "current_personnel": 20,
+            "full_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "current_equipments": {
+              "20式小銃": 10,
+              "高機動車": 2,
+              "120mm迫撃砲": 2
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "TKCo_8a17a199-620b-43b1-8cb3-96ef194da538",
+        "templateId": "TKCo",
+        "name": "戦車中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151205000000",
+        "type": "tank",
+        "full_personnel": 30,
+        "current_personnel": 30,
+        "full_equipments": {
+          "20式小銃": 24,
+          "MINIMI 5.56mm機関銃": 3,
+          "10式戦車": 2
+        },
+        "current_equipments": {
+          "20式小銃": 24,
+          "MINIMI 5.56mm機関銃": 3,
+          "10式戦車": 2
+        },
+        "lower_units": [
+          {
+            "id": "TKPt_12a9c1ea-2041-41f1-a561-512bef309de4",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          },
+          {
+            "id": "TKPt_b5fccb14-b005-440e-9389-44389c80d1ef",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          },
+          {
+            "id": "TKPt_6e316858-8cf6-474f-83f9-bf1add0007fb",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "TKCo_539994ec-1d57-4233-8857-deb32d87a3e6",
+        "templateId": "TKCo",
+        "name": "戦車中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151205000000",
+        "type": "tank",
+        "full_personnel": 30,
+        "current_personnel": 30,
+        "full_equipments": {
+          "20式小銃": 24,
+          "MINIMI 5.56mm機関銃": 3,
+          "10式戦車": 2
+        },
+        "current_equipments": {
+          "20式小銃": 24,
+          "MINIMI 5.56mm機関銃": 3,
+          "10式戦車": 2
+        },
+        "lower_units": [
+          {
+            "id": "TKPt_a93c848b-15be-436c-8ad5-1daf1efa40f0",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          },
+          {
+            "id": "TKPt_3b3a183e-9354-418a-a3f5-7977fe6e104e",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          },
+          {
+            "id": "TKPt_e96ed29b-d9e7-4169-908f-8ad875973eaa",
+            "templateId": "TKPt",
+            "name": "戦車小隊",
+            "force": "BLUFOR",
+            "sidc": "10031000141205000000",
+            "type": "tank",
+            "full_personnel": 30,
+            "current_personnel": 30,
+            "full_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "current_equipments": {
+              "20式小銃": 24,
+              "MINIMI 5.56mm機関銃": 3,
+              "10式戦車": 4
+            },
+            "lower_units": []
+          }
+        ]
+      },
+      {
+        "id": "HSpCo_0f32ef0f-328a-4cc0-9ae6-32cd501ed90e",
+        "templateId": "HSpCo",
+        "name": "自走榴弾砲中隊",
+        "force": "BLUFOR",
+        "sidc": "10031000151303010000",
+        "type": "artillery",
+        "full_personnel": 10,
+        "current_personnel": 10,
+        "full_equipments": {
+          "89式小銃": 10,
+          "高機動車": 1,
+          "99式自走155mm榴弾砲": 2
+        },
+        "current_equipments": {
+          "89式小銃": 10,
+          "高機動車": 1,
+          "99式自走155mm榴弾砲": 2
+        },
+        "lower_units": []
+      },
+      {
+        "id": "AWSPPt_e14348ab-f066-4709-92e7-f1ac7579ee57",
+        "templateId": "AWSPPt",
+        "name": "自走高射機関砲小隊",
+        "force": "BLUFOR",
+        "sidc": "10031000141301010000",
+        "type": "anti_air",
+        "full_personnel": 20,
+        "current_personnel": 20,
+        "full_equipments": {
+          "89式小銃": 10,
+          "87式自走高射機関砲": 2
+        },
+        "current_equipments": {
+          "89式小銃": 10,
+          "87式自走高射機関砲": 2
+        },
+        "lower_units": []
+      },
+      {
+        "id": "ATHPt_99415c1c-099d-42b1-a28b-7aacfd806bf1",
+        "templateId": "ATHPt",
+        "name": "対戦車ヘリ小隊",
+        "force": "BLUFOR",
+        "sidc": "10031000141206000000",
+        "type": "air",
+        "full_personnel": 10,
+        "current_personnel": 10,
+        "full_equipments": {
+          "AH-64D アパッチ・ロングボウ": 4
+        },
+        "current_equipments": {
+          "AH-64D アパッチ・ロングボウ": 4
+        },
+        "lower_units": []
+      }
+    ]
+  }
+]

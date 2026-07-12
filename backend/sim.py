@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
+import ray
 from shapely.geometry import GeometryCollection
 import scipy.optimize
 from models import *
@@ -10,6 +11,7 @@ from map import *
 from utils import *
 from functools import lru_cache
 import json, msgspec, copy, glob
+
 
 
 class Simulation:
@@ -157,6 +159,82 @@ class Simulation:
 		return updated_units
 
 
+	def _get_visibility_ratio(self, dist1, dist2, n_samples=10):
+		xy1 = np.random.normal(dist1["mean"], dist1["sigma"], (n_samples, 2))
+		xy2 = np.random.normal(dist2["mean"], dist2["sigma"], (n_samples, 2))
+		
+		z1 = self.map.get_elevation(xy1) 
+		z2 = self.map.get_elevation(xy2)
+		
+		pts1 = np.hstack([xy1, z1.reshape(-1, 1)])
+		pts2 = np.hstack([xy2, z2.reshape(-1, 1)])
+		
+		visible_results = self.map.compute_visibility(pts1, pts2)
+		return np.mean(visible_results)
+
+
+	def _process_single_unit_ingelligence(
+		self,
+		unit_id1 : str,
+		placed_units : Dict[str, PlacedUnit], 
+		updated_units : Dict[str, UnitRecord],
+		unit_distances : np.ndarray,
+		last_action_dict : Dict[str, UnitAction],
+		deployment_distribution : Dict[str, Dict],
+		discovery_distribution : Dict[str, np.ndarray],
+		exposure_distribution : Dict[str, np.ndarray],
+		sensors_dict : Dict[str, Sensor],
+	) -> List[DetectLog]:
+		unit1 = placed_units[unit_id1]
+		sensors = sensors_dict[unit_id1]
+		last_action1 = last_action_dict[unit_id1]
+		detect_logs = []
+		is_artillery_mode = last_action1.moveMode in [MoveMode.DEFENSE, MoveMode.ARTILLERY]
+
+		for uj, unit_id2 in enumerate(updated_units):
+			unit2 = placed_units[unit_id2]
+			last_action2 = last_action_dict[unit_id2]
+
+			if unit1.force == unit2.force:
+				continue
+
+			if exposure_distribution[unit_id2].shape[-1] == 0:
+				continue
+
+			R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2]
+
+			# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつ射撃実績があれば、R_effは諸元上の最大距離となる)
+			if is_artillery_mode and last_action2.moveMode == MoveMode.ARTILLERY and len(unit2.attackingUnits) > 0:
+				for si, sensor in enumerate(sensors):
+					if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
+						R_eff[unit_id1][si] = sensor.sensor_range
+
+			max_range = R_eff.max()
+			if max_range >= unit_distances[uj]:
+				discovery_prob = (R_eff / (unit_distances[uj] + 1e-3)) ** 2
+				discovery_prob = np.clip(discovery_prob, 0, 1)
+
+				# 前の時刻で発見済みならプラス
+				if unit_id2 in [det_log.unitId for det_log in unit1.detectedUnits]:
+					discovery_prob *= self.coeffs.intelligence.temporal_discovery_advantage
+
+				visibility_ratio = _get_visibility_ratio(
+					deployment_distribution[unit_id1], deployment_distribution[unit_id2]
+				)
+				discovery_prob *= visibility_ratio
+
+				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
+				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
+
+				# Step5: 発見できたのか、できたとしたらその割合はいくらなのか記録
+				if np.random.rand() <= unit_discovery_prob:
+					detect_logs.append(
+						DetectLog(unitId=unit_id2, awareness=float(unit_awareness_ratio))
+					)
+
+		return detect_logs
+
+
 	def intelligence_evaluation(self, 
 		placed_units : Dict[str, PlacedUnit], 
 		updated_units : Dict[str, UnitRecord], 
@@ -169,24 +247,7 @@ class Simulation:
 		discovery_distribution = {}
 		exposure_distribution = {}
 		sensors_dict = {}
-
-
-		def get_visibility_ratio(u1_id, u2_id, n_samples=10):
-			dist1 = deployment_distribution[u1_id]
-			dist2 = deployment_distribution[u2_id]
-
-			xy1 = np.random.normal(dist1["mean"], dist1["sigma"], (n_samples, 2))
-			xy2 = np.random.normal(dist2["mean"], dist2["sigma"], (n_samples, 2))
-			
-			z1 = self.map.get_elevation(xy1) 
-			z2 = self.map.get_elevation(xy2)
-			
-			pts1 = np.hstack([xy1, z1.reshape(-1, 1)])
-			pts2 = np.hstack([xy2, z2.reshape(-1, 1)])
-			
-			visible_results = self.map.compute_visibility(pts1, pts2)
-			return np.mean(visible_results)
-
+		last_action_dict = {}
 
 		for unit_id, record in updated_units.items():
 			unit = placed_units[unit_id]
@@ -196,14 +257,14 @@ class Simulation:
 				equipments += [eq_name] * eq_num
 
 			last_action = get_last_action(record)
+			last_action_dict[unit_id] = last_action
 			sensors = self._filter_equipments(tuple(equipments), Sensor)
 			vehicles = self._filter_equipments(tuple(equipments), Vehicle)
-			sensors += [self.coeffs.intelligence.personnel_sensor] * get_current_personnel(unit)
+			sensors += [self.coeffs.intelligence.personnel_sensor] #* get_current_personnel(unit)
+			sensors = list(set(sensors))
 			sensors_dict[unit_id] = sensors
 
-			discovery_ranges = []
-			for sensor in sensors:
-				discovery_ranges.append(self.distance_scales[sensor.name])
+			discovery_ranges = [self.distance_scales[sensor.name] for sensor in sensors]
 
 			discovery_distribution[unit_id] = np.sqrt((np.array(discovery_ranges) ** 2)
 				* self.coeffs.intelligence.discovery_distance_scale_by_move_mode[last_action.moveMode]
@@ -215,66 +276,32 @@ class Simulation:
 				vehicle_types.append(self.vehicle_type_one_hot[vehicle.type])
 
 			if len(unit.attackingUnits) > 0:
-				exposure_distribution[unit_id] = np.array(vehicle_types)
+				exposure_distribution[unit_id] = np.array(vehicle_types).T
 			else:
-				exposure_distribution[unit_id] = (np.array(vehicle_types) \
+				exposure_distribution[unit_id] = (np.array(vehicle_types).T \
 					* self.coeffs.intelligence.exposure_distance_scale_by_move_mode[last_action.moveMode]
 					* self.coeffs.intelligence.exposure_distance_scale_by_move_speed[last_action.moveSpeed])
 
-		# Step3: 部隊間距離を計算し、発見距離分布*被発見距離分布外なら計算から除外
 		unit_positions = [placed_units[unit_id].position for unit_id in updated_units]
 		unit_positions_utm = np.array([[p.easting, p.northing] for p in self.map.geo_transformer.to_utm(unit_positions)])
 		unit_distances = np.linalg.norm(unit_positions_utm[:,np.newaxis,:] - unit_positions_utm[np.newaxis,:,:], axis=-1)
 
 		for ui, unit_id1 in enumerate(updated_units):
-			unit1 = placed_units[unit_id1]
 			if len(discovery_distribution[unit_id1]) == 0:
 				continue
 
-			sensors = sensors_dict[unit_id1]
-			last_action1 = get_last_action(updated_units[unit_id1])
-
-			for uj, unit_id2 in enumerate(updated_units):
-				unit2 = placed_units[unit_id2]
-				last_action2 = get_last_action(updated_units[unit_id2])
-
-				if unit1.force == unit2.force:
-					continue
-
-				if len(exposure_distribution[unit_id2]) == 0:
-					continue
-
-				R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2].T
-
-				# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつ射撃実績があれば、R_effは諸元上の最大距離となる)
-				if last_action1.moveMode in [MoveMode.DEFENSE, MoveMode.ARTILLERY] and last_action2.moveMode == MoveMode.ARTILLERY \
-					and len(unit2.attackingUnits) > 0:
-					for si, sensor in enumerate(sensors):
-						if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
-							R_eff[unit_id1][si] = sensor.sensor_range
-
-				discovery_prob = (R_eff / (unit_distances[ui,uj] + 1e-3)) ** 2
-				discovery_prob = np.clip(discovery_prob, 0, 1)
-
-				# 前の時刻で発見済みならプラス
-				if unit_id2 in [det_log.unitId for det_log in unit1.detectedUnits]:
-					discovery_prob *= self.coeffs.intelligence.temporal_discovery_advantage
-
-				max_range = np.max(R_eff)
-				if max_range < unit_distances[ui, uj]:
-					discovery_prob = np.zeros_like(discovery_prob)
-				else:
-					visibility_ratio = get_visibility_ratio(unit_id1, unit_id2)
-					discovery_prob *= visibility_ratio
-
-				unit_discovery_prob = np.mean(np.max(discovery_prob, axis=1))
-				unit_awareness_ratio = np.mean(np.max(discovery_prob, axis=0))
-
-				# Step5: 発見できたのか、できたとしたらその割合はいくらなのか記録
-				if np.random.rand() <= unit_discovery_prob:
-					updated_units[unit_id1].detectedUnits.append(
-						DetectLog(unitId=unit_id2, awareness=float(unit_awareness_ratio))
-					)
+			detect_logs = self._process_single_unit_ingelligence(
+				unit_id1,
+				placed_units, 
+				updated_units,
+				unit_distances[ui],
+				last_action_dict,
+				deployment_distribution,
+				discovery_distribution,
+				exposure_distribution,
+				sensors_dict,
+			)
+			updated_units[unit_id1].detectedUnits += detect_logs
 
 		return updated_units
 
