@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from collections import Counter
 from enum import Enum
 from datetime import datetime
-from typing import TypeVar, Generic, Union, List, Dict, Type, Optional, cast
+from typing import TypeVar, Generic, Union, List, Tuple, Dict, Type, Optional, cast
 import msgspec
 from shapely import get_coordinates, set_coordinates
 from shapely.ops import transform
@@ -317,8 +317,8 @@ class Weapon(Equipment):
 class Vehicle(Equipment):
 	type: VehicleType
 	max_speed: float
-	weapons: List[Weapon | str]
-	sensors: List[Sensor | str]
+	weapons: Tuple[Union[Weapon, str], ...]
+	sensors: Tuple[Union[Sensor, str], ...]
 	required_personnel: int
 	personnel_capacity: int
 
@@ -499,6 +499,7 @@ class MobilityCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 
 class IntelligenceCoeff(msgspec.Struct, frozen=True, cache_hash=True):
 	personnel_sensor: Sensor
+	personnel_vehicle: Vehicle
 	temporal_discovery_advantage: float
 
 	discovery_distance_scale_by_move_speed: Dict[MoveSpeed, float]

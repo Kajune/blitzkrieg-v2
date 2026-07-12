@@ -120,6 +120,18 @@
 			"type": "OpticalVisual",
 			"sensor_range": 2000
 		},
+		"personnel_vehicle":
+		{
+			"name": "人員",
+			"type": "Foot",
+			"max_speed": 4,
+			"weapons":
+			[],
+			"sensors":
+			[],
+			"required_personnel": 1,
+			"personnel_capacity": 1
+		},
 		"temporal_discovery_advantage": 2.0,
 		"discovery_distance_scale_by_move_speed":
 		{

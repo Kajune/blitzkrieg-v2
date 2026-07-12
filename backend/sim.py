@@ -179,6 +179,7 @@ class Simulation:
 		placed_units : Dict[str, PlacedUnit], 
 		updated_units : Dict[str, UnitRecord],
 		unit_distances : np.ndarray,
+		R_eff_list : np.ndarray,
 		last_action_dict : Dict[str, UnitAction],
 		deployment_distribution : Dict[str, Dict],
 		discovery_distribution : Dict[str, np.ndarray],
@@ -201,13 +202,14 @@ class Simulation:
 			if exposure_distribution[unit_id2].shape[-1] == 0:
 				continue
 
-			R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2]
+#			R_eff = discovery_distribution[unit_id1] @ exposure_distribution[unit_id2]
+			R_eff = R_eff_list[uj]
 
 			# 対砲迫レーダーを考慮 (RADAR_COUNTER_BATTERYについては、自部隊のmoveModeがARTILLERYまたはDEFENSEかつ、目標のmoveModeがARTILLERYかつ射撃実績があれば、R_effは諸元上の最大距離となる)
 			if is_artillery_mode and last_action2.moveMode == MoveMode.ARTILLERY and len(unit2.attackingUnits) > 0:
 				for si, sensor in enumerate(sensors):
 					if sensor.type == SensorType.RADAR_COUNTER_BATTERY:
-						R_eff[unit_id1][si] = sensor.sensor_range
+						R_eff[si,:] = sensor.sensor_range
 
 			max_range = R_eff.max()
 			if max_range >= unit_distances[uj]:
@@ -246,6 +248,10 @@ class Simulation:
 
 		discovery_distribution = {}
 		exposure_distribution = {}
+		max_discovery_dim1 = 0
+		max_discovery_dim2 = 0
+		max_exposure_dim1 = 0
+		max_exposure_dim2 = 0
 		sensors_dict = {}
 		last_action_dict = {}
 
@@ -260,6 +266,8 @@ class Simulation:
 			last_action_dict[unit_id] = last_action
 			sensors = self._filter_equipments(tuple(equipments), Sensor)
 			vehicles = self._filter_equipments(tuple(equipments), Vehicle)
+			vehicles += [self.coeffs.intelligence.personnel_vehicle] #* get_current_personnel(unit)
+			vehicles = list(set(vehicles))
 			sensors += [self.coeffs.intelligence.personnel_sensor] #* get_current_personnel(unit)
 			sensors = list(set(sensors))
 			sensors_dict[unit_id] = sensors
@@ -270,10 +278,14 @@ class Simulation:
 				* self.coeffs.intelligence.discovery_distance_scale_by_move_mode[last_action.moveMode]
 				* self.coeffs.intelligence.discovery_distance_scale_by_move_speed[last_action.moveSpeed]
 				* (1 - unit.suppressionRate))
+			max_discovery_dim1 = max(max_discovery_dim1, discovery_distribution[unit_id].shape[0])
+			max_discovery_dim2 = max(max_discovery_dim2, discovery_distribution[unit_id].shape[1])
 
 			vehicle_types = []
 			for vehicle in vehicles:
 				vehicle_types.append(self.vehicle_type_one_hot[vehicle.type])
+			if len(vehicle_types) == 0:
+				continue
 
 			if len(unit.attackingUnits) > 0:
 				exposure_distribution[unit_id] = np.array(vehicle_types).T
@@ -281,10 +293,27 @@ class Simulation:
 				exposure_distribution[unit_id] = (np.array(vehicle_types).T \
 					* self.coeffs.intelligence.exposure_distance_scale_by_move_mode[last_action.moveMode]
 					* self.coeffs.intelligence.exposure_distance_scale_by_move_speed[last_action.moveSpeed])
+			max_exposure_dim1 = max(max_exposure_dim1, exposure_distribution[unit_id].shape[0])
+			max_exposure_dim2 = max(max_exposure_dim2, exposure_distribution[unit_id].shape[1])
 
 		unit_positions = [placed_units[unit_id].position for unit_id in updated_units]
 		unit_positions_utm = np.array([[p.easting, p.northing] for p in self.map.geo_transformer.to_utm(unit_positions)])
 		unit_distances = np.linalg.norm(unit_positions_utm[:,np.newaxis,:] - unit_positions_utm[np.newaxis,:,:], axis=-1)
+
+		discovery_matrix = np.zeros((len(updated_units), max_discovery_dim1, max_discovery_dim2))
+		exposure_matrix = np.zeros((len(updated_units), max_exposure_dim1, max_exposure_dim2))
+		assert max_discovery_dim2 == max_exposure_dim1
+
+		for ui, unit_id in enumerate(updated_units):
+			if unit_id in discovery_distribution:
+				m = discovery_distribution[unit_id]
+				discovery_matrix[ui][:m.shape[0], :m.shape[1]] = m
+
+			if unit_id in exposure_distribution:
+				m = exposure_distribution[unit_id]
+				exposure_matrix[ui][:m.shape[0], :m.shape[1]] = m
+
+		R_eff_full = np.einsum('ikm,jmn->ijkn', discovery_matrix, exposure_matrix)
 
 		for ui, unit_id1 in enumerate(updated_units):
 			if len(discovery_distribution[unit_id1]) == 0:
@@ -295,6 +324,7 @@ class Simulation:
 				placed_units, 
 				updated_units,
 				unit_distances[ui],
+				R_eff_full[ui],
 				last_action_dict,
 				deployment_distribution,
 				discovery_distribution,
