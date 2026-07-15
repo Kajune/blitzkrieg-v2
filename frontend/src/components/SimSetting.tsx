@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAppStore } from '../contexts/AppContext';
-import { mapElementToJSON } from '../types/mapElement';
 import '../App.module.css';
 
 
@@ -57,7 +56,7 @@ export const SimSetting = ({
 				simConfig,
 				units,
 				placedUnits,
-				mapElements: mapElements.map(mapElementToJSON),
+				mapElements,
 			};
 
 			const response = await fetch('/api/register_simulation', {

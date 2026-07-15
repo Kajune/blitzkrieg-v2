@@ -1,34 +1,50 @@
 /* 共通のマーカー基底 */
 .tactical-marker {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 20px;
-    line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 20px;
+	line-height: 1;
 }
 
 .marker-cross::before { content: '＋'; }
 
 .my-custom-tooltip {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: white !important;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px black; /* 文字を見やすく */
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	color: white !important;
+	font-weight: bold;
+	text-shadow: 1px 1px 2px black; /* 文字を見やすく */
 }
 
 .offcanvasContainer {
-    visibility: visible;
-    z-index: 2000;
-    background-color: #212529;
-    color: #fff;
-    width: 280px;
+	visibility: visible;
+	z-index: 2000;
+	background-color: #212529;
+	color: #fff;
+	width: 280px;
 }
 
 .milsymbol-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.suppressionBadge {
+	position: absolute;
+	top: -10px;
+	right: -10px;
+	background: yellow;
+	color: black;
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	font-size: 12px;
 }

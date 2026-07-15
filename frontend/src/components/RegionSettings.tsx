@@ -6,7 +6,7 @@ import type { Force } from '../types/unitTypes';
 import { FORCES, FORCE_STYLES } from '../types/unitTypes';
 import type { MapElement, ElementType, GeometryType } from '../types/mapElement'
 import { ElementTypeName, GeometryTypeName } from '../types/mapElement'
-
+import type { GeoJsonObject } from 'geojson';
 import '../App.module.css';
 
 
@@ -23,13 +23,11 @@ export const RegionSettings = ({
 	onClose, 
 	onStartDrawing,
 	drawingElement,
-	onVisibilityChange,
 }: { 
 	isOpen: boolean; 
 	onClose: () => void; 
 	onStartDrawing: (el: MapElement) => void;
 	drawingElement: MapElement | null;
-	onVisibilityChange: (el: MapElement, visible: boolean) => void;
 }) => {
 	const { mapElements, setMapElements, displayForce } = useAppStore();
 	const initialTab = displayForce === 'GOD' ? FORCES[0] : displayForce;
@@ -93,7 +91,14 @@ export const RegionSettings = ({
 	};
 
 	const executeAddElement = (type: ElementType, geometry: GeometryType, force: Force, name: string) => {
-		onStartDrawing({ id: crypto.randomUUID(), type, force, geometry, name });
+		onStartDrawing({ 
+			id: crypto.randomUUID(), 
+			type, 
+			force, 
+			geometry, 
+			name,
+			geoJson: { type: "FeatureCollection", features: [] } as GeoJsonObject
+		});
 		setInputModal({ show: false, type: null, geometry: null, force: null });
 	};
 
@@ -105,7 +110,6 @@ export const RegionSettings = ({
 				show: true,
 				confirmText: '削除する',
 				onConfirm: () => {
-					mapElements.forEach((el) => el.layer?.remove());
 					setMapElements([]);
 					setModal(prev => ({ ...prev, show: false }));
 				},
@@ -113,10 +117,6 @@ export const RegionSettings = ({
 			});
 		} else {
 			setMapElements((prev) => {
-				const target = prev.find((el) => el.id === id);
-				if (target && target.layer) {
-					target.layer.remove();
-				}
 				return prev.filter((el) => el.id !== id);
 			});
 		}
@@ -124,12 +124,6 @@ export const RegionSettings = ({
 
 	const toggleAllByForce = (force: Force, isChecked: boolean) => {
 		setVisible(prev => ({ ...prev, [force]: isChecked }));
-
-		mapElements.forEach((el) => {
-			if (el.force === force) {
-				onVisibilityChange(el, isChecked);
-			}
-		});
 	};
 
 	return (

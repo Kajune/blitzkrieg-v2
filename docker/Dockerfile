@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
 	python3-dev \
 	libgdal-dev \
 	libgl1 \
-    libglib2.0-0 \
+	libglib2.0-0 \
 	g++ \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -22,7 +22,8 @@ RUN pip3 install --no-cache-dir \
 	opencv-python \
 	scipy \
 	dotenv \
-	pyastar2d
+	pyastar2d \
+	ray
 
 ENV CUDA_PATH=/usr/local/cuda
 ENV PATH=$PATH:/usr/local/cuda/bin

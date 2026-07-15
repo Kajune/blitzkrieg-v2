@@ -1,5 +1,6 @@
 import type { Force } from './unitTypes';
 import { FORCE_STYLES } from './unitTypes';
+import type { GeoJsonObject } from 'geojson';
 
 export type ElementType = 'operation' | 'fortification' | 'obstacle' | 'coa';
 export type GeometryType = 'polygon' | 'polyline' | 'point';
@@ -10,7 +11,7 @@ export interface MapElement {
 	force: Force;
 	geometry: GeometryType;
 	name: string;
-	layer?: L.Layer;
+	geoJson: GeoJsonObject;
 }
 
 export const getMapElementColor = (element: MapElement): string => {
@@ -21,21 +22,6 @@ export const getMapElementColor = (element: MapElement): string => {
 		case 'coa': return element.force ? FORCE_STYLES[element.force].color : 'black';
 		default: return 'black';
 	}
-};
-
-export const mapElementToJSON = (element: MapElement) => {
-	const geometry = element.layer && 'toGeoJSON' in element.layer 
-		? (element.layer as any).toGeoJSON() 
-		: null;
-
-	return {
-		id: element.id,
-		type: element.type,
-		force: element.force,
-		geometry: element.geometry,
-		name: element.name,
-		geoJson: geometry,
-	};
 };
 
 export const ElementTypeName: Record<ElementType, string> = {

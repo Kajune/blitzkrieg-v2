@@ -220,7 +220,7 @@ class Simulation:
 				if unit_id2 in [det_log.unitId for det_log in unit1.detectedUnits]:
 					discovery_prob *= self.coeffs.intelligence.temporal_discovery_advantage
 
-				visibility_ratio = _get_visibility_ratio(
+				visibility_ratio = self._get_visibility_ratio(
 					deployment_distribution[unit_id1], deployment_distribution[unit_id2]
 				)
 				discovery_prob *= visibility_ratio

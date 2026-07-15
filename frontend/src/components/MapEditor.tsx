@@ -4,14 +4,16 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import ms from 'milsymbol';
-import type { GeoJsonObject } from 'geojson';
 
 import { useAppStore } from '../contexts/AppContext';
 import type { MapElement } from '../types/mapElement'
 import { getMapElementColor } from '../types/mapElement'
 import type { Unit, PlacedUnit, Force, DetectLog, AttackLog } from '../types/unitTypes';
-import { getTotalPersonnel, getSymbolSize } from '../types/unitTypes';
+import { UnitMarker } from './UnitMarker';
+import { ElementLayer } from './ElementLayer';
+import { generateUnitIcon } from '../utils/unitIcon';
+import type { GeometryType } from '../types/mapElement';
+import type { Feature } from 'geojson';
 import '../App.module.css';
 
 L.Marker.prototype.options.icon = L.icon({
@@ -43,6 +45,7 @@ export const useMapEditor = (
 	useEffect(() => {
 		selectedUnitIdRef.current = selectedUnitId;
 	}, [selectedUnitId]);
+	const [shouldFocusAfterLoad, setShouldFocusAfterLoad] = useState(false);
 
 	const pendingRef = useRef(pendingElement);
 	const pointsRef = useRef(points);
@@ -169,9 +172,6 @@ export const useMapEditor = (
 				removeUnitFromMap(unit.id);
 				const newUnits: PlacedUnit[] = result.deployedUnits;
 				setPlacedUnits((prev) => [...prev, ...newUnits]);
-				newUnits.forEach((childUnit) => {
-					createLayerFromUnit(childUnit);
-				});				
 				setSelectedUnitId(null);
 			} else {
 				console.log(result.errors);
@@ -180,62 +180,6 @@ export const useMapEditor = (
 			console.error('部隊の展開に失敗しました', err);
 		}
 
-	};
-
-	const createLayerFromElement = (el: MapElement, geoJsonData : GeoJsonObject): L.Layer => {
-		const style = { color: getMapElementColor(el) };
-
-		const layer = L.geoJSON(geoJsonData, {
-			style: () => style,
-			pointToLayer: (_feature, latlng) => {
-				const icon = L.divIcon({
-					className: '',
-					html: `<div style="color: ${style.color}; font-size: 28px;">+</div>`,
-					iconSize: [30, 30],
-					iconAnchor: [15, 15]
-				});
-				return L.marker(latlng, { icon });
-			}
-		}).addTo(mapInstance.current!);
-
-		if (layer) {
-			layer.bindTooltip(el.name ?? '', { 
-				permanent: true, 
-				direction: 'center',
-				className: 'my-custom-tooltip'
-			});
-			
-			if (!showLabels) {
-				layer.closeTooltip();
-			}
-		}
-
-		el.layer = layer;
-		
-		return layer;
-	};
-
-	const createLayerFromUnit = (unit: PlacedUnit): L.Marker => {
-		const layer = L.marker([unit.position.lat, unit.position.lon], {
-			icon: createUnitIcon(unit),
-			draggable: isUnitPlacementOpen
-		}).addTo(mapInstance.current!);
-
-		layer.on('dragend', (e) => {
-			const marker = e.target as L.Marker;
-			const newPos = marker.getLatLng();
-			
-			setPlacedUnits((prev) => 
-				prev.map(u => u.id === unit.id 
-					? { ...u, position: { lat: newPos.lat, lon: newPos.lng } } 
-					: u
-				)
-			);
-		});
-		layer.on('click', () => setSelectedUnitId(unit.id));
-		layer.bindTooltip(unit.templateId);
-		unitLayerMap.current.set(unit.id, layer);
-		return layer;
 	};
 
 	useEffect(() => {
@@ -265,14 +209,49 @@ export const useMapEditor = (
 		setPoints([]);
 	};
 
-	const setVisibility = (el: MapElement, visible: boolean) => {
-		if (!mapInstance.current) return;
-		if (!el.layer) return;
-		const isOnMap = mapInstance.current.hasLayer(el.layer);
-		if (visible && !isOnMap) {
-			el.layer.addTo(mapInstance.current);
-		} else if (!visible && isOnMap) {
-			el.layer.remove();
+	const convertPointsToGeoJson = (geometry: GeometryType, points: L.LatLng[]): Feature => {
+		if (points.length === 0) {
+			return { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} };
+		}
+
+		switch (geometry) {
+			case 'point':
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'Point',
+						coordinates: [points[0].lng, points[0].lat]
+					},
+					properties: {}
+				};
+
+			case 'polyline':
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'LineString',
+						coordinates: points.map(p => [p.lng, p.lat])
+					},
+					properties: {}
+				};
+
+			case 'polygon':
+				// ポリゴンは始点と終点が同じである必要があるため、必要に応じて閉じる
+				let coords = points.map(p => [p.lng, p.lat]);
+				if (points.length > 0 && (points[0].lat !== points[points.length - 1].lat || points[0].lng !== points[points.length - 1].lng)) {
+					coords.push([points[0].lng, points[0].lat]);
+				}
+				return {
+					type: 'Feature',
+					geometry: {
+						type: 'Polygon',
+						coordinates: [coords]
+					},
+					properties: {}
+				};
+				
+			default:
+				throw new Error(`Unsupported geometry type: ${geometry}`);
 		}
 	};
 
@@ -283,86 +262,19 @@ export const useMapEditor = (
 			mapInstance.current.removeLayer(tempLayerRef.current);
 			tempLayerRef.current = null;
 		}
-		let layer: L.Layer | null = null;
-		const color = getMapElementColor(pendingRef.current);
 
-		if (pendingRef.current.geometry === 'polygon' && finalPoints.length >= 3) {
-			layer = L.polygon(finalPoints, { color }).addTo(mapInstance.current);
-		} else if (pendingRef.current.geometry === 'polyline' && finalPoints.length >= 2) {
-			layer = L.polyline(finalPoints, { color }).addTo(mapInstance.current);
-		} else if (pendingRef.current.geometry === 'point') {
-			const icon = L.divIcon({
-				className: '',
-				html: `<div style="
-					color: ${color}; 
-					font-size: 28px; 
-					display: flex; 
-					justify-content: center; 
-					align-items: center;
-					width: 100%;
-					height: 100%;
-				">+</div>`,
-				iconSize: [30, 30],
-				iconAnchor: [15, 15]
-			});
-			layer = L.marker(finalPoints[0], { icon }).addTo(mapInstance.current);
-		}
+		const newGeoJson = convertPointsToGeoJson(pendingRef.current.geometry, finalPoints);
 
-		if (layer) {
-			layer.bindTooltip(pendingRef.current.name ?? '', { 
-				permanent: true, 
-				direction: 'center',
-				className: 'my-custom-tooltip'
-			});
-			
-			if (!showLabelsRef.current) {
-				layer.closeTooltip();
+		setMapElements((prev) => [
+			...prev, 
+			{ 
+				...pendingRef.current!, 
+				geoJson: newGeoJson
 			}
-			
-			setMapElements((prev) => [...prev, { ...pendingRef.current as MapElement, layer }]);
-		}
+		]);
 
 		setPendingElement(null);
 		setPoints([]);
-	};
-
-	const createUnitIcon = (unit: PlacedUnit): L.DivIcon => {
-		const totalPersonnel = getTotalPersonnel(unit, 'full_personnel');
-		const symbolSize = getSymbolSize(totalPersonnel);
-		const symbol = new ms.Symbol(unit.sidc, { size: symbolSize });
-		const sSize = symbol.getSize();
-
-		// 抑制率が0.5以上なら警告マークを表示するHTMLを作成
-		const isSuppressed = unit.suppressionRate >= 0.5;
-		const html = `
-			<div style="position: relative; width: ${sSize.width}px; height: ${sSize.height}px;">
-				${symbol.asSVG()}
-				${isSuppressed ? `
-					<div style="
-						position: absolute; 
-						top: -10px; 
-						right: -10px; 
-						background: yellow; 
-						color: black; 
-						border-radius: 50%; 
-						width: 20px; 
-						height: 20px; 
-						display: flex; 
-						align-items: center; 
-						justify-content: center; 
-						font-weight: bold; 
-						font-size: 12px;
-					">!</div>
-				` : ''}
-			</div>
-		`;
-
-		return L.divIcon({
-			className: 'milsymbol-icon',
-			html: html,
-			iconSize: [sSize.width, sSize.height],
-			iconAnchor: [sSize.width / 2, sSize.height / 2]
-		});
 	};
 
 	useEffect(() => {
@@ -371,7 +283,7 @@ export const useMapEditor = (
 			const marker = unitLayerMap.current.get(unit.id);
 			if (marker) {
 				const currentIcon = marker.getIcon();
-				const newIcon = createUnitIcon(unit);
+				const newIcon = generateUnitIcon(unit);
 				
 				// アイコンのHTMLを比較して、変更がある場合のみ更新する
 				// (無駄な再描画を防ぐため)
@@ -421,30 +333,6 @@ export const useMapEditor = (
 		};
 
 		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
-
-		const layer = L.marker(latLng, {
-			icon: createUnitIcon(newPlacedUnit),
-			draggable: isUnitPlacementOpen
-		}).addTo(mapInstance.current);
-
-		layer.on('dragend', (e) => {
-			const marker = e.target as L.Marker;
-			const newPos = marker.getLatLng();
-			
-			setPlacedUnits((prev) => 
-				prev.map(u => u.id === unitData.id 
-					? { ...u, position: { lat: newPos.lat, lon: newPos.lng } } 
-					: u
-				)
-			);
-		});
-
-		layer.on('click', () => {
-			setSelectedUnitId(newPlacedUnit.id);
-		});
-
-		layer.bindTooltip(newPlacedUnit.templateId);
-		unitLayerMap.current.set(newPlacedUnit.id, layer);
 	};
 
 	const clearMap = () => {
@@ -483,6 +371,15 @@ export const useMapEditor = (
 
 		map.fitBounds(bounds);
 	};
+
+	useEffect(() => {
+		if (shouldFocusAfterLoad) {
+			requestAnimationFrame(() => {
+				focusAll();
+				setShouldFocusAfterLoad(false);
+			});
+		}
+	}, [shouldFocusAfterLoad, mapElements, placedUnits]);
 
 	const tempLayerRef = useRef<L.Polyline | null>(null);
 
@@ -691,19 +588,6 @@ export const useMapEditor = (
 				});
 			}
 		});
-
-		mapElements.forEach((el) => {
-			if (!el.layer) return;
-			
-			const isVisible = displayForce === 'GOD' || el.force === displayForce || el.type !== 'coa';
-			
-			const isOnMap = map.hasLayer(el.layer);
-			if (isVisible && !isOnMap) {
-				el.layer.addTo(map);
-			} else if (!isVisible && isOnMap) {
-				el.layer.remove();
-			}
-		});
 	}, [displayForce, placedUnits, mapElements, showDetectionPolygons]);
 
 	useEffect(() => {
@@ -716,7 +600,6 @@ export const useMapEditor = (
 		}
 
 		if (showMobilityMap && mobilityMap) {
-			// データ構造を判定して、単一のFeatureとして扱う
 			const feature = ('features' in mobilityMap) 
 				? (mobilityMap.features as any[])[0] 
 				: mobilityMap;
@@ -743,34 +626,56 @@ export const useMapEditor = (
 		}
 	}, [mobilityMap, showMobilityMap]);
 
-	useEffect(() => {
-		mapElements.forEach((el) => {
-			if (!el.layer) return;
-			if (showLabels) {
-				el.layer.openTooltip();
-			} else {
-				el.layer.closeTooltip();
-			}
+	const renderMarkers = () => {
+		if (!mapInstance.current) return null;
+		return placedUnits.map(unit => (
+			<UnitMarker
+				key={unit.id}
+				unit={unit}
+				map={mapInstance.current!}
+				isDraggable={isUnitPlacementOpen}
+				onDragEnd={(id, latlng) => {
+					setPlacedUnits(prev => prev.map(u => u.id === id ? { ...u, position: { lat: latlng.lat, lon: latlng.lng } } : u));
+				}}
+				onClick={setSelectedUnitId}
+			/>
+		));
+	};
+
+	const renderElements = () => {
+		if (!mapInstance.current) return null;
+		
+		return mapElements.map(el => {
+			const isForceVisible = displayForce === 'GOD' || el.force === displayForce || el.type !== 'coa';
+			const isVisible = isForceVisible;
+
+			return (
+				<ElementLayer 
+					key={el.id} 
+					map={mapInstance.current!} 
+					element={el} 
+					isVisible={isVisible}
+					showLabels={showLabels} 
+				/>
+			);
 		});
-	}, [showLabels, displayForce, mapElements]);
+	};
 
 	return {
-		map: mapInstance.current,
 		clearMap,
-		focusAll,
-		createLayerFromElement,
-		createLayerFromUnit,
+		setShouldFocusAfterLoad,
 		mapRef,
 		pendingElement,
 		selectedUnitId,
 		setSelectedUnitId,
 		startDrawing,
-		setVisibility,
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionAttackPolygons,
 		deployChildren,
+		renderMarkers,
+		renderElements,
 	};
 };
 

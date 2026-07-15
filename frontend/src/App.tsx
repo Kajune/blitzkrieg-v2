@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import { AppProvider, useAppStore } from './contexts/AppContext';
-import { mapElementToJSON } from './types/mapElement';
 import { useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
@@ -35,22 +34,20 @@ function AppContent() {
 	} = useAppStore();
 
 	const { 
-		map,
 		clearMap,
-		focusAll,
-		createLayerFromElement,
-		createLayerFromUnit,
+		setShouldFocusAfterLoad,
 		mapRef,
 		pendingElement,
 		selectedUnitId,
 		setSelectedUnitId,
 		startDrawing,
-		setVisibility,
 		handleDragOver,
 		handleDrop,
 		removeUnitFromMap,
 		updateDetectionAttackPolygons,
 		deployChildren,
+		renderMarkers,
+		renderElements,
 	} = useMapEditor(showLabels, showDetectionPolygons, showMobilityMap, isUnitPlacementOpen);
 
 	const exportData = () => {
@@ -58,7 +55,7 @@ function AppContent() {
 			simConfig,
 			units,
 			placedUnits,
-			mapElements: mapElements.map(mapElementToJSON),
+			mapElements,
 			simRecord,
 		};
 
@@ -90,29 +87,13 @@ function AppContent() {
 
 				if (data.simConfig) setSimConfig(data.simConfig);
 				if (data.units) setUnits(data.units);
-				if (data.placedUnits) {
-					setPlacedUnits(data.placedUnits);
-					data.placedUnits.forEach((u: any) => {
-						createLayerFromUnit(u);
-					});
-				}
-
-				if (data.mapElements) {
-					const restoredElements = data.mapElements.map((el: any) => {
-						const layer = createLayerFromElement(el, el.geoJson);
-						if (map) {
-							layer.addTo(map);
-						}
-						return { ...el, layer: layer };
-					});
-					setMapElements(restoredElements);
-				}
+				if (data.placedUnits) setPlacedUnits(data.placedUnits);
+				if (data.mapElements) setMapElements(data.mapElements);
 				if (data.simRecord) setSimRecord(data.simRecord);
 				setSimUuid(null);
 
 				setShowMenu(false);
-				focusAll();
-
+				setShouldFocusAfterLoad(true);
 			} catch (error) {
 				console.error(error);
 				alert('ファイルの形式が正しくないか、読み込みに失敗しました。');
@@ -128,7 +109,10 @@ function AppContent() {
 				style={{ width: '100%', height: '100%', zIndex: 1 }} 
 				onDragOver={handleDragOver} 
 				onDrop={handleDrop}
-			/>
+			>
+				{renderElements()}
+				{renderMarkers()}
+			</div>
 
 			<button 
 				className="btn btn-secondary position-absolute"
@@ -241,7 +225,6 @@ function AppContent() {
 				onClose={() => setIsRegionEditorOpen(false)}
 				onStartDrawing={startDrawing}
 				drawingElement={pendingElement}
-				onVisibilityChange={setVisibility}
 			/>
 			<UnitPlacement 
 				isOpen={isUnitPlacementOpen} 
