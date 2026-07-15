@@ -11,7 +11,7 @@ import { getMapElementColor } from '../types/mapElement'
 import type { Unit, PlacedUnit, Force, DetectLog, AttackLog } from '../types/unitTypes';
 import { UnitMarker } from './UnitMarker';
 import { ElementLayer } from './ElementLayer';
-import { generateUnitIcon } from '../utils/unitIcon';
+import { ImageLayer } from './ImageLayer';
 import type { GeometryType } from '../types/mapElement';
 import type { Feature } from 'geojson';
 import '../App.module.css';
@@ -52,20 +52,13 @@ export const useMapEditor = (
 	const showLabelsRef = useRef(showLabels);
 	const showDetectionPolygonsRef = useRef(showDetectionPolygons);
 	const showMobilityMapRef = useRef(showMobilityMap);
-	const mobilityLayerRef = useRef<L.Layer | null>(null);
-	const { unitLayerMap, actionLayerMap, detectionLayerMap } = useAppStore();
+	const { actionLayerMap, detectionLayerMap } = useAppStore();
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
 	};
 
 	const removeUnitFromMap = (unitId: string) => {
-		const layer = unitLayerMap.current.get(unitId);
-		if (layer && mapInstance.current) {
-			mapInstance.current.removeLayer(layer);
-			unitLayerMap.current.delete(unitId);
-		}
-
 		const layers = detectionLayerMap.current.get(unitId);
 		if (layers) {
 			layers.forEach(layer => layer.remove());
@@ -87,12 +80,9 @@ export const useMapEditor = (
 			return;
 		}
 
-		const sourceMarker = unitLayerMap.current.get(unitId);
-		if (!sourceMarker) return;
-		const sourcePos = sourceMarker.getLatLng();
-
 		const sourceUnit = placedUnits.find(u => u.id === unitId);
 		if (!sourceUnit) return;
+		const sourcePos = L.latLng(sourceUnit.position.lat, sourceUnit.position.lon);
 
 		const isUnitVisible = displayForce === 'GOD' || sourceUnit.force === displayForce;
 
@@ -105,9 +95,9 @@ export const useMapEditor = (
 		const attackingTargetIds = new Set(attackingUnits.map(a => a.unitId));
 
 		const newPolygons: L.Polygon[] = detectedUnits.map((log) => {
-			const targetMarker = unitLayerMap.current.get(log.unitId);
-			if (!targetMarker) return null;
-			const targetPos = targetMarker.getLatLng();
+			const targetUnit = placedUnits.find(u => u.id === log.unitId);
+			if (!targetUnit) return null;
+			const targetPos = L.latLng(targetUnit.position.lat, targetUnit.position.lon);
 
 			const latDiff = targetPos.lat - sourcePos.lat;
 			const lngDiff = targetPos.lng - sourcePos.lng;
@@ -190,20 +180,6 @@ export const useMapEditor = (
 		showMobilityMapRef.current = showMobilityMap;
 	}, [pendingElement, points, showLabels, showDetectionPolygons, showMobilityMap]);
 
-	useEffect(() => {
-		if (!mapInstance.current) return;
-
-		unitLayerMap.current.forEach((layer) => {
-			if (layer instanceof L.Marker) {
-				if (isUnitPlacementOpen) {
-					layer.dragging?.enable();
-				} else {
-					layer.dragging?.disable();
-				}
-			}
-		});
-	}, [isUnitPlacementOpen]);
-
 	const startDrawing = (el: MapElement) => {
 		setPendingElement(el);
 		setPoints([]);
@@ -277,23 +253,6 @@ export const useMapEditor = (
 		setPoints([]);
 	};
 
-	useEffect(() => {
-		// placedUnitsが更新されるたびに、該当するマーカーのアイコンを再設定する
-		placedUnits.forEach((unit) => {
-			const marker = unitLayerMap.current.get(unit.id);
-			if (marker) {
-				const currentIcon = marker.getIcon();
-				const newIcon = generateUnitIcon(unit);
-				
-				// アイコンのHTMLを比較して、変更がある場合のみ更新する
-				// (無駄な再描画を防ぐため)
-				if ((currentIcon as any).options.html !== (newIcon as any).options.html) {
-					marker.setIcon(newIcon);
-				}
-			}
-		});
-	}, [placedUnits]);
-
 	const handleDrop = (e: React.DragEvent) => {
 		e.preventDefault();
 		const unitData: Unit = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -344,7 +303,6 @@ export const useMapEditor = (
 			}
 		});
 		
-		unitLayerMap.current.clear();
 		detectionLayerMap.current.forEach(layers => {
 			layers.forEach(layer => layer.remove());
 		});
@@ -454,6 +412,8 @@ export const useMapEditor = (
 
 		const handleContextMenu = (e: L.LeafletMouseEvent) => {
 			e.originalEvent.preventDefault();
+
+			if (!mapInstance.current) return;
 			
 			const currentId = selectedUnitIdRef.current;
 			if (!currentId) return;
@@ -464,12 +424,20 @@ export const useMapEditor = (
 			const isUnitControllable = displayForce === 'GOD' || sourceUnit.force === displayForce;
 			if (!isUnitControllable) return;
 
-			let targetUnitId: string | null = null;
-			unitLayerMap.current.forEach((layer, unitId) => {
-				if (unitId !== currentId && layer.getLatLng().equals(e.latlng, 0.001)) {
-					targetUnitId = unitId;
-				}
+			const clickPoint = mapInstance.current.latLngToContainerPoint(e.latlng);
+			const PIXEL_THRESHOLD = 20;
+			
+			const targetUnit = placedUnits.find((u) => {
+				const unitPoint = mapInstance.current!.latLngToContainerPoint([u.position.lat, u.position.lon]);
+				const distance = clickPoint.distanceTo(unitPoint);
+				const isVisible = displayForce === 'GOD' || 
+								  u.force === displayForce || 
+								  (simDatalink[displayForce as Force]?.includes(u.id) ?? false);
+				
+				return u.id !== currentId && distance < PIXEL_THRESHOLD && isVisible;
 			});
+
+			const targetUnitId = targetUnit?.id ?? null;
 
 			const newAction = {
 				id: crypto.randomUUID(),
@@ -555,24 +523,9 @@ export const useMapEditor = (
 		if (!map) return;
 
 		placedUnits.forEach((unit) => {
-			const unitMarker = unitLayerMap.current.get(unit.id);
 			const actionLines = actionLayerMap.current.get(unit.id);
 			const detectionPolygons = detectionLayerMap.current.get(unit.id);
-
-			const isVisible = (() => {
-				if (displayForce === 'GOD') return true;
-				const currentForce = displayForce as Force;
-				return unit.force === currentForce || (simDatalink[currentForce]?.includes(unit.id) ?? false);
-			})();
 			const isVisibleCOA = displayForce === 'GOD' || unit.force === displayForce;
-
-			if (unitMarker) {
-				if (isVisible && !map.hasLayer(unitMarker)) {
-					unitMarker.addTo(map);
-				} else if (!isVisible && map.hasLayer(unitMarker)) {
-					map.removeLayer(unitMarker);
-				}
-			}
 
 			if (actionLines) {
 				actionLines.forEach(line => {
@@ -590,56 +543,30 @@ export const useMapEditor = (
 		});
 	}, [displayForce, placedUnits, mapElements, showDetectionPolygons]);
 
-	useEffect(() => {
-		const map = mapInstance.current;
-		if (!map) return;
-
-		if (mobilityLayerRef.current) {
-			map.removeLayer(mobilityLayerRef.current);
-			mobilityLayerRef.current = null;
-		}
-
-		if (showMobilityMap && mobilityMap) {
-			const feature = ('features' in mobilityMap) 
-				? (mobilityMap.features as any[])[0] 
-				: mobilityMap;
-
-			if (feature && feature.geometry && feature.properties?.mesh_data) {
-				const coords = feature.geometry.coordinates[0];
-				const lngs = coords.map((c: number[]) => c[0]);
-				const lats = coords.map((c: number[]) => c[1]);
-				
-				const bounds = L.latLngBounds(
-					L.latLng(Math.min(...lats), Math.min(...lngs)),
-					L.latLng(Math.max(...lats), Math.max(...lngs))
-				);
-
-				const imageUrl = `data:${feature.properties.mime_type};base64,${feature.properties.mesh_data}`;
-
-				const overlay = L.imageOverlay(imageUrl, bounds, {
-					opacity: 0.7,
-					interactive: false
-				}).addTo(map);
-
-				mobilityLayerRef.current = overlay;
-			}
-		}
-	}, [mobilityMap, showMobilityMap]);
-
 	const renderMarkers = () => {
 		if (!mapInstance.current) return null;
-		return placedUnits.map(unit => (
-			<UnitMarker
-				key={unit.id}
-				unit={unit}
-				map={mapInstance.current!}
-				isDraggable={isUnitPlacementOpen}
-				onDragEnd={(id, latlng) => {
-					setPlacedUnits(prev => prev.map(u => u.id === id ? { ...u, position: { lat: latlng.lat, lon: latlng.lng } } : u));
-				}}
-				onClick={setSelectedUnitId}
-			/>
-		));
+
+		return placedUnits.map(unit => {
+			const isVisible = (() => {
+				if (displayForce === 'GOD') return true;
+				const currentForce = displayForce as Force;
+				return unit.force === currentForce || (simDatalink[currentForce]?.includes(unit.id) ?? false);
+			})();
+
+			return (
+				<UnitMarker
+					key={unit.id}
+					unit={unit}
+					map={mapInstance.current!}
+					isDraggable={isUnitPlacementOpen}
+					isVisible={isVisible}
+					onDragEnd={(id, latlng) => {
+						setPlacedUnits(prev => prev.map(u => u.id === id ? { ...u, position: { lat: latlng.lat, lon: latlng.lng } } : u));
+					}}
+					onClick={setSelectedUnitId}
+				/>
+			);
+		});
 	};
 
 	const renderElements = () => {
@@ -661,6 +588,17 @@ export const useMapEditor = (
 		});
 	};
 
+	const renderMobilityLayer = () => {
+		if (!mapInstance.current) return null;
+		return (
+			<ImageLayer 
+				map={mapInstance.current}
+				isVisible={showMobilityMap}
+				data={mobilityMap}
+			/>
+		);
+	};
+
 	return {
 		clearMap,
 		setShouldFocusAfterLoad,
@@ -676,6 +614,7 @@ export const useMapEditor = (
 		deployChildren,
 		renderMarkers,
 		renderElements,
+		renderMobilityLayer,
 	};
 };
 

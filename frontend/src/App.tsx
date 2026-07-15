@@ -48,6 +48,7 @@ function AppContent() {
 		deployChildren,
 		renderMarkers,
 		renderElements,
+		renderMobilityLayer,
 	} = useMapEditor(showLabels, showDetectionPolygons, showMobilityMap, isUnitPlacementOpen);
 
 	const exportData = () => {
@@ -110,6 +111,7 @@ function AppContent() {
 				onDragOver={handleDragOver} 
 				onDrop={handleDrop}
 			>
+				{renderMobilityLayer()}
 				{renderElements()}
 				{renderMarkers()}
 			</div>
