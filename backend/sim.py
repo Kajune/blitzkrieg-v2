@@ -425,18 +425,19 @@ class Simulation:
 				record.personnelEquipments.add_personnel_damage(p_damage)
 				
 				# 装備損耗計算
-				for eq_name, eq_count in all_current_equipments.items():
-					if eq_name not in self.vehicles:
-						continue
-					vehicle = self.vehicles[eq_name]
+				if total_vehicles_count > 0:
+					for eq_name, eq_count in all_current_equipments.items():
+						if eq_name not in self.vehicles:
+							continue
+						vehicle = self.vehicles[eq_name]
 
-					e_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][vehicle.type] * eq_count / total_vehicles_count)
-					record.personnelEquipments.add_equipment_damage(eq_name, e_damage)
+						e_damage = int(damage * self.coeffs.combat.damage_scale_by_target_type[weapon_type][vehicle.type] * eq_count / total_vehicles_count)
+						record.personnelEquipments.add_equipment_damage(eq_name, e_damage)
 
 				total_suppression += (damage * self.coeffs.combat.suppression_factor)
 				
 			# 抑制率の更新
-			record.suppressionRate = float(np.clip(record.suppressionRate, 0, 1.0))
+			record.suppressionRate = float(np.clip(total_suppression, 0, 1.0))
 
 		return updated_units
 

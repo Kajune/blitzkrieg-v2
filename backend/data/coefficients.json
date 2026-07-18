@@ -59,6 +59,7 @@
 				"fortification": 0.0,
 				"water": 0.5,
 				"waterway": 0.5,
+				"sea": 1.0,
 				"building": 0.0,
 				"obstacle": 0.8
 			},
@@ -68,6 +69,7 @@
 				"fortification": 0.5,
 				"water": 0.9,
 				"waterway": 0.9,
+				"sea": 1.0,
 				"building": 1.0,
 				"obstacle": 0.8
 			},
@@ -77,6 +79,7 @@
 				"fortification": 0.5,
 				"water": 0.9,
 				"waterway": 0.9,
+				"sea": 1.0,
 				"building": 1.0,
 				"obstacle": 0.8
 			},
@@ -86,6 +89,7 @@
 				"fortification": 0.5,
 				"water": 0.9,
 				"waterway": 0.9,
+				"sea": 1.0,
 				"building": 0.8,
 				"obstacle": 0.6
 			},
@@ -207,7 +211,7 @@
 	{
 		"fire_power_efficiency": 0.5,
 		"damage_speed": 0.2,
-		"suppression_factor": 1.0,
+		"suppression_factor": 0.2,
 		"range_scale_by_move_speed":
 		{
 			"LOW": 1.0,

@@ -211,20 +211,30 @@ class Map:
 			print(f"Terrain preparation: {time.time() - start_time:.4f} seconds")
 
 			osm_start = time.time()
+			
+			# 道路
 			road_condition = "\"highway\" IS NOT NULL"
 			road, road_fclass = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=road_condition, extra_fields=["highway"])
 
+			# 建物
 			building_condition = "\"building\" IS NOT NULL AND building != 'no'"
 			building, building_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=building_condition)
 
+			# 内陸の河川・水路
 			waterway_condition = "\"waterway\" IS NOT NULL"
 			waterway, waterway_fclass = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=waterway_condition)
 
+			# 内陸の水域 (湖など)
 			water_condition = "\"water\" IS NOT NULL"
-			water, waterway_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
+			water, water_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
 
+			# 海
+			sea, sea_fclass = self.gis.load_osm_data("osm_water_polygons", self.common_ao_geom, condition="", geom_col="geom")
+
+			# 植生
 			veg_condition = "\"natural\" IN ('wood', 'scrub', 'grassland') OR \"landuse\" IN ('forest', 'grass', 'orchard')"
 			vegetation, vegetation_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=veg_condition)
+
 			print(f"OSM data loading: {time.time() - osm_start:.4f} seconds")
 
 		else:
@@ -238,8 +248,8 @@ class Map:
 				right_top=UTMLocation(easting=max_x, northing=max_y),
 				epsg=self.geo_transformer.epsg
 			)
-			road = building = waterway = water = vegetation = None
-			road_fclass = building_fclass = waterway_fclass = waterway_fclass = vegetation_fclass = None
+			road = building = waterway = water = sea = vegetation = None
+			road_fclass = building_fclass = waterway_fclass = water_fclass = sea_fclass = vegetation_fclass = None
 
 		loop_start = time.time()
 		geometries = {}
@@ -258,6 +268,7 @@ class Map:
 				"fortification": {"geom": fortification_geoms, "type": "polygon", "color": [255, 255, 100]},
 				"water": {"geom": water, "type": "polygon", "color": [255, 100, 100]},
 				"waterway": {"geom": waterway, "type": "polyline", "color": [255, 100, 100], "width": 10},
+				"sea": {"geom": sea, "type": "polygon", "color": [255, 100, 100]},
 				"building": {"geom": building, "type": "polygon", "color": [100, 100, 100]},
 				"road": {"geom": road, "type": "polyline", "color": [255, 255, 255], "width": 10},
 				"obstacle": {"geom": obstacle_geoms, "type": "polygon", "color": [100, 255, 255]},
@@ -329,14 +340,14 @@ class Map:
 				
 				print(f"Processing {geom_name} ({force}): {time.time() - item_start:.4f} seconds")
 
-			for k in ["vegetation", "fortification", "water", "waterway", "building", "road"]:
+			for k in ["vegetation", "fortification", "water", "waterway", "sea", "building", "road"]:
 				cached_geometries[k] = geometries[force][k]
 
 		print(f"Total loop time: {time.time() - loop_start:.4f} seconds")
 
 		if debug:
 			self._debug_plot_units_on_terrain(terrain, "debug.png", 
-				geometries=geometries,
+				geometries=cached_geometries,
 				to_utm=True
 			)
 
@@ -401,8 +412,8 @@ class Map:
 		for k in ["vegetation", "fortification"]:
 			mobility_map.data += self.map_geometries[force][k]["mesh"].data * coeffs[k]
 
-		# water, waterway, buildingは大きい方で上書き
-		for k in ["water", "waterway", "building"]:
+		# water, waterway, sea, buildingは大きい方で上書き
+		for k in ["water", "waterway", "sea", "building"]:
 			mobility_map.data = np.maximum(mobility_map.data, self.map_geometries[force][k]["mesh"].data * coeffs[k])
 
 		# roadは小さい方で上書き
@@ -432,9 +443,9 @@ class Map:
 		for k in ["vegetation", "fortification"]:
 			mobility_map.data += self.cached_map_geometries[k]["mesh"].data
 
-		# water, waterway, buildingは大きい方で上書き
-		for k in ["water", "waterway", "building"]:
-			mobility_map.data = np.maximum(mobility_map.data, self.cached_map_geometries[k]["mesh"].data * 0.5)
+		# water, waterway, sea, buildingは大きい方で上書き
+		for k in ["water", "waterway", "sea", "building"]:
+			mobility_map.data = np.maximum(mobility_map.data, self.cached_map_geometries[k]["mesh"].data)
 
 		# roadは小さい方で上書き
 		for k in ["road"]:

@@ -7,11 +7,19 @@
 ## 構築手順
 1. PostGISサーバの構築 (省略すると一応地図情報なしで動く)
 
-下記からDEMとosm.pbfをダウンロードし、それぞれ`geo-server/dem`と`geo-server/osm`以下に配置
+### ALOS
+- ダウンロード元: ALOS (https://www.eorc.jaxa.jp/ALOS/jp/index_j.htm)
+- 配置先: `geo-server/dem`
+- zipを解凍して、`geo-server/dem/N020E120_N025E125/ALPSMLC30_N020E121_DSM.tif`のようになっていることを期待
 
-ALOSはzipを解凍して、`geo-server/dem/N020E120_N025E125/ALPSMLC30_N020E121_DSM.tif`のようになっていることを期待
-- ALOS (https://www.eorc.jaxa.jp/ALOS/jp/index_j.htm)
-- OSM (https://download.geofabrik.de/asia.html)
+### OSM
+- ダウンロード元: OSM (https://download.geofabrik.de/asia.html)
+- 配置先: `geo-server/osm`
+
+### Water polygons
+- ダウンロード元: Water polygons (https://osmdata.openstreetmap.de/data/water-polygons.html)
+- ダウンロードファイル: water-polygons-split-3857.zip
+- 配置先: `geo-server/water`
 
 その後、以下を実行
 ```
@@ -21,6 +29,7 @@ docker compose up -d
 chmod +x *.sh
 ./import_dem.sh 		# 数時間かかる
 ./import_osm.sh 		# 丸一日かかる
+./import_water.sh   # 数十分かかる
 ```
 
 2. フロントエンドのビルド (省略可)

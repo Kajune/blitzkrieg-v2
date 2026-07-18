@@ -94,15 +94,15 @@ class PostGIS:
 			)
 
 
-	def load_osm_data(self, table_name: str, geom: shape, condition: str = "", extra_fields: List[str] = []) -> Tuple[GeometryCollection, List[Any]]:
+	def load_osm_data(self, table_name: str, geom: shape, condition: str = "", geom_col: str = "way", extra_fields: List[str] = []) -> Tuple[GeometryCollection, List[Any]]:
 		wkt = geom.wkt
 		epsg = os.getenv("DEM_EPSG")
 		
 		query = f"""
-		SELECT ST_AsBinary(ST_Transform(way, {epsg})) {("," + ",".join(extra_fields)) if len(extra_fields) > 0 else ""} 
+		SELECT ST_AsBinary(ST_Transform({geom_col}, {epsg})) {("," + ",".join(extra_fields)) if len(extra_fields) > 0 else ""} 
 			FROM {table_name} 
-			WHERE way && ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)
-			AND (ST_Intersects(way, ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)))
+			WHERE {geom_col} && ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)
+			AND (ST_Intersects({geom_col}, ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)))
 		"""
 
 		if condition:
