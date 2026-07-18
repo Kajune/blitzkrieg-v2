@@ -1,5 +1,7 @@
 ![ロゴ](res/logo.png)
-![デモ](res/demo.mp4)
+
+https://github.com/user-attachments/assets/fe986bc5-286b-4a9a-887e-b98b919510d5
+
 
 ## 概要
 戦術レベルの陸上戦闘のシミュレーション
