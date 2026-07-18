@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
-
+import { MapContainer, TileLayer, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-import { useAppStore } from '../contexts/AppContext';
-import type { MapElement } from '../types/mapElement'
-import { getMapElementColor } from '../types/mapElement'
-import type { Unit, PlacedUnit, Force, DetectLog, AttackLog } from '../types/unitTypes';
-import { UnitMarker } from './UnitMarker';
-import { ElementLayer } from './ElementLayer';
-import { ImageLayer } from './ImageLayer';
-import type { GeometryType } from '../types/mapElement';
 import type { Feature } from 'geojson';
+import type { MapElement, GeometryType } from '../types/mapElement'
+import type { Unit, PlacedUnit, Force } from '../types/unitTypes';
+import { getMapElementColor } from '../types/mapElement';
+import { useAppStore } from '../contexts/AppContext';
+import { useMapStore } from '../contexts/MapContext';
+import { ElementLayer } from './ElementLayer';
+import { UnitMarker } from './UnitMarker';
+import { ImageLayer } from './ImageLayer';
+import { ActionLayer } from './ActionLayer';
+import { DetectionLayer } from './DetectionLayer';
 import '../App.module.css';
 
 L.Marker.prototype.options.icon = L.icon({
@@ -23,122 +24,75 @@ L.Marker.prototype.options.icon = L.icon({
 	iconAnchor: [12, 41],
 });
 
+
+const convertPointsToGeoJson = (geometry: GeometryType, points: L.LatLng[]): Feature => {
+	if (points.length === 0) {
+		return { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} };
+	}
+
+	switch (geometry) {
+		case 'point':
+			return {
+				type: 'Feature',
+				geometry: {
+					type: 'Point',
+					coordinates: [points[0].lng, points[0].lat]
+				},
+				properties: {}
+			};
+
+		case 'polyline':
+			return {
+				type: 'Feature',
+				geometry: {
+					type: 'LineString',
+					coordinates: points.map(p => [p.lng, p.lat])
+				},
+				properties: {}
+			};
+
+		case 'polygon':
+			// ポリゴンは始点と終点が同じである必要があるため、必要に応じて閉じる
+			let coords = points.map(p => [p.lng, p.lat]);
+			if (points.length > 0 && (points[0].lat !== points[points.length - 1].lat || points[0].lng !== points[points.length - 1].lng)) {
+				coords.push([points[0].lng, points[0].lat]);
+			}
+			return {
+				type: 'Feature',
+				geometry: {
+					type: 'Polygon',
+					coordinates: [coords]
+				},
+				properties: {}
+			};
+			
+		default:
+			throw new Error(`Unsupported geometry type: ${geometry}`);
+	}
+};
+
+
 export const useMapEditor = (
-	showLabels: boolean,
-	showDetectionPolygons: boolean,
-	showMobilityMap: boolean,
-	isUnitPlacementOpen: boolean,
 ) => {
-	const mapInstance = useRef<L.Map | null>(null);
-	const mapRef = useRef<HTMLDivElement | null>(null);
 	const { 
-		mapElements, setMapElements, 
+		setMapElements, 
 		placedUnits, setPlacedUnits,
-		simDatalink, displayForce,
-		mobilityMap,
+		displayForce,
 		simUuid,
 	} = useAppStore();
-	const [pendingElement, setPendingElement] = useState<MapElement | null>(null);
-	const [points, setPoints] = useState<L.LatLng[]>([]);
-	const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
-	const selectedUnitIdRef = useRef(selectedUnitId);
-	useEffect(() => {
-		selectedUnitIdRef.current = selectedUnitId;
-	}, [selectedUnitId]);
-	const [shouldFocusAfterLoad, setShouldFocusAfterLoad] = useState(false);
 
-	const pendingRef = useRef(pendingElement);
-	const pointsRef = useRef(points);
-	const showLabelsRef = useRef(showLabels);
-	const showDetectionPolygonsRef = useRef(showDetectionPolygons);
-	const showMobilityMapRef = useRef(showMobilityMap);
-	const { actionLayerMap, detectionLayerMap } = useAppStore();
-
-	const handleDragOver = (e: React.DragEvent) => {
-		e.preventDefault();
-	};
+	const {
+		pendingElement, setPendingElement,
+		setPoints,
+		selectedUnitId, setSelectedUnitId,
+	} = useMapStore();
 
 	const removeUnitFromMap = (unitId: string) => {
-		const layers = detectionLayerMap.current.get(unitId);
-		if (layers) {
-			layers.forEach(layer => layer.remove());
-			detectionLayerMap.current.delete(unitId);
-		}
-
 		setPlacedUnits((prev) => prev.filter(u => u.id !== unitId));
 
 		if (selectedUnitId === unitId) {
 			setSelectedUnitId(null);
 		}
-	};
-
-	const updateDetectionAttackPolygons = (unitId: string, detectedUnits: DetectLog[], attackingUnits: AttackLog[]) => {
-		const existingLayers = detectionLayerMap.current.get(unitId) || [];
-		existingLayers.forEach(layer => layer.remove());
-
-		if (!showDetectionPolygonsRef.current) {
-			return;
-		}
-
-		const sourceUnit = placedUnits.find(u => u.id === unitId);
-		if (!sourceUnit) return;
-		const sourcePos = L.latLng(sourceUnit.position.lat, sourceUnit.position.lon);
-
-		const isUnitVisible = displayForce === 'GOD' || sourceUnit.force === displayForce;
-
-		if (!isUnitVisible) {
-			detectionLayerMap.current.set(unitId, []);
-			return;
-		}
-
-		// 攻撃対象となっているユニットIDのセットを作成
-		const attackingTargetIds = new Set(attackingUnits.map(a => a.unitId));
-
-		const newPolygons: L.Polygon[] = detectedUnits.map((log) => {
-			const targetUnit = placedUnits.find(u => u.id === log.unitId);
-			if (!targetUnit) return null;
-			const targetPos = L.latLng(targetUnit.position.lat, targetUnit.position.lon);
-
-			const latDiff = targetPos.lat - sourcePos.lat;
-			const lngDiff = targetPos.lng - sourcePos.lng;
-			
-			const dist = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
-			if (dist === 0) return null;
-
-			const unitLat = latDiff / dist;
-			const unitLng = lngDiff / dist;
-
-			const halfWidth = 0.05;
-
-			const p1 = [
-				sourcePos.lat + dist * (unitLat * Math.cos(halfWidth) - unitLng * Math.sin(halfWidth)),
-				sourcePos.lng + dist * (unitLng * Math.cos(halfWidth) + unitLat * Math.sin(halfWidth))
-			] as [number, number];
-			
-			const p2 = [
-				sourcePos.lat + dist * (unitLat * Math.cos(-halfWidth) - unitLng * Math.sin(-halfWidth)),
-				sourcePos.lng + dist * (unitLng * Math.cos(-halfWidth) + unitLat * Math.sin(-halfWidth))
-			] as [number, number];
-
-			const opacity = Math.min(0.5, log.awareness * 0.5);
-			
-			// 攻撃中なら赤、そうでなければ黄色
-			const color = attackingTargetIds.has(log.unitId) ? 'red' : 'yellow';
-
-			return L.polygon([
-				[sourcePos.lat, sourcePos.lng],
-				p1,
-				p2
-			], {
-				color: color,
-				fillColor: color,
-				fillOpacity: opacity,
-				weight: 0,
-				interactive: false
-			}).addTo(mapInstance.current!);
-		}).filter((p): p is L.Polygon => p !== null);
-
-		detectionLayerMap.current.set(unitId, newPolygons);
 	};
 
 	const deployChildren = async (unit: PlacedUnit) => {
@@ -160,6 +114,7 @@ export const useMapEditor = (
 
 			if (result.success && result.deployedUnits) {
 				removeUnitFromMap(unit.id);
+				console.log(result.deployedUnits);
 				const newUnits: PlacedUnit[] = result.deployedUnits;
 				setPlacedUnits((prev) => [...prev, ...newUnits]);
 				setSelectedUnitId(null);
@@ -172,90 +127,28 @@ export const useMapEditor = (
 
 	};
 
-	useEffect(() => {
-		pendingRef.current = pendingElement;
-		pointsRef.current = points;
-		showLabelsRef.current = showLabels;
-		showDetectionPolygonsRef.current = showDetectionPolygons;
-		showMobilityMapRef.current = showMobilityMap;
-	}, [pendingElement, points, showLabels, showDetectionPolygons, showMobilityMap]);
-
 	const startDrawing = (el: MapElement) => {
-		setPendingElement(el);
 		setPoints([]);
-	};
-
-	const convertPointsToGeoJson = (geometry: GeometryType, points: L.LatLng[]): Feature => {
-		if (points.length === 0) {
-			return { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} };
-		}
-
-		switch (geometry) {
-			case 'point':
-				return {
-					type: 'Feature',
-					geometry: {
-						type: 'Point',
-						coordinates: [points[0].lng, points[0].lat]
-					},
-					properties: {}
-				};
-
-			case 'polyline':
-				return {
-					type: 'Feature',
-					geometry: {
-						type: 'LineString',
-						coordinates: points.map(p => [p.lng, p.lat])
-					},
-					properties: {}
-				};
-
-			case 'polygon':
-				// ポリゴンは始点と終点が同じである必要があるため、必要に応じて閉じる
-				let coords = points.map(p => [p.lng, p.lat]);
-				if (points.length > 0 && (points[0].lat !== points[points.length - 1].lat || points[0].lng !== points[points.length - 1].lng)) {
-					coords.push([points[0].lng, points[0].lat]);
-				}
-				return {
-					type: 'Feature',
-					geometry: {
-						type: 'Polygon',
-						coordinates: [coords]
-					},
-					properties: {}
-				};
-				
-			default:
-				throw new Error(`Unsupported geometry type: ${geometry}`);
-		}
+		setPendingElement(el);
 	};
 
 	const completeDrawing = (finalPoints: L.LatLng[]) => {
-		if (!pendingRef.current || !mapInstance.current) return;
-
-		if (tempLayerRef.current) {
-			mapInstance.current.removeLayer(tempLayerRef.current);
-			tempLayerRef.current = null;
+		if (!pendingElement) {
+			return;
 		}
-
-		const newGeoJson = convertPointsToGeoJson(pendingRef.current.geometry, finalPoints);
-
+		const newGeoJson = convertPointsToGeoJson(pendingElement.geometry, finalPoints);
 		setMapElements((prev) => [
 			...prev, 
-			{ 
-				...pendingRef.current!, 
-				geoJson: newGeoJson
-			}
+			{ ...pendingElement!, geoJson: newGeoJson }
 		]);
-
-		setPendingElement(null);
 		setPoints([]);
+		setPendingElement(null);
 	};
 
-	const handleDrop = (e: React.DragEvent) => {
-		e.preventDefault();
-		const unitData: Unit = JSON.parse(e.dataTransfer.getData('application/json'));
+	const placeUnit = (e: DragEvent, map: L.Map) => {
+		const data = e.dataTransfer?.getData('application/json');
+		if (!data) return;
+		const unitData: Unit = JSON.parse(data);
 		
 		const isAlreadyPlaced = placedUnits.some((u) => u.id === unitData.id);
 		if (isAlreadyPlaced) {
@@ -263,17 +156,12 @@ export const useMapEditor = (
 			return;
 		}
 
-		if (!unitData || !mapInstance.current) return;
-
-		const rect = mapRef.current?.getBoundingClientRect();
-		if (!rect) return;
+		if (!unitData) return;
 
 		const isUnitControllable = displayForce === 'GOD' || unitData.force === displayForce;
 		if (!isUnitControllable) return;
 
-		const x = e.clientX - rect.left;
-		const y = e.clientY - rect.top;
-		const latLng = mapInstance.current.containerPointToLatLng([x, y]);
+		const latLng = map.mouseEventToLatLng(e as MouseEvent);
 		
 		const newPlacedUnit: PlacedUnit = {
 			...unitData,
@@ -294,147 +182,167 @@ export const useMapEditor = (
 		setPlacedUnits((prev) => [...prev, newPlacedUnit]);
 	};
 
-	const clearMap = () => {
-		if (!mapInstance.current) return;
-		
-		mapInstance.current.eachLayer((layer) => {
-			if (layer instanceof L.Marker || layer instanceof L.Path) {
-				mapInstance.current!.removeLayer(layer);
-			}
-		});
-		
-		detectionLayerMap.current.forEach(layers => {
-			layers.forEach(layer => layer.remove());
-		});
-		detectionLayerMap.current.clear();
+	return {
+		startDrawing,
+		completeDrawing,
+		placeUnit,
+		removeUnitFromMap,
+		deployChildren,
 	};
+};
 
-	const focusAll = () => {
-		const map = mapInstance.current;
-		if (!map) return;
+export const ElementLayers = ({ showLabels }: { showLabels: boolean }) => {
+	const { mapElements, displayForce } = useAppStore();
 
-		const layers: L.Layer[] = [];
-		
-		map.eachLayer((layer) => {
-			if (layer instanceof L.Marker || layer instanceof L.Path) {
-				layers.push(layer);
-			}
-		});
+	return (
+		<>
+			{mapElements.map(el => {
+				const isVisible = displayForce === 'GOD' || el.force === displayForce || el.type !== 'coa';
+				
+				if (!isVisible) return null;
 
-		if (layers.length === 0) return;
+				return (
+					<ElementLayer 
+						key={el.id} 
+						element={el} 
+						showLabels={showLabels} 
+					/>
+				);
+			})}
+		</>
+	);
+};
 
-		const bounds = L.latLngBounds(layers.map(l => 
-			'getBounds' in l ? (l as any).getBounds() : (l as any).getLatLng()
-		));
+export const UnitMarkers = ({ isUnitPlacementOpen }: { isUnitPlacementOpen: boolean }) => {
+	const { placedUnits, setPlacedUnits, displayForce, simDatalink } = useAppStore();
+	const { setSelectedUnitId } = useMapStore();
 
-		map.fitBounds(bounds);
-	};
+	return (
+		<>
+			{placedUnits.map(unit => {
+				const isVisible = (() => {
+					if (displayForce === 'GOD') return true;
+					const currentForce = displayForce as Force;
+					return unit.force === currentForce || (simDatalink[currentForce]?.includes(unit.id) ?? false);
+				})();
+
+				if (!isVisible) return null;
+
+				return (
+					<UnitMarker
+						key={unit.id}
+						unit={unit}
+						isDraggable={isUnitPlacementOpen}
+						onDragEnd={(id, latlng) => {
+							setPlacedUnits(prev => prev.map(u => u.id === id ? { ...u, position: { lat: latlng.lat, lon: latlng.lng } } : u));
+						}}
+						onClick={setSelectedUnitId}
+					/>
+				);
+			})}
+		</>
+	);
+};
+
+const DrawingElement = ({ pendingElement, points, setPoints, completeDrawing }: any) => {
+	const [mousePos, setMousePos] = useState<L.LatLng | null>(null);
+	const pendingRef = useRef(pendingElement);
+	const pointsRef = useRef(points);
 
 	useEffect(() => {
-		if (shouldFocusAfterLoad) {
-			requestAnimationFrame(() => {
-				focusAll();
-				setShouldFocusAfterLoad(false);
-			});
-		}
-	}, [shouldFocusAfterLoad, mapElements, placedUnits]);
-
-	const tempLayerRef = useRef<L.Polyline | null>(null);
-
-	useEffect(() => {
-		if (!mapInstance.current || !pendingElement) return;
-
-		const handleMouseMove = (e: L.LeafletMouseEvent) => {
-			if (points.length === 0 || !mapInstance.current) return;
-
-			const color = getMapElementColor(pendingElement);
-			const currentPoints = [...points, e.latlng];
-
-			if (tempLayerRef.current) {
-				mapInstance.current.removeLayer(tempLayerRef.current);
-			}
-			
-			tempLayerRef.current = L.polyline(currentPoints, { 
-				color, 
-				dashArray: '5, 5',
-				interactive: false 
-			}).addTo(mapInstance.current);
-		};
-
-		mapInstance.current.on('mousemove', handleMouseMove);
-		return () => { mapInstance.current?.off('mousemove', handleMouseMove); };
+		pendingRef.current = pendingElement;
+		pointsRef.current = points;
 	}, [pendingElement, points]);
 
-
-	useEffect(() => {
-		if (!mapRef.current) return;
-		const map = L.map(mapRef.current, { doubleClickZoom: false }).setView([35.6812, 139.7671], 13);
-		L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png').addTo(map);
-		mapInstance.current = map;
-
-		const handleClick = (e: L.LeafletMouseEvent) => {
-			const pending = pendingRef.current;
-			
-			if (pending) {
-				if (pending.geometry === 'point') {
-					completeDrawing([e.latlng]);
-				} else {
-					setPoints((prev) => [...prev, e.latlng]);
-				}
-				return;
+	useMapEvents({
+		mousemove(e) {
+			if (pointsRef.current.length > 0) setMousePos(e.latlng);
+		},
+		click(e) {
+			if (!pendingRef.current) return;
+			if (pendingRef.current.geometry === 'point') {
+				completeDrawing([e.latlng]);
+			} else {
+				setPoints((prev: any) => [...prev, e.latlng]);
 			}
-
-			const target = e.originalEvent.target as HTMLElement;
-			if (!target.closest('.leaflet-marker-icon')) {
-				setSelectedUnitId(null);
-			}
-		};
-
-		const handleDblClick = (e: L.LeafletMouseEvent) => {
+		},
+		dblclick(e) {
 			if (pendingRef.current) {
 				completeDrawing([...pointsRef.current, e.latlng]);
 			}
-		};
+		},
+	});
 
-		map.on('click', handleClick);
-		map.on('dblclick', handleDblClick);
+	if (pointsRef.current.length === 0 || !mousePos) return null;
 
-		return () => {
-			map.off('click', handleClick);
-			map.off('dblclick', handleDblClick);
-			map.remove();
-		};
-	}, []);
+	return (
+		<Polyline 
+			positions={[...pointsRef.current, mousePos]} 
+			pathOptions={{ color: getMapElementColor(pendingRef.current), dashArray: '5, 5' }} 
+		/>
+	);
+};
+
+const MapDropHandler = ({ 
+	placeUnit 
+}: { 
+	placeUnit: (e: DragEvent, map: L.Map) => void 
+}) => {
+	const map = useMap();
 
 	useEffect(() => {
-		const map = mapInstance.current;
-		if (!map) return;
+		const container = map.getContainer();
 
-		const handleContextMenu = (e: L.LeafletMouseEvent) => {
+		const handleDragOver = (e: DragEvent) => {
+			e.preventDefault();
+			e.dataTransfer!.dropEffect = 'copy';
+		};
+
+		const handleDrop = (e: DragEvent) => {
+			e.preventDefault();
+			placeUnit(e, map);
+		};
+
+		container.addEventListener('dragover', handleDragOver);
+		container.addEventListener('drop', handleDrop);
+
+		return () => {
+			container.removeEventListener('dragover', handleDragOver);
+			container.removeEventListener('drop', handleDrop);
+		};
+	}, [map, placeUnit]);
+
+	return null;
+};
+
+const ActionLayers = () => {
+	const { placedUnits, setPlacedUnits, displayForce, simDatalink } = useAppStore();
+	const { selectedUnitId } = useMapStore();
+	const map = useMap();
+
+	useMapEvents({
+		contextmenu(e) {
 			e.originalEvent.preventDefault();
 
-			if (!mapInstance.current) return;
-			
-			const currentId = selectedUnitIdRef.current;
-			if (!currentId) return;
+			if (!selectedUnitId) return;
 
-			const sourceUnit = placedUnits.find((u) => u.id === currentId);
+			const sourceUnit = placedUnits.find((u) => u.id === selectedUnitId);
 			if (!sourceUnit) return;
 
 			const isUnitControllable = displayForce === 'GOD' || sourceUnit.force === displayForce;
 			if (!isUnitControllable) return;
 
-			const clickPoint = mapInstance.current.latLngToContainerPoint(e.latlng);
+			const clickPoint = e.containerPoint;
 			const PIXEL_THRESHOLD = 20;
 			
 			const targetUnit = placedUnits.find((u) => {
-				const unitPoint = mapInstance.current!.latLngToContainerPoint([u.position.lat, u.position.lon]);
+				const unitPoint = map.latLngToContainerPoint([u.position.lat, u.position.lon]);
 				const distance = clickPoint.distanceTo(unitPoint);
 				const isVisible = displayForce === 'GOD' || 
 								  u.force === displayForce || 
 								  (simDatalink[displayForce as Force]?.includes(u.id) ?? false);
 				
-				return u.id !== currentId && distance < PIXEL_THRESHOLD && isVisible;
+				return u.id !== selectedUnitId && distance < PIXEL_THRESHOLD && isVisible;
 			});
 
 			const targetUnitId = targetUnit?.id ?? null;
@@ -453,168 +361,209 @@ export const useMapEditor = (
 
 			setPlacedUnits((prev) =>
 				prev.map((u) => {
-					if (u.id !== currentId) return u;
+					if (u.id !== selectedUnitId) return u;
 					const nextActions = isShiftPressed ? [...u.actions, newAction] : [newAction];
 					return { ...u, actions: nextActions };
 				})
 			);
-		};
+		}
+	});
 
-		map.on('contextmenu', handleContextMenu);
-		return () => { map.off('contextmenu', handleContextMenu); };
-	}, [placedUnits, displayForce]);
+	return (
+		<>
+			{placedUnits.map(unit => {
+				const isVisible = (() => {
+					if (displayForce === 'GOD') return true;
+					const currentForce = displayForce as Force;
+					return unit.force === currentForce;
+				})();
 
-	useEffect(() => {
-		const map = mapInstance.current;
-		if (!map) return;
+				if (!isVisible) return null;
 
-		actionLayerMap.current.forEach((layers) => {
-			layers.forEach(layer => map.removeLayer(layer));
-		});
-		actionLayerMap.current.clear();
-
-		placedUnits.forEach((unit) => {
-			const activeActions = unit.actions.filter(a => !a.finished);
-			if (activeActions.length === 0) return;
-
-			const lines: L.Polyline[] = [];
-			let currentPos: L.LatLng = L.latLng(unit.position.lat, unit.position.lon);
-
-			activeActions.forEach((action, index) => {
-				let targetPos: L.LatLng | null = null;
-				
-				if (action.targetPosition) {
-					targetPos = L.latLng(action.targetPosition.lat, action.targetPosition.lon);
-				} else if (action.targetUnitId) {
-					const targetUnit = placedUnits.find(u => u.id === action.targetUnitId);
-					if (targetUnit) {
-						targetPos = L.latLng(targetUnit.position.lat, targetUnit.position.lon);
-					}
-				}
-
-				if (targetPos) {
-					const isFirstAction = index === 0;
-					const isApproach = !!action.targetUnitId;
-					let isEnemy = false;
-					if (isApproach) {
-						const targetUnit = placedUnits.find(u => u.id === action.targetUnitId);
-						if (targetUnit && targetUnit.force !== unit.force) {
-							isEnemy = true;
-						}
-					}
-
-					const line = L.polyline([currentPos, targetPos], {
-						color: isApproach ? (isEnemy ? 'red' : 'green') : 'yellow',
-						weight: 2,
-						dashArray: isFirstAction ? '' : '5, 10',
-						interactive: false
-					}).addTo(map);
-					
-					lines.push(line);
-					currentPos = targetPos;
-				}
-			});
-			actionLayerMap.current.set(unit.id, lines);
-		});
-	}, [placedUnits]);
-
-	useEffect(() => {
-		const map = mapInstance.current;
-		if (!map) return;
-
-		placedUnits.forEach((unit) => {
-			const actionLines = actionLayerMap.current.get(unit.id);
-			const detectionPolygons = detectionLayerMap.current.get(unit.id);
-			const isVisibleCOA = displayForce === 'GOD' || unit.force === displayForce;
-
-			if (actionLines) {
-				actionLines.forEach(line => {
-					if (isVisibleCOA && !map.hasLayer(line)) line.addTo(map);
-					else if (!isVisibleCOA && map.hasLayer(line)) map.removeLayer(line);
-				});
-			}
-
-			if (detectionPolygons) {
-				detectionPolygons.forEach(poly => {
-					if ((isVisibleCOA && showDetectionPolygons) && !map.hasLayer(poly)) poly.addTo(map);
-					else if (!(isVisibleCOA && showDetectionPolygons) && map.hasLayer(poly)) map.removeLayer(poly);
-				});
-			}
-		});
-	}, [displayForce, placedUnits, mapElements, showDetectionPolygons]);
-
-	const renderMarkers = () => {
-		if (!mapInstance.current) return null;
-
-		return placedUnits.map(unit => {
-			const isVisible = (() => {
-				if (displayForce === 'GOD') return true;
-				const currentForce = displayForce as Force;
-				return unit.force === currentForce || (simDatalink[currentForce]?.includes(unit.id) ?? false);
-			})();
-
-			return (
-				<UnitMarker
-					key={unit.id}
-					unit={unit}
-					map={mapInstance.current!}
-					isDraggable={isUnitPlacementOpen}
-					isVisible={isVisible}
-					onDragEnd={(id, latlng) => {
-						setPlacedUnits(prev => prev.map(u => u.id === id ? { ...u, position: { lat: latlng.lat, lon: latlng.lng } } : u));
-					}}
-					onClick={setSelectedUnitId}
-				/>
-			);
-		});
-	};
-
-	const renderElements = () => {
-		if (!mapInstance.current) return null;
-		
-		return mapElements.map(el => {
-			const isForceVisible = displayForce === 'GOD' || el.force === displayForce || el.type !== 'coa';
-			const isVisible = isForceVisible;
-
-			return (
-				<ElementLayer 
-					key={el.id} 
-					map={mapInstance.current!} 
-					element={el} 
-					isVisible={isVisible}
-					showLabels={showLabels} 
-				/>
-			);
-		});
-	};
-
-	const renderMobilityLayer = () => {
-		if (!mapInstance.current) return null;
-		return (
-			<ImageLayer 
-				map={mapInstance.current}
-				isVisible={showMobilityMap}
-				data={mobilityMap}
-			/>
-		);
-	};
-
-	return {
-		clearMap,
-		setShouldFocusAfterLoad,
-		mapRef,
-		pendingElement,
-		selectedUnitId,
-		setSelectedUnitId,
-		startDrawing,
-		handleDragOver,
-		handleDrop,
-		removeUnitFromMap,
-		updateDetectionAttackPolygons,
-		deployChildren,
-		renderMarkers,
-		renderElements,
-		renderMobilityLayer,
-	};
+				return (
+					<ActionLayer
+						key={`action-${unit.id}`}
+						unit={unit}
+						placedUnits={placedUnits}
+					/>
+				);
+			})}
+		</>
+	);
 };
 
+const DetectionLayers = () => {
+	const { placedUnits, displayForce } = useAppStore();
+
+	return (
+		<>
+			{placedUnits.map(unit => {
+				const isVisible = (() => {
+					if (displayForce === 'GOD') return true;
+					const currentForce = displayForce as Force;
+					return unit.force === currentForce;
+				})();
+
+				if (!isVisible) return null;
+
+				return (
+					<DetectionLayer
+						key={`detection-${unit.id}`}
+						unit={unit}
+						placedUnits={placedUnits}
+					/>
+				);
+			})}
+		</>
+	);
+};
+
+const MapController = ({ 
+	shouldFocus, 
+	setShouldFocus, 
+	mapElements, 
+	placedUnits 
+}: {
+	shouldFocus: boolean,
+	setShouldFocus: React.Dispatch<React.SetStateAction<boolean>>,
+	mapElements: MapElement[],
+	placedUnits: PlacedUnit[],
+}) => {
+	const map = useMap();
+
+	useEffect(() => {
+		if (shouldFocus) {
+			const timer = setTimeout(() => {
+				const layers: L.Layer[] = [];
+				map.eachLayer((layer: L.Layer) => {
+					if (layer instanceof L.Marker || layer instanceof L.Path) {
+						layers.push(layer);
+					}
+				});
+
+				if (layers.length > 0) {
+					const bounds = L.latLngBounds(layers.map(l => 
+						'getBounds' in l ? (l as any).getBounds() : (l as any).getLatLng()
+					));
+					map.fitBounds(bounds, { padding: [20, 20] });
+				}
+				setShouldFocus(false);
+			}, 0);
+
+			return () => clearTimeout(timer);
+		}
+	}, [shouldFocus, mapElements, placedUnits, map, setShouldFocus]);
+
+	return null;
+};
+
+interface MapEditorProps {
+	isUnitPlacementOpen: boolean;
+}
+
+export const MapEditor = ({
+	isUnitPlacementOpen,
+}: MapEditorProps) => {
+	const {
+		mapElements, placedUnits
+	} = useAppStore();
+	const {
+		points, setPoints, 
+		shouldFocusAfterLoad, setShouldFocusAfterLoad,
+		pendingElement, 
+		mobilityMap,
+	} = useMapStore();
+	const {
+		completeDrawing,
+		placeUnit,
+	} = useMapEditor();
+
+	const [showLabels, setShowLabels] = useState(true);
+	const [showDetectionPolygons, setShowDetectionPolygons] = useState(true);
+	const [showMobilityMap, setShowMobilityMap] = useState(false);
+
+	return (
+		<div
+			style={{ width: '100%', height: '100%', position: 'relative' }}
+			onDragOver={(e) => e.preventDefault()}
+		>
+			<MapContainer 
+				style={{ width: '100%', height: '100%', zIndex: 1 }} 
+				center={[35.6812, 139.7671]} 
+				zoom={13} 
+				doubleClickZoom={false}
+			>
+				<TileLayer url="https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png" />
+				<MapDropHandler placeUnit={placeUnit} />
+				<MapController 
+					shouldFocus={shouldFocusAfterLoad} 
+					setShouldFocus={setShouldFocusAfterLoad}
+					mapElements={mapElements}
+					placedUnits={placedUnits}
+				/>
+				{showMobilityMap && (
+					<ImageLayer data={mobilityMap} />
+				)}
+				<ElementLayers showLabels={showLabels} />
+				<DrawingElement 
+					pendingElement={pendingElement} 
+					points={points} 
+					setPoints={setPoints} 
+					completeDrawing={completeDrawing} 
+				/>
+				{showDetectionPolygons && (
+					<DetectionLayers />
+				)}
+				<ActionLayers />
+				<UnitMarkers
+					isUnitPlacementOpen={isUnitPlacementOpen}
+				/>
+
+				<button 
+					className="btn btn-secondary btn-sm position-absolute"
+					style={{ 
+						bottom: 80, 
+						left: 10, 
+						zIndex: 1000,
+						borderRadius: '20px',
+						padding: '5px 10px',
+						fontSize: '0.8rem'
+					}}
+					onClick={() => setShowLabels(!showLabels)}
+				>
+					{showLabels ? 'ラベル非表示' : 'ラベル表示'}
+				</button>
+
+				<button 
+					className="btn btn-secondary btn-sm position-absolute"
+					style={{ 
+						bottom: 80, 
+						left: 120, 
+						zIndex: 1000,
+						borderRadius: '20px',
+						padding: '5px 10px',
+						fontSize: '0.8rem'
+					}}
+					onClick={() => setShowDetectionPolygons(!showDetectionPolygons)}
+				>
+					{showDetectionPolygons ? '探知非表示' : '探知表示'}
+				</button>
+
+				<button 
+					className="btn btn-secondary btn-sm position-absolute"
+					style={{ 
+						bottom: 80, 
+						left: 220, 
+						zIndex: 1000,
+						borderRadius: '20px',
+						padding: '5px 10px',
+						fontSize: '0.8rem'
+					}}
+					onClick={() => setShowMobilityMap(!showMobilityMap)}
+				>
+					{showMobilityMap ? '機動障害図非表示' : '機動障害図表示'}
+				</button>
+			</MapContainer>
+		</div>
+	);
+};

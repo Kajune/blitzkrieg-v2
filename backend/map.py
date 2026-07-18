@@ -81,7 +81,7 @@ class Map:
 		tpos: GeoLocation, 
 		deplyment_distribution: Dict[str, Dict],
 		path: Optional[List[GeoLocation]],
-	) -> Tuple[List[UTMLocation], bool]:
+	) -> Tuple[List[GeoLocation], bool, List[GeoLocation]]:
 		upos = self.geo_transformer.to_utm(upos)
 		tpos = self.geo_transformer.to_utm(tpos)
 		if path is not None:
@@ -138,15 +138,16 @@ class Map:
 			)
 
 			if len(path_px) <= 1:
-				return self.geo_transformer.to_geo([tpos]), True
+				return self.geo_transformer.to_geo([tpos]), True, self.geo_transformer.to_geo([tpos])
 
 			path = mobility_map.from_image_coord(path_px)
 			path[0] = upos
 			path[-1] = tpos
 		else:
+			path[0] = upos
+			path[-1] = tpos
 			path_px = mobility_map.to_image_coord(path)
 
-		trajectories = []
 		finished = False
 		base_speed = speed * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
 
@@ -168,6 +169,8 @@ class Map:
 		total_t = 0
 		new_position = path[0]
 		i = 0
+		trajectories = []
+
 		for i in range(len(path) - 1):
 			d = path[i].distance(path[i+1])
 			s = actual_speed[int(path_px[i][0]), int(path_px[i][1])]
@@ -204,23 +207,24 @@ class Map:
 			terrain.data = terrain.data.astype(np.float32)
 			terrain = self.geo_transformer.convert_to_utm_mesh(terrain)
 			terrain = terrain.resize_by_resolution(map_resolution, map_resolution)
+
 			print(f"Terrain preparation: {time.time() - start_time:.4f} seconds")
 
 			osm_start = time.time()
 			road_condition = "\"highway\" IS NOT NULL"
-			road = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=road_condition)
+			road, road_fclass = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=road_condition, extra_fields=["highway"])
 
 			building_condition = "\"building\" IS NOT NULL AND building != 'no'"
-			building = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=building_condition)
+			building, building_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=building_condition)
 
 			waterway_condition = "\"waterway\" IS NOT NULL"
-			waterway = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=waterway_condition)
+			waterway, waterway_fclass = self.gis.load_osm_data("planet_osm_line", self.common_ao_geom, condition=waterway_condition)
 
 			water_condition = "\"water\" IS NOT NULL"
-			water = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
+			water, waterway_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=water_condition)
 
 			veg_condition = "\"natural\" IN ('wood', 'scrub', 'grassland') OR \"landuse\" IN ('forest', 'grass', 'orchard')"
-			vegetation = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=veg_condition)
+			vegetation, vegetation_fclass = self.gis.load_osm_data("planet_osm_polygon", self.common_ao_geom, condition=veg_condition)
 			print(f"OSM data loading: {time.time() - osm_start:.4f} seconds")
 
 		else:
@@ -235,6 +239,7 @@ class Map:
 				epsg=self.geo_transformer.epsg
 			)
 			road = building = waterway = water = vegetation = None
+			road_fclass = building_fclass = waterway_fclass = waterway_fclass = vegetation_fclass = None
 
 		loop_start = time.time()
 		geometries = {}
@@ -284,8 +289,34 @@ class Map:
 				img = np.zeros_like(terrain.data)
 
 				if geometries[force][geom_name]["type"] == "polyline":
-					cv2.polylines(img, geom_coords_list, isClosed=False, color=1, 
-						thickness=max(1, int(geometries[force][geom_name]["width"] / map_resolution)))
+					if geom_name == "road":
+						road_costs = {
+							'motorway': 0.0,
+							'primary': 0.0,
+							'secondary': 0.1,
+							'tertiary': 0.2,
+							'residential': 0.3,
+							'default': 1.0
+						}
+
+						road_groups = {}
+						for i, geom in enumerate(geometries[force][geom_name]["geom"].geoms):
+							fclass = road_fclass[i] if i < len(road_fclass) else 'default'
+							if fclass not in road_groups:
+								road_groups[fclass] = []
+							road_groups[fclass].append(geom)
+
+						for fclass, geoms in road_groups.items():
+							cost = road_costs.get(fclass, road_costs['default'])
+							
+							for g in geoms:
+								geom_pixel = terrain.to_image_geom(g)
+								geom_coords = get_geometry_coords(geom_pixel)
+								cv2.polylines(img, geom_coords, isClosed=False, color=cost, 
+									thickness=max(1, int(geometries[force][geom_name]["width"] / map_resolution)))
+					else:
+						cv2.polylines(img, geom_coords_list, isClosed=False, color=1, 
+							thickness=max(1, int(geometries[force][geom_name]["width"] / map_resolution)))
 				elif geometries[force][geom_name]["type"] == "polygon":
 					cv2.fillPoly(img, geom_coords_list, color=1)
 				else:
@@ -403,7 +434,7 @@ class Map:
 
 		# water, waterway, buildingは大きい方で上書き
 		for k in ["water", "waterway", "building"]:
-			mobility_map.data = np.maximum(mobility_map.data, self.cached_map_geometries[k]["mesh"].data)
+			mobility_map.data = np.maximum(mobility_map.data, self.cached_map_geometries[k]["mesh"].data * 0.5)
 
 		# roadは小さい方で上書き
 		for k in ["road"]:

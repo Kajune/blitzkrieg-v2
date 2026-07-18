@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAppStore } from '../contexts/AppContext';
+import { useMapStore } from '../contexts/MapContext';
 import '../App.module.css';
 
 
@@ -14,8 +15,8 @@ export const SimSetting = ({
 		simConfig, setSimConfig, 
 		simUuid, setSimUuid,
 		units, placedUnits, mapElements,
-		setMobilityMap,
 	} = useAppStore();
+	const { setMobilityMap } = useMapStore();
 	const [isSending, setIsSending] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
 

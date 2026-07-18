@@ -97,7 +97,7 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 								</div>
 								<div className="text-muted mt-1" style={{ fontSize: '0.7rem' }}>
 									LOC: {unit.position.lat.toFixed(4)}, {unit.position.lon.toFixed(4)}<br/>
-									MoveMode: {unit.currentMoveMode}, MoveSpeed: {unit.currentMoveSpeed}, FireMode: {unit.currentFireMode}
+									Mode: {unit.currentMoveMode}, Speed: {unit.currentMoveSpeed}, Fire: {unit.currentFireMode}
 								</div>
 							</div>
 						</div>

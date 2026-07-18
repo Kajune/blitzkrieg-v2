@@ -1,3 +1,4 @@
+from typing import *
 import os, atexit
 from dotenv import load_dotenv
 import psycopg2
@@ -59,15 +60,23 @@ class PostGIS:
 		query = f"""
 		WITH env AS (
 			SELECT ST_Envelope(ST_GeomFromText('{wkt}', {epsg})) AS geom_env
+		),
+		filtered_rasters AS (
+			SELECT rast
+			FROM {dem_table}, env
+			WHERE ST_Intersects(rast, env.geom_env)
+		),
+		unified_raster AS (
+			SELECT ST_Union(rast) AS merged_rast
+			FROM filtered_rasters
 		)
 		SELECT 
-			(ST_DumpValues(ST_Clip(rast, env.geom_env))).valarray,
+			(ST_DumpValues(ST_Clip(merged_rast, env.geom_env))).valarray,
 			ST_XMin(env.geom_env) as min_lon,
 			ST_YMin(env.geom_env) as min_lat,
 			ST_XMax(env.geom_env) as max_lon,
 			ST_YMax(env.geom_env) as max_lat
-		FROM {dem_table}, env
-		WHERE ST_Intersects(rast, env.geom_env);
+		FROM unified_raster, env;
 		"""
 
 		with self.get_cursor() as cur:
@@ -78,19 +87,19 @@ class PostGIS:
 				return None
 
 			return GeoMesh(
-				data=np.array(result[0]), 
+				data=np.nan_to_num(np.float32(result[0])), 
 				left_bottom=GeoLocation(lon=result[1], lat=result[2]),
 				right_top=GeoLocation(lon=result[3], lat=result[4]),
 				epsg=epsg
 			)
 
 
-	def load_osm_data(self, table_name: str, geom: shape, condition: str = "") -> GeometryCollection:
+	def load_osm_data(self, table_name: str, geom: shape, condition: str = "", extra_fields: List[str] = []) -> Tuple[GeometryCollection, List[Any]]:
 		wkt = geom.wkt
 		epsg = os.getenv("DEM_EPSG")
 		
 		query = f"""
-		SELECT ST_AsBinary(ST_Transform(way, {epsg})) 
+		SELECT ST_AsBinary(ST_Transform(way, {epsg})) {("," + ",".join(extra_fields)) if len(extra_fields) > 0 else ""} 
 			FROM {table_name} 
 			WHERE way && ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)
 			AND (ST_Intersects(way, ST_Transform(ST_GeomFromText('{wkt}', {epsg}), 3857)))
@@ -100,13 +109,18 @@ class PostGIS:
 			query += f" AND ({condition})"
 
 		geometries = []
+		extra_fields_values = []
 		with self.get_cursor() as cur:
 			cur.execute(query)
 			rows = cur.fetchall()
 
 			for row in rows:
 				if row[0]:
-					data = row[0].tobytes() if isinstance(row[0], memoryview) else row[0]
-					geometries.append(wkb.loads(data))
+					geometry = row[0].tobytes() if isinstance(row[0], memoryview) else row[0]
+					geometries.append(wkb.loads(geometry))
+
+				for i in range(len(extra_fields)):
+					data = row[i+1].tobytes() if isinstance(row[i+1], memoryview) else row[i+1]
+					extra_fields_values.append(data)
 		
-		return GeometryCollection(geometries)
+		return GeometryCollection(geometries), extra_fields_values

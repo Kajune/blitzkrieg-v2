@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 import { AppProvider, useAppStore } from './contexts/AppContext';
-import { useMapEditor } from './components/MapEditor';
+import { MapProvider, useMapStore } from './contexts/MapContext';
+import { MapEditor, useMapEditor } from './components/MapEditor';
 import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
 import { UnitPlacement } from './components/UnitPlacement';
@@ -20,9 +21,6 @@ function AppContent() {
 	const [isRegionEditorOpen, setIsRegionEditorOpen] = useState(false);
 	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
 	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
-	const [showLabels, setShowLabels] = useState(true);
-	const [showDetectionPolygons, setShowDetectionPolygons] = useState(true);
-	const [showMobilityMap, setShowMobilityMap] = useState(false);
 
 	const { 
 		simConfig, setSimConfig, 
@@ -33,23 +31,17 @@ function AppContent() {
 		setSimUuid,
 	} = useAppStore();
 
-	const { 
-		clearMap,
-		setShouldFocusAfterLoad,
-		mapRef,
+	const {
 		pendingElement,
-		selectedUnitId,
-		setSelectedUnitId,
+		setShouldFocusAfterLoad,
+		selectedUnitId, setSelectedUnitId,
+	} = useMapStore();
+
+	const { 
 		startDrawing,
-		handleDragOver,
-		handleDrop,
 		removeUnitFromMap,
-		updateDetectionAttackPolygons,
 		deployChildren,
-		renderMarkers,
-		renderElements,
-		renderMobilityLayer,
-	} = useMapEditor(showLabels, showDetectionPolygons, showMobilityMap, isUnitPlacementOpen);
+	} = useMapEditor();
 
 	const exportData = () => {
 		const payload = {
@@ -84,15 +76,12 @@ function AppContent() {
 			try {
 				const data = JSON.parse(content);
 
-				clearMap();
-
 				if (data.simConfig) setSimConfig(data.simConfig);
 				if (data.units) setUnits(data.units);
 				if (data.placedUnits) setPlacedUnits(data.placedUnits);
 				if (data.mapElements) setMapElements(data.mapElements);
 				if (data.simRecord) setSimRecord(data.simRecord);
 				setSimUuid(null);
-
 				setShowMenu(false);
 				setShouldFocusAfterLoad(true);
 			} catch (error) {
@@ -106,15 +95,21 @@ function AppContent() {
 
 	return (
 		<div data-bs-theme="dark" style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', backgroundColor: '#212529', color: '#fff' }}>
-			<div ref={mapRef} 
+{/*			<div ref={mapRef} 
 				style={{ width: '100%', height: '100%', zIndex: 1 }} 
 				onDragOver={handleDragOver} 
 				onDrop={handleDrop}
 			>
 				{renderMobilityLayer()}
 				{renderElements()}
+				{renderDetectionLayers()}
+				{renderActionLayers()}
 				{renderMarkers()}
 			</div>
+*/}
+			<MapEditor
+				isUnitPlacementOpen={isUnitPlacementOpen}
+			/>
 
 			<button 
 				className="btn btn-secondary position-absolute"
@@ -129,51 +124,6 @@ function AppContent() {
 				onClick={() => setShowMenu(true)}
 			>
 				&#9654;
-			</button>
-
-			<button 
-				className="btn btn-secondary btn-sm position-absolute"
-				style={{ 
-					bottom: 80, 
-					left: 10, 
-					zIndex: 1000,
-					borderRadius: '20px',
-					padding: '5px 10px',
-					fontSize: '0.8rem'
-				}}
-				onClick={() => setShowLabels(!showLabels)}
-			>
-				{showLabels ? 'ラベル非表示' : 'ラベル表示'}
-			</button>
-
-			<button 
-				className="btn btn-secondary btn-sm position-absolute"
-				style={{ 
-					bottom: 80, 
-					left: 120, 
-					zIndex: 1000,
-					borderRadius: '20px',
-					padding: '5px 10px',
-					fontSize: '0.8rem'
-				}}
-				onClick={() => setShowDetectionPolygons(!showDetectionPolygons)}
-			>
-				{showDetectionPolygons ? '探知非表示' : '探知表示'}
-			</button>
-
-			<button 
-				className="btn btn-secondary btn-sm position-absolute"
-				style={{ 
-					bottom: 80, 
-					left: 220, 
-					zIndex: 1000,
-					borderRadius: '20px',
-					padding: '5px 10px',
-					fontSize: '0.8rem'
-				}}
-				onClick={() => setShowMobilityMap(!showMobilityMap)}
-			>
-				{showMobilityMap ? '機動障害図非表示' : '機動障害図表示'}
 			</button>
 
 			<div 
@@ -239,7 +189,6 @@ function AppContent() {
 
 			<SimControl
 				showMenu={showMenu}
-				updateDetectionAttackPolygons={updateDetectionAttackPolygons}
 			/>
 		</div>
 	);
@@ -248,7 +197,9 @@ function AppContent() {
 function App() {
 	return (
 		<AppProvider>
-			<AppContent />
+			<MapProvider>
+				<AppContent />
+			</MapProvider>
 		</AppProvider>
 	);
 }

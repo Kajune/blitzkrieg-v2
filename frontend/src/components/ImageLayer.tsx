@@ -1,22 +1,23 @@
 import { useEffect } from 'react';
+import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 interface ImageLayerProps {
-	map: L.Map;
-	isVisible: boolean;
 	data: any;
 }
 
-export const ImageLayer = ({ map, isVisible, data }: ImageLayerProps) => {
+export const ImageLayer = ({ data }: ImageLayerProps) => {
+	const map = useMap();
+
 	useEffect(() => {
 		let overlay: L.ImageOverlay | null = null;
 
-		if (isVisible && data) {
+		if (data) {
 			const feature = ('features' in data) 
 				? (data.features as any[])[0] 
 				: data;
 
-			if (feature && feature.geometry && feature.properties?.mesh_data) {
+			if (feature?.geometry?.coordinates?.[0] && feature.properties?.mesh_data) {
 				const coords = feature.geometry.coordinates[0];
 				const lngs = coords.map((c: number[]) => c[0]);
 				const lats = coords.map((c: number[]) => c[1]);
@@ -40,7 +41,7 @@ export const ImageLayer = ({ map, isVisible, data }: ImageLayerProps) => {
 				map.removeLayer(overlay);
 			}
 		};
-	}, [map, isVisible, data]);
+	}, [map, data]);
 
 	return null;
 };

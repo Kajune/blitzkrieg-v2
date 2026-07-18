@@ -1,51 +1,44 @@
 import { useEffect, useRef } from 'react';
-import { useAppStore } from '../contexts/AppContext';
+import { useMapStore } from '../contexts/MapContext';
+import { Marker, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { generateUnitIcon } from '../utils/unitIcon';
 import type { PlacedUnit } from '../types/unitTypes';
 
 interface Props {
 	unit: PlacedUnit;
-	map: L.Map;
 	isDraggable: boolean;
-	isVisible: boolean;
 	onDragEnd: (id: string, latlng: L.LatLng) => void;
 	onClick: (id: string) => void;
 }
 
-export const UnitMarker = ({ unit, map, isDraggable, isVisible, onDragEnd, onClick }: Props) => {
+export const UnitMarker = ({ unit, isDraggable, onDragEnd, onClick }: Props) => {
 	const markerRef = useRef<L.Marker | null>(null);
-	const { unitLayerMap } = useAppStore();
+	const { unitLayerMap } = useMapStore();
 
 	useEffect(() => {
-		if (isVisible) {
-			const marker = L.marker([unit.position.lat, unit.position.lon], {
-				icon: generateUnitIcon(unit),
-				draggable: isDraggable
-			}).addTo(map);
-			
-			markerRef.current = marker;
+		const marker = markerRef.current;
+		if (marker) {
 			unitLayerMap.current.set(unit.id, marker);
-
-			markerRef.current.on('dragend', (e) => onDragEnd(unit.id, e.target.getLatLng()));
-			markerRef.current.on('click', () => onClick(unit.id));
-			markerRef.current.bindTooltip(unit.templateId);
 		}
 
-		return () => { 
-			if (unit.id) {
-				unitLayerMap.current.delete(unit.id);
-			}
-			markerRef.current?.remove(); 
-			markerRef.current = null;
+		return () => {
+			unitLayerMap.current.delete(unit.id);
 		};
-	}, [isVisible, map, unit.id]);
+	}, [unit.id, unitLayerMap]);
 
-	useEffect(() => {
-		if (!markerRef.current) return;
-		markerRef.current.setIcon(generateUnitIcon(unit));
-		markerRef.current.dragging?.[isDraggable ? 'enable' : 'disable']();
-	}, [unit, isDraggable]);
-
-	return null;
+	return (
+		<Marker
+			ref={markerRef}
+			position={[unit.position.lat, unit.position.lon]}
+			icon={generateUnitIcon(unit)}
+			draggable={isDraggable}
+			eventHandlers={{
+				dragend: (e) => onDragEnd(unit.id, e.target.getLatLng()),
+				click: () => onClick(unit.id),
+			}}
+		>
+		<Tooltip>{unit.templateId}</Tooltip>
+		</Marker>
+	);
 };

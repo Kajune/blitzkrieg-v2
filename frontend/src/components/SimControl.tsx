@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
+import { useMapStore } from '../contexts/MapContext';
 import type { UnitRecord, PersonnelEquipmentsRecord } from '../types/simTypes';
-import type { Unit, PlacedUnit, Force, DisplayForce, DetectLog, AttackLog } from '../types/unitTypes';
+import type { Unit, PlacedUnit, Force, DisplayForce } from '../types/unitTypes';
 import { FORCES, DISPLAY_FORCES } from '../types/unitTypes';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -10,10 +11,8 @@ type SimMode = 'playing' | 'recording' | null;
 
 export const SimControl = ({ 
 	showMenu,
-	updateDetectionAttackPolygons,
 }: { 
 	showMenu: boolean,
-	updateDetectionAttackPolygons: (unitId: string, detectedUnits: DetectLog[], attackingUnits: AttackLog[]) => void,
 }) => {
 	const {
 		simUuid,
@@ -22,11 +21,13 @@ export const SimControl = ({
 		setPlacedUnits, 
 		simRecord, 
 		setSimRecord,
-		unitLayerMap,
 		setSimDatalink,
 		displayForce,
 		setDisplayForce,
 	} = useAppStore();
+	const {
+		unitLayerMap
+	} = useMapStore();
 
 	const [mode, setMode] = useState<SimMode>(null);
 	const [speed, setSpeed] = useState<number>(1);
@@ -166,7 +167,6 @@ export const SimControl = ({
 				if (marker) {
 					const last_position = unitRecord.trajectory[unitRecord.trajectory.length - 1];
 					marker.setLatLng([last_position.lat, last_position.lon]);
-					updateDetectionAttackPolygons(unitId, unitRecord.detectedUnits, unitRecord.attackingUnits);
 				}
 			});
 			return;
@@ -212,7 +212,6 @@ export const SimControl = ({
 					const lon = pos1.lon + (pos2.lon - pos1.lon) * lerpProgress;
 					
 					marker.setLatLng([lat, lon]);
-					updateDetectionAttackPolygons(unitId, unitRecord.detectedUnits, unitRecord.attackingUnits);
 				}
 			});
 
