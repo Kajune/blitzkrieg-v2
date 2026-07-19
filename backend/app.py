@@ -70,6 +70,7 @@ def deploy_child_units():
 
 
 @app.route('/api/simulate', methods=['POST'])
+@profile
 def simulate():
 	try:
 		sim_request = msgspec.convert(request.json, SimRequest)

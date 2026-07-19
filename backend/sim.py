@@ -116,11 +116,38 @@ class Simulation:
 		return deployment_distribution
 
 
+	def _compute_deployment_distribution_overlaps(self, deployment_distribution : Dict[str, Dict]) -> Dict[str, float]:
+		unit_ids = list(deployment_distribution.keys())
+		n = len(unit_ids)
+		if n == 0:
+			return {}
+		
+		means = np.array([deployment_distribution[uid]["mean"] for uid in unit_ids])  # (n, 2)
+		sigmas = np.array([deployment_distribution[uid]["sigma"] for uid in unit_ids]) # (n, 2)
+		variances = sigmas ** 2 # (n, 2)
+
+		diff = means[:, np.newaxis, :] - means[np.newaxis, :, :]		
+		v_sum = variances[:, np.newaxis, :] + variances[np.newaxis, :, :]
+		log_coeff = 0.5 * (np.sum(np.log(0.5 * v_sum), axis=2) - 
+						   0.5 * (np.sum(np.log(variances[:, np.newaxis, :]), axis=2) + 
+								  np.sum(np.log(variances[np.newaxis, :, :]), axis=2)))
+		
+		dist_sq = np.sum((diff**2) / v_sum, axis=2)
+		
+		overlaps_matrix = np.exp(log_coeff - 0.125 * dist_sq)
+		np.fill_diagonal(overlaps_matrix, 0)
+		total_overlaps = np.sum(overlaps_matrix, axis=1)
+		
+		return {unit_ids[i]: float(total_overlaps[i]) for i in range(n)}
+
+
 	def maneuver_evaluation(self, 
 		placed_units : Dict[str, PlacedUnit], 
 		updated_units : Dict[str, UnitRecord], 
 		deployment_distribution : Dict[str, Dict]
 	) -> Dict[str, UnitRecord]:
+		deployment_distribution_overlaps = self._compute_deployment_distribution_overlaps(deployment_distribution)
+
 		for unit_id, record in updated_units.items():
 			if not record.actions:
 				continue
@@ -144,7 +171,14 @@ class Simulation:
 				else:
 					path = None
 
-				trajectories, finished, path = self.map.compute_maneuver(unit, action, record.trajectory[-1], target_pos, deployment_distribution, path=path)
+				trajectories, finished, path = self.map.compute_maneuver(
+													unit, 
+													action, 
+													record.trajectory[-1], 
+													target_pos, 
+													deployment_distribution_overlaps[unit_id], 
+													path=path
+				)
 				record.trajectory += trajectories
 				record.actions[ai].finished = finished
 				record.currentTargetPos = target_pos
@@ -378,7 +412,7 @@ class Simulation:
 						* self.coeffs.combat.range_scale_by_move_speed[last_action.moveSpeed]
 						* (1 - record.suppressionRate))
 					
-					hit_prob = np.clip(1 - 0.5 * (dist / effective_range) ** 2, 0, 1)
+					hit_prob = max(min(1 - 0.5 * (dist / effective_range) ** 2, 1), 0)
 					total_fire_power = hit_prob * weapon.fire_power * detect_log.awareness * efficiency
 
 					if total_fire_power > 0:

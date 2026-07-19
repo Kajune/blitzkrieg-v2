@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Polygon, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { useAppStore } from '../contexts/AppContext';
 import type { PlacedUnit } from '../types/unitTypes';
 
 export const DetectionLayer = ({ unit, placedUnits }: { 
@@ -8,6 +9,7 @@ export const DetectionLayer = ({ unit, placedUnits }: {
 	placedUnits: PlacedUnit[] 
 }) => {
 	const map = useMap();
+	const { displayForce } = useAppStore();
 
 	const polygons = useMemo(() => {
 		const attackingTargetIds = new Set(unit.attackingUnits.map(a => a.unitId));
@@ -15,6 +17,14 @@ export const DetectionLayer = ({ unit, placedUnits }: {
 
 		return unit.detectedUnits
 			.map((log) => {
+				const isGod = displayForce === 'GOD';
+				const isSameForce = displayForce === unit.force;
+				const isAttacking = attackingTargetIds.has(log.unitId);
+
+				if (!(isGod || isSameForce || isAttacking)) {
+					return null;
+				}
+
 				const targetUnit = placedUnits.find(u => u.id === log.unitId);
 				if (!targetUnit) return null;
 
@@ -40,12 +50,12 @@ export const DetectionLayer = ({ unit, placedUnits }: {
 						[map.containerPointToLatLng(p1).lat, map.containerPointToLatLng(p1).lng],
 						[map.containerPointToLatLng(p2).lat, map.containerPointToLatLng(p2).lng]
 					] as [number, number][], 
-					color: attackingTargetIds.has(log.unitId) ? 'red' : 'yellow',
+					color: isAttacking ? 'red' : 'yellow',
 					opacity: Math.min(0.5, log.awareness * 0.5)
 				};
 			})
 			.filter((p): p is NonNullable<typeof p> => p !== null);
-	}, [unit, placedUnits, map]);
+	}, [unit, placedUnits, map, displayForce]);
 
 	return (
 		<>

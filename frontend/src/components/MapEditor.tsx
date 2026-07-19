@@ -393,19 +393,11 @@ const ActionLayers = () => {
 };
 
 const DetectionLayers = () => {
-	const { placedUnits, displayForce } = useAppStore();
+	const { placedUnits } = useAppStore();
 
 	return (
 		<>
 			{placedUnits.map(unit => {
-				const isVisible = (() => {
-					if (displayForce === 'GOD') return true;
-					const currentForce = displayForce as Force;
-					return unit.force === currentForce;
-				})();
-
-				if (!isVisible) return null;
-
 				return (
 					<DetectionLayer
 						key={`detection-${unit.id}`}

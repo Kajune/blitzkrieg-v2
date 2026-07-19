@@ -91,20 +91,19 @@ pair_los_kernel = cp.ElementwiseKernel(
 		raw float32 dem,
 		int32 width, int32 height,
 		float32 res_x, float32 res_y,
-		raw float32 p1_x, raw float32 p1_y, raw float32 p1_z,
-		raw float32 p2_x, raw float32 p2_y, raw float32 p2_z
+		raw float32 p1, raw float32 p2
 	''',
 	out_params='uint8 pair_results',
 	operation='''
 		int p_idx = i;
 
-		float x1 = p1_x[p_idx];
-		float y1 = p1_y[p_idx];
-		float z1 = p1_z[p_idx];
+		float x1 = p1[p_idx * 3 + 0];
+		float y1 = p1[p_idx * 3 + 1];
+		float z1 = p1[p_idx * 3 + 2];
 
-		float x2 = p2_x[p_idx];
-		float y2 = p2_y[p_idx];
-		float z2 = p2_z[p_idx];
+		float x2 = p2[p_idx * 3 + 0];
+		float y2 = p2[p_idx * 3 + 1];
+		float z2 = p2[p_idx * 3 + 2];
 
 		if ((int)(x1 / res_x) == (int)(x2 / res_x) && (int)(y1 / res_y) == (int)(y2 / res_y)) {
 			pair_results = 1;
@@ -147,8 +146,8 @@ pair_los_kernel = cp.ElementwiseKernel(
 )
 
 
-def compute_multi_mva_maps(dem_np, res_x, res_y, viewers_list):
-	height, width = dem_np.shape
+def _compute_multi_mva_maps(dem_gpu, res_x, res_y, viewers_list):
+	height, width = dem_gpu.shape
 	num_viewers = len(viewers_list)
 	
 	viewers_arr = np.array(viewers_list, dtype=np.float32)
@@ -157,7 +156,6 @@ def compute_multi_mva_maps(dem_np, res_x, res_y, viewers_list):
 	vz_np = viewers_arr[:, 2]
 	md_np = viewers_arr[:, 3]
 	
-	dem_gpu = cp.asarray(dem_np, dtype=cp.float32)
 	vx_gpu = cp.asarray(vx_np, dtype=cp.float32)
 	vy_gpu = cp.asarray(vy_np, dtype=cp.float32)
 	vz_gpu = cp.asarray(vz_np, dtype=cp.float32)
@@ -178,35 +176,27 @@ def compute_multi_mva_maps(dem_np, res_x, res_y, viewers_list):
 
 
 # 初期コンパイル
-compute_multi_mva_maps(np.zeros((10, 10), dtype=np.float32), 1, 1, [[0,0,0,1]])
+_compute_multi_mva_maps(cp.asarray(np.zeros((10, 10), dtype=np.float32)), 1, 1, [[0,0,0,1]])
 
 
-def compute_pairs_los(dem_np, res_x, res_y, pairs_p1, pairs_p2):
+def _compute_pairs_los(dem_gpu, res_x, res_y, pairs_p1, pairs_p2):
 	"""
 	pairs_p1, pairs_p2: それぞれ形状が (N, 3) の配列。 [[x, y, z], ...]
 	"""
-	height, width = dem_np.shape
+	height, width = dem_gpu.shape
 	num_pairs = len(pairs_p1)
 
-	p1_arr = np.array(pairs_p1, dtype=np.float32)
-	p2_arr = np.array(pairs_p2, dtype=np.float32)
-
-	dem_gpu = cp.asarray(dem_np, dtype=cp.float32)
-	p1x_gpu = cp.asarray(p1_arr[:, 0])
-	p1y_gpu = cp.asarray(p1_arr[:, 1])
-	p1z_gpu = cp.asarray(p1_arr[:, 2])
-	p2x_gpu = cp.asarray(p2_arr[:, 0])
-	p2y_gpu = cp.asarray(p2_arr[:, 1])
-	p2z_gpu = cp.asarray(p2_arr[:, 2])
-
-	results_gpu = cp.zeros(num_pairs, dtype=np.uint8)
+	p1_gpu = cp.asarray(pairs_p1, dtype=cp.float32)
+	p2_gpu = cp.asarray(pairs_p2, dtype=cp.float32)
+	
+	height, width = dem_gpu.shape
+	results_gpu = cp.zeros(len(pairs_p1), dtype=np.uint8)
 
 	pair_los_kernel(
 		dem_gpu,
 		width, height,
 		res_x, res_y,
-		p1x_gpu, p1y_gpu, p1z_gpu,
-		p2x_gpu, p2y_gpu, p2z_gpu,
+		p1_gpu, p2_gpu,
 		results_gpu
 	)
 
@@ -214,7 +204,23 @@ def compute_pairs_los(dem_np, res_x, res_y, pairs_p1, pairs_p2):
 
 
 # 初期コンパイル
-compute_pairs_los(np.zeros((10, 10), dtype=np.float32), 1, 1, [[0,0,0]], [[1,1,1]])
+_compute_pairs_los(cp.asarray(np.zeros((10, 10), dtype=np.float32)), 1, 1, [[0,0,0]], [[1,1,1]])
+
+
+class LOSCalculator:
+	def __init__(self, dem_np, res_x, res_y):
+		self.dem_gpu = cp.asarray(dem_np)
+		self.res_x = res_x
+		self.res_y = res_y
+
+
+	def compute_pairs_los(self, pairs_p1, pairs_p2):
+		return _compute_pairs_los(self.dem_gpu, self.res_x, self.res_y, pairs_p1, pairs_p2)
+
+
+	def compute_multi_mva_maps(self, viewers_list):
+		return _compute_multi_mva_maps(self.dem_gpu, self.res_x, self.res_y, viewers_list)
+
 
 
 def generate_simple_bumps_dem(height, width, max_height=50.0):
@@ -253,7 +259,7 @@ if __name__ == "__main__":
 	print(f"GPUでの複数MVA（最小可視高度）一括計算を開始...")
 	start_time = time.time()
 	for i in range(10):
-		result_maps = compute_multi_mva_maps(test_dem, resolution_x, resolution_y, random_viewers)
+		result_maps = _compute_multi_mva_maps(test_dem, resolution_x, resolution_y, random_viewers)
 	print(f"計算完了！ 処理時間: {(time.time() - start_time) / 10:.4f} 秒")
 
 	# 💡 可視化処理（今回は「地面からの必要高度」を色分けしてみる）
@@ -316,7 +322,7 @@ if __name__ == "__main__":
 	start_time = time.time()
 	# 100回ループして速度ベンチマーク
 	for _ in range(100):
-		pair_results = compute_pairs_los(test_dem, resolution_x, resolution_y, pairs_p1, pairs_p2)
+		pair_results = _compute_pairs_los(test_dem, resolution_x, resolution_y, pairs_p1, pairs_p2)
 	print(f"ペア判定計算完了！ 1回あたりの平均処理時間: {(time.time() - start_time) / 100:.5f} 秒")
 
 	# --- 💡 新機能：新たな可視化処理（線の描画） ---

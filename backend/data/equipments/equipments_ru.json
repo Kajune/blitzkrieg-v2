@@ -114,6 +114,20 @@
 			"fire_power": 10.0
 		},
 		{
+			"name": "2B11 120mm迫撃砲",
+			"type": "Howitzer",
+			"fire_range": 7100,
+			"fire_type": "Indirect",
+			"fire_power": 8.0
+		},
+		{
+			"name": "2S4 240mm自走迫撃砲",
+			"type": "Howitzer",
+			"fire_range": 9600,
+			"fire_type": "Indirect",
+			"fire_power": 20.0
+		},
+		{
 			"name": "152mm 2A65 榴弾砲",
 			"type": "Howitzer",
 			"fire_range": 28000,
@@ -244,6 +258,32 @@
 			],
 			"required_personnel": 3,
 			"personnel_capacity": 10
+		},
+		{
+			"name": "2S9 ノーナ-S 120mm自走迫撃砲",
+			"type": "GroundHardTracked",
+			"max_speed": 60,
+			"weapons":
+			[
+				"2B11 120mm迫撃砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 4,
+			"personnel_capacity": 4
+		},
+		{
+			"name": "2S4 チュリパン 240mm自走迫撃砲",
+			"type": "GroundHardTracked",
+			"max_speed": 60,
+			"weapons":
+			[
+				"2S4 240mm自走迫撃砲"
+			],
+			"sensors":
+			[],
+			"required_personnel": 5,
+			"personnel_capacity": 5
 		},
 		{
 			"name": "2S19 ムスタ-S 152mm自走榴弾砲",

@@ -6,7 +6,7 @@ from models import *
 from geometry import *
 from gis import *
 from utils import *
-from los import compute_multi_mva_maps, compute_pairs_los
+from los import LOSCalculator
 from functools import lru_cache
 import pyastar2d
 import cv2, time, copy
@@ -46,6 +46,8 @@ class Map:
 		self.alt_mesh, self.map_geometries, self.cached_map_geometries = self._prepare_map(debug=debug)
 		self.slope_mesh = compute_slope_mesh(self.alt_mesh)
 
+		self.los_calculator = LOSCalculator(self.alt_mesh.data, *self.alt_mesh.resolution)
+
 
 	def get_elevation(self, pts: np.ndarray) -> np.ndarray:
 		"""
@@ -70,7 +72,7 @@ class Map:
 
 
 	def compute_visibility(self, pts1 : np.ndarray, pts2 : np.ndarray) -> List[bool]:
-		pair_results = compute_pairs_los(self.alt_mesh.data, *self.alt_mesh.resolution, pts1, pts2)
+		pair_results = self.los_calculator.compute_pairs_los(pts1, pts2)
 		return [r > 0 for r in pair_results]
 
 
@@ -79,7 +81,7 @@ class Map:
 		action: UnitAction, 
 		upos: GeoLocation, 
 		tpos: GeoLocation, 
-		deplyment_distribution: Dict[str, Dict],
+		deployment_distribution_overlap: float,
 		path: Optional[List[GeoLocation]],
 	) -> Tuple[List[GeoLocation], bool, List[GeoLocation]]:
 		upos = self.geo_transformer.to_utm(upos)
@@ -100,7 +102,7 @@ class Map:
 					tpos_utm_shapely = intersection
 				tpos = UTMLocation.from_shapely(tpos_utm_shapely)
 
-		mobility_map = self._compute_mobility_map(unit, deplyment_distribution[unit.id])
+		mobility_map = self._compute_mobility_map(unit)
 		upos_px, tpos_px = mobility_map.to_image_coord([upos, tpos])
 
 		speed = self._compute_speed(unit) * 1000 / 3600
@@ -152,13 +154,8 @@ class Map:
 		base_speed = speed * self.coeffs.mobility.speed_scale_by_move_mode[action.moveMode]
 
 		# 渋滞ペナルティ
-		overlap_ratio = 0
 		lam_overlap = 1.0
-		for unit_id, dist in deplyment_distribution.items():
-			if unit_id == unit.id:
-				continue
-			overlap_ratio += calculate_distribution_overlap(deplyment_distribution[unit.id], dist)
-		base_speed *= np.exp(-overlap_ratio * lam_overlap)
+		base_speed *= np.exp(-deployment_distribution_overlap * lam_overlap)
 
 		speed_cap = self.coeffs.mobility.move_speed_cap[action.moveSpeed] * 1000 / 3600
 		actual_speed = (1 - mobility_map.data)
@@ -459,7 +456,7 @@ class Map:
 		return mobility_map
 
 
-	def _compute_mobility_map(self, unit: PlacedUnit, deplyment_distribution: Dict) -> UTMMesh:
+	def _compute_mobility_map(self, unit: PlacedUnit) -> UTMMesh:
 		vehicle_types = self._get_unit_mobility_composition(unit)
 		
 		coeffs = {geom_type: [] for geom_type in self.map_geometries[unit.force]}
@@ -471,23 +468,6 @@ class Map:
 		coeffs = {k: np.mean(v) if v else 0 for k, v in coeffs.items()}
 
 		mobility_map = self._compute_mobility_map_impl(frozenset(coeffs.items()), unit.force)
-
-		"""
-		sigma_meters = np.mean(deplyment_distribution["sigma"])
-		res_x, res_y = mobility_map.resolution
-		avg_res = (res_x + res_y) / 2.0
-		sigma_pixels = sigma_meters / avg_res
-
-		if sigma_pixels > 0.1:
-			kernel_size = int(round(sigma_pixels * 3) * 2 + 1)
-			mobility_map.data = cv2.GaussianBlur(
-				mobility_map.data, 
-				(kernel_size, kernel_size), 
-				sigmaX=sigma_pixels, 
-				sigmaY=sigma_pixels
-			)
-		"""
-
 		return mobility_map
 
 
