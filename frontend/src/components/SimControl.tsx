@@ -75,7 +75,6 @@ export const SimControl = ({
 
 		let active = true;
 		const targetInterval = simConfig.tickInterval * 1000 / speed;
-		let drift = 0;
 
 		const loop = async (_timestamp: number) => {
 			if (!active) return;
@@ -88,10 +87,8 @@ export const SimControl = ({
 			rollingSpeedRef.current = rollingSpeedRef.current * 0.5 + currentRealSpeed * 0.5;
 			setActualSpeed(rollingSpeedRef.current.toFixed(1));
 
-			drift += targetInterval - elapsed;
-			const adjustment = drift * 0.5;
-			drift -= adjustment;
-			const nextDelay = Math.max(0, targetInterval + adjustment);
+			const lag = elapsed - targetInterval;
+			const nextDelay = Math.max(0, targetInterval - lag);
 
 			const prevTime = currentTimeRef.current;
 			const nextTime = prevTime + simConfig.tickInterval * 1000;
@@ -108,10 +105,10 @@ export const SimControl = ({
 
 			try {
 				if (mode === 'playing') {
-					updateUnitsByTime(nextTime, true, nextDelay);
+					updateUnitsByTime(nextTime, true, targetInterval);
 				} else if (mode === 'recording') {
 					isFetchingRef.current = true;
-					await fetchAndRecord(prevTime, simConfig.tickInterval * 1000, nextDelay);
+					await fetchAndRecord(prevTime, nextTime - prevTime, targetInterval);
 					isFetchingRef.current = false;
 				}
 
@@ -136,7 +133,7 @@ export const SimControl = ({
 	const applyUnitStatus = (
 		unitRecords: Record<string, UnitRecord>,
 		animate: boolean = false,
-		nextDelay: number
+		targetInterval: number
 	) => {
 		const newDatalink = FORCES.reduce((acc, force) => {
 			acc[force] = [];
@@ -173,7 +170,7 @@ export const SimControl = ({
 		}
 
 		const startTime = performance.now();
-		const duration = nextDelay;
+		const duration = targetInterval;
 
 		const startPositions = new Map<string, [number, number]>();
 		Object.entries(unitRecords).forEach(([unitId, _unitRecord]) => {
@@ -282,18 +279,18 @@ export const SimControl = ({
 		);
 	};
 
-	const updateUnitsByTime = (time: number, animate: boolean, nextDelay: number) => {
+	const updateUnitsByTime = (time: number, animate: boolean, targetInterval: number) => {
 		const record = simRecordRef.current.find((r) => 
 			new Date(r.startDateTime).getTime() <= time && 
 			time <= new Date(r.endDateTime).getTime()
 		);
 
 		if (record) {
-			applyUnitStatus(record.unitRecords, animate, nextDelay);
+			applyUnitStatus(record.unitRecords, animate, targetInterval);
 		}
 	};
 
-	const fetchAndRecord = async (time: number, deltaTime: number, nextDelay: number) => {
+	const fetchAndRecord = async (time: number, deltaTime: number, targetInterval: number) => {
 		try {
 			const response = await fetch('/api/simulate', {
 				method: 'POST',
@@ -309,7 +306,7 @@ export const SimControl = ({
 
 			if (result.success && result.unitRecords) {
 				setSimRecord((prev) => [...prev, result]);
-				applyUnitStatus(result.unitRecords, true, nextDelay);
+				applyUnitStatus(result.unitRecords, true, targetInterval);
 			} else {
 				console.log(result.errors);
 			}
