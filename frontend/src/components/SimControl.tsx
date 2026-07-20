@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../contexts/AppContext';
 import { useMapStore } from '../contexts/MapContext';
-import type { UnitRecord, PersonnelEquipmentsRecord } from '../types/simTypes';
+import type { SimRecord, UnitRecord, PersonnelEquipmentsRecord } from '../types/simTypes';
 import type { Unit, PlacedUnit, Force, DisplayForce } from '../types/unitTypes';
 import { FORCES, DISPLAY_FORCES } from '../types/unitTypes';
 import Slider from 'rc-slider';
@@ -17,13 +17,12 @@ export const SimControl = ({
 	const {
 		simUuid,
 		simConfig,
-		placedUnits, 
-		setPlacedUnits, 
-		simRecord, 
-		setSimRecord,
+		placedUnits, setPlacedUnits, 
+		simRecord, setSimRecord,
 		setSimDatalink,
-		displayForce,
-		setDisplayForce,
+		displayForce, setDisplayForce,
+		clientUuid,
+		dirtyUnitIds, clearDirtyUnits,
 	} = useAppStore();
 	const {
 		unitLayerMap
@@ -44,11 +43,13 @@ export const SimControl = ({
 	const isFetchingRef = useRef<boolean>(false);
 	const simRecordRef = useRef(simRecord);
 	const placedUnitsRef = useRef(placedUnits);
+	const dirtyUnitIdsRef = useRef(dirtyUnitIds);
 
 	useEffect(() => { simRecordRef.current = simRecord; }, [simRecord]);
 	useEffect(() => { placedUnitsRef.current = placedUnits; }, [placedUnits]);
 	const currentTimeRef = useRef(currentTime);
 	useEffect(() => { currentTimeRef.current = currentTime; }, [currentTime]);
+	useEffect(() => { dirtyUnitIdsRef.current = dirtyUnitIds; }, [dirtyUnitIds]);
 
 	useEffect(() => {
 		if (showMenu) {
@@ -129,6 +130,66 @@ export const SimControl = ({
 		
 		return () => { active = false; };
 	}, [mode, speed, endTime]);
+
+	useEffect(() => {
+		if (!clientUuid) return;
+
+		let active = true;
+		const intervalTime = 1000;
+
+		const pollState = async () => {
+			if (!active) return;
+			try {
+				// 1. 取得する直前に、手元の最新 placedUnits をサーバーに送ってアクションを同期する
+				if (dirtyUnitIdsRef.current.size > 0) {
+					const unitActionsMap: Record<string, any[]> = {};
+					dirtyUnitIdsRef.current.forEach((unitId) => {
+						const targetUnit = placedUnitsRef.current.find((u) => u.id === unitId);
+						if (targetUnit) {
+							unitActionsMap[unitId] = targetUnit.actions;
+						}
+					});
+
+					const response = await fetch('/api/update_unit_actions', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							sim_id: clientUuid,
+							unit_actions: unitActionsMap,
+						}),
+					});
+					const resJson = await response.json();
+					if (resJson.success) {
+						clearDirtyUnits();
+					}
+				}
+
+				// 2. その後、最新の状態を取得する
+				const response = await fetch(`/api/fetch_simulation_state?sim_id=${encodeURIComponent(clientUuid)}`, {
+					method: 'GET',
+					headers: { 'Content-Type': 'application/json' },
+				});
+				const result = await response.json();
+
+				if (result.success && result.unitRecords) {
+					if (result.endDateTime) {
+						setCurrentTime(result.endDateTime);
+					}
+					applyUnitStatus(result.unitRecords, false, 0);
+				}
+			} catch (err) {
+				console.error("Poll state sync & fetch error:", err);
+			}
+
+			if (active) {
+				setTimeout(pollState, intervalTime);
+			}
+		};
+
+		pollState();
+
+		return () => { active = false; };
+	}, [clientUuid]);
 
 	const applyUnitStatus = (
 		unitRecords: Record<string, UnitRecord>,
@@ -260,7 +321,7 @@ export const SimControl = ({
 				updatedUnit = updateUnitRecursive(updatedUnit, record.personnelEquipments) as PlacedUnit;
 
 				// actionsの処理
-				if (mode === 'recording') {
+				if (mode === 'recording' && !record.dirty) {
 					const finishedIds = new Set(record.actions.filter(a => a.finished).map(a => a.id));
 					return {
 						...updatedUnit,
@@ -279,6 +340,19 @@ export const SimControl = ({
 		);
 	};
 
+	const syncSimulationState = async (recordData: SimRecord) => {
+		if (!simUuid) return;
+		try {
+			await fetch('/api/update_simulation_state', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(recordData)
+			});
+		} catch (err) {
+			console.error('シミュレーション状態の同期に失敗しました', err);
+		}
+	};
+
 	const updateUnitsByTime = (time: number, animate: boolean, targetInterval: number) => {
 		const record = simRecordRef.current.find((r) => 
 			new Date(r.startDateTime).getTime() <= time && 
@@ -287,6 +361,7 @@ export const SimControl = ({
 
 		if (record) {
 			applyUnitStatus(record.unitRecords, animate, targetInterval);
+			syncSimulationState(record);
 		}
 	};
 
@@ -321,91 +396,91 @@ export const SimControl = ({
 			style={{ 
 				bottom: 0, 
 				left: 0, 
-				width: '720px', 
+				width: clientUuid !== null ? '240px' : '720px', 
 				zIndex: 1000,
 				fontSize: '0.8rem',
 				borderTopRightRadius: '8px'
 			}}
 		>
 			<div className="d-flex align-items-center gap-2">
-				<div className="text-center mb-1 fw-bold text-light">
+				<div className="text-center mb-1 fw-bold text-light text-nowrap">
 					{new Date(currentTime).toLocaleString()}
 				</div>
 
-				{/* 再生ボタン */}
-				<button 
-					className={`btn btn-sm ${mode === 'recording' ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
-					onClick={() => toggleMode('playing')}
-					disabled={mode === 'recording'}
-				>
-					{mode === 'playing' ? <i className="bi bi-stop-fill"></i> : <i className="bi bi-play-fill"></i>}
-				</button>
+				{clientUuid === null && (
+					<>
+						<button 
+							className={`btn btn-sm ${mode === 'recording' ? 'btn-outline-secondary' : 'btn-outline-primary'}`}
+							onClick={() => toggleMode('playing')}
+							disabled={mode === 'recording'}
+						>
+							{mode === 'playing' ? <i className="bi bi-stop-fill"></i> : <i className="bi bi-play-fill"></i>}
+						</button>
 
-				{/* 録画ボタン */}
-				<button 
-					className={`btn btn-sm ${mode === 'playing' ? 'btn-outline-secondary' : 'btn-outline-danger'}`}
-					onClick={() => toggleMode('recording')}
-					disabled={mode === 'playing' || simUuid === null}
-					// ツールチップを表示
-					title={simUuid === null ? "シミュレーション設定からサーバに送信すると録画可能になります" : ""}
-				>
-					{mode === 'recording' ? <i className="bi bi-stop-fill"></i> : <i className="bi bi-record-fill"></i>}
-				</button>
+						<button 
+							className={`btn btn-sm ${mode === 'playing' ? 'btn-outline-secondary' : 'btn-outline-danger'}`}
+							onClick={() => toggleMode('recording')}
+							disabled={mode === 'playing' || simUuid === null}
+							title={simUuid === null ? "シミュレーション設定からサーバに送信すると録画可能になります" : ""}
+						>
+							{mode === 'recording' ? <i className="bi bi-stop-fill"></i> : <i className="bi bi-record-fill"></i>}
+						</button>
 
-				<div className="w-100" style={{ padding: '0 0px' }}>
-					<Slider
-						min={startTime}
-						max={endTime}
-						value={currentTime}
-						onChange={(val) => {
-							const time = val as number;
-							setCurrentTime(time);
-							updateUnitsByTime(time, false, 0);
-						}}
-						disabled={mode !== null}
-						handleStyle={{
-							height: 12,
-							width: 12,
-							marginTop: -4,
-							backgroundColor: '#fff',
-							border: '2px solid #0d6efd',
-							zIndex: 2,
-						}}
-					/>
-				</div>
+						<div className="w-100" style={{ padding: '0 0px' }}>
+							<Slider
+								min={startTime}
+								max={endTime}
+								value={currentTime}
+								onChange={(val) => {
+									const time = val as number;
+									setCurrentTime(time);
+									updateUnitsByTime(time, false, 0);
+								}}
+								disabled={mode !== null}
+								handleStyle={{
+									height: 12,
+									width: 12,
+									marginTop: -4,
+									backgroundColor: '#fff',
+									border: '2px solid #0d6efd',
+									zIndex: 2,
+								}}
+							/>
+						</div>
 
-				<div className="text-muted" style={{ minWidth: '50px', fontSize: '0.7rem' }}>
-					{actualSpeed}x
-				</div>
+						<div className="text-muted" style={{ minWidth: '50px', fontSize: '0.7rem' }}>
+							{actualSpeed}x
+						</div>
 
-				{/* 倍速切り替え：いつでも操作可能 */}
-				<select 
-					className="form-select form-select-sm" 
-					style={{ width: '100px' }}
-					value={speed}
-					onChange={(e) => setSpeed(Number(e.target.value))}
-				>
-					<option value="1">x1</option>
-					<option value="2">x2</option>
-					<option value="4">x4</option>
-					<option value="8">x8</option>
-					<option value="16">x16</option>
-					<option value="32">x32</option>
-					<option value="64">x64</option>
-				</select>
+						<select 
+							className="form-select form-select-sm" 
+							style={{ width: '100px' }}
+							value={speed}
+							onChange={(e) => setSpeed(Number(e.target.value))}
+						>
+							<option value="1">x1</option>
+							<option value="2">x2</option>
+							<option value="4">x4</option>
+							<option value="8">x8</option>
+							<option value="16">x16</option>
+							<option value="32">x32</option>
+							<option value="64">x64</option>
+						</select>
 
-				<select 
-					className="form-select form-select-sm" 
-					style={{ width: '120px' }}
-					value={displayForce}
-					onChange={(e) => setDisplayForce(e.target.value as DisplayForce)}
-				>
-					{DISPLAY_FORCES.map((force) => (
-						<option key={force} value={force}>
-							{force}
-						</option>
-					))}
-				</select>
+						<select 
+							className="form-select form-select-sm" 
+							style={{ width: '120px' }}
+							value={displayForce}
+							onChange={(e) => setDisplayForce(e.target.value as DisplayForce)}
+						>
+							{DISPLAY_FORCES.map((force) => (
+								<option key={force} value={force}>
+									{force}
+								</option>
+							))}
+						</select>
+					</>
+				)}
 			</div>
 		</div>
 	);

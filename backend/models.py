@@ -461,6 +461,7 @@ class UnitRecord(msgspec.Struct):
 	currentFireMode: Optional[FireMode] = None
 	currentTargetPos: Optional[GeoLocation] = None
 	currentPath: Optional[List[GeoLocation]] = None
+	dirty: bool = False
 
 
 class SimRequest(msgspec.Struct):
@@ -482,6 +483,11 @@ class UnitDeploymentRequest(msgspec.Struct):
 	sim_id: str
 	placed_units: List[PlacedUnit]
 	deploy_unit_id: str
+
+
+class UpdateUnitActionRequest(msgspec.Struct):
+	sim_id: str
+	unit_actions: Dict[str, List[UnitAction]]
 
 
 class UnitDeploymentCoeff(msgspec.Struct, frozen=True, cache_hash=True):

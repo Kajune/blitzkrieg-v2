@@ -316,7 +316,7 @@ const MapDropHandler = ({
 };
 
 const ActionLayers = () => {
-	const { placedUnits, setPlacedUnits, displayForce, simDatalink } = useAppStore();
+	const { placedUnits, setPlacedUnits, displayForce, simDatalink, markUnitDirty } = useAppStore();
 	const { selectedUnitId } = useMapStore();
 	const map = useMap();
 
@@ -366,6 +366,7 @@ const ActionLayers = () => {
 					return { ...u, actions: nextActions };
 				})
 			);
+			markUnitDirty(selectedUnitId);
 		}
 	});
 

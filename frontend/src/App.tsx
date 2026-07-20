@@ -7,6 +7,7 @@ import { UnitEditor } from './components/UnitEditor';
 import { RegionSettings } from './components/RegionSettings';
 import { UnitPlacement } from './components/UnitPlacement';
 import { SimSetting } from './components/SimSetting';
+import { ClientSetting } from './components/ClientSetting';
 import { UnitDetailPane } from './components/UnitDetailPane';
 import { SimControl } from './components/SimControl';
 
@@ -21,6 +22,7 @@ function AppContent() {
 	const [isRegionEditorOpen, setIsRegionEditorOpen] = useState(false);
 	const [isUnitPlacementOpen, setIsUnitPlacementOpen] = useState(false);
 	const [isSimSettingOpen, setIsSimSettingOpen] = useState(false);
+	const [isClientSettingOpen, setIsClientSettingOpen] = useState(false);
 
 	const { 
 		simConfig, setSimConfig, 
@@ -29,6 +31,7 @@ function AppContent() {
 		mapElements, setMapElements,
 		simRecord, setSimRecord,
 		setSimUuid,
+		clientUuid,
 	} = useAppStore();
 
 	const {
@@ -138,16 +141,17 @@ function AppContent() {
 					<h4 className="mb-4">blitzkrieg-v2</h4>
 					<hr />
 					<div className="d-grid gap-2">
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitEditorOpen(true); setShowMenu(false); }}>部隊編成</button>
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionEditorOpen(true); setShowMenu(false); }}>地域設定</button>
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitPlacementOpen(true); setShowMenu(false); }}>部隊配置</button>
-						<button className="btn btn-outline-light text-start" onClick={() => { setIsSimSettingOpen(true); setShowMenu(false); }}>シミュレーション設定</button>
-						<button className="btn btn-outline-light text-start" onClick={exportData}>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitEditorOpen(true); setShowMenu(false); }} disabled={clientUuid !== null}>部隊編成</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsRegionEditorOpen(true); setShowMenu(false); }} disabled={clientUuid !== null}>地域設定</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsUnitPlacementOpen(true); setShowMenu(false); }} disabled={clientUuid !== null}>部隊配置</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsSimSettingOpen(true); setShowMenu(false); }} disabled={clientUuid !== null}>シミュレーション設定</button>
+						<button className="btn btn-outline-light text-start" onClick={() => { setIsClientSettingOpen(true); setShowMenu(false); }}>クライアント設定</button>
+						<button className="btn btn-outline-light text-start" onClick={exportData} disabled={clientUuid !== null}>
 							エクスポート
 						</button>
-						<label className="btn btn-outline-light text-start">
+						<label className={`btn btn-outline-light text-start ${clientUuid !== null ? 'disabled' : ''}`}>
 							インポート
-							<input type="file" accept=".json" onChange={importData} style={{ display: 'none' }} />
+							<input type="file" accept=".json" onChange={importData} style={{ display: 'none' }} disabled={clientUuid !== null} />
 						</label>
 					</div>
 				</div>
@@ -167,24 +171,32 @@ function AppContent() {
 
 			{showMenu && <div className="offcanvas-backdrop fade show" onClick={() => setShowMenu(false)} style={{ zIndex: 1040 }} />}
 
-			<UnitEditor 
-				isOpen={isUnitEditorOpen} 
-				onClose={() => setIsUnitEditorOpen(false)}
-				removeUnitFromMap={removeUnitFromMap}
-			/>
-			<RegionSettings 
-				isOpen={isRegionEditorOpen} 
-				onClose={() => setIsRegionEditorOpen(false)}
-				onStartDrawing={startDrawing}
-				drawingElement={pendingElement}
-			/>
-			<UnitPlacement 
-				isOpen={isUnitPlacementOpen} 
-				onClose={() => setIsUnitPlacementOpen(false)}
-			/>
-			<SimSetting 
-				isOpen={isSimSettingOpen} 
-				onClose={() => setIsSimSettingOpen(false)}
+			{!clientUuid && (
+				<>
+				<UnitEditor 
+					isOpen={isUnitEditorOpen} 
+					onClose={() => setIsUnitEditorOpen(false)}
+					removeUnitFromMap={removeUnitFromMap}
+				/>
+				<RegionSettings 
+					isOpen={isRegionEditorOpen} 
+					onClose={() => setIsRegionEditorOpen(false)}
+					onStartDrawing={startDrawing}
+					drawingElement={pendingElement}
+				/>
+				<UnitPlacement 
+					isOpen={isUnitPlacementOpen} 
+					onClose={() => setIsUnitPlacementOpen(false)}
+				/>
+				<SimSetting 
+					isOpen={isSimSettingOpen} 
+					onClose={() => setIsSimSettingOpen(false)}
+				/>
+				</>
+			)}
+			<ClientSetting 
+				isOpen={isClientSettingOpen} 
+				onClose={() => setIsClientSettingOpen(false)}
 			/>
 
 			<SimControl

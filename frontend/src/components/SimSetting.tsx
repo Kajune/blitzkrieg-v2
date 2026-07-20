@@ -81,10 +81,12 @@ export const SimSetting = ({
 				const mobilityData = await mobilityResponse.json();
 				setMobilityMap(mobilityData.mobility_map);
 			} else {
-				console.log(data.errors);
+				console.error('シミュレーションの設定に失敗しました:', data.errors);
+				alert('シミュレーションの設定に失敗しました。UUIDを確認してください。');
 			}
 		} catch (error) {
 			console.error('送信失敗:', error);
+			alert('サーバとの通信に失敗しました。');
 		} finally {
 			setIsSending(false);
 		}

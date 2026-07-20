@@ -15,7 +15,14 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 	const symbolRef = useRef<HTMLDivElement>(null);
 	const tableStyle = { fontSize: '0.65rem', fontFamily: 'monospace' };
 	const textStyle = { fontSize: '0.65rem' };
-	const { placedUnits, setPlacedUnits, simDatalink, displayForce, simUuid } = useAppStore();
+	const { 
+		placedUnits, setPlacedUnits, 
+		markUnitDirty,
+		simDatalink, 
+		displayForce, 
+		simUuid,
+		clientUuid,
+	} = useAppStore();
 
 	const unit = placedUnits.find(u => u.id === unitId);
 
@@ -67,12 +74,14 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 		newActions[index] = { ...newActions[index], [field]: value };
 		const updatedUnit = { ...unit, actions: newActions };
 		setPlacedUnits(placedUnits.map(u => u.id === unit.id ? updatedUnit : u));
+		markUnitDirty(unit.id);
 	};
 
 	const deleteAction = (index: number) => {
 		const newActions = unit.actions.filter((_, i) => i !== index);
 		const updatedUnit = { ...unit, actions: newActions };
 		setPlacedUnits(placedUnits.map(u => u.id === unit.id ? updatedUnit : u));
+		markUnitDirty(unit.id);
 	};
 
 	return (
@@ -238,7 +247,7 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 
 					{showFullDetails && (
 						<>
-							{unit.lower_units.length > 0 && (
+							{(unit.lower_units.length > 0 && !clientUuid) && (
 								<button 
 									className="btn btn-sm btn-outline-warning w-100 mt-2" 
 									onClick={handleDeployClick} 
@@ -247,9 +256,11 @@ export const UnitDetailPane = ({ unitId, onClose, onDelete, onDeployChildren }: 
 									{isDeploying ? '隷下部隊展開中...' : '隷下部隊を展開'}
 								</button>
 							)}
-							<button className="btn btn-sm btn-outline-danger w-100 mt-2" onClick={() => onDelete(unit)}>
-								部隊を削除
-							</button>
+							{!clientUuid && (
+								<button className="btn btn-sm btn-outline-danger w-100 mt-2" onClick={() => onDelete(unit)}>
+									部隊を削除
+								</button>
+							)}
 						</>
 					)}
 				</div>

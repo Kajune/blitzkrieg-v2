@@ -24,6 +24,7 @@ export interface UnitRecord {
 	currentFireMode: FireMode | null;
 	currentTargetPos: GeoLocation | null;
 	currentPath: GeoLocation[] | null;
+	dirty: boolean | null;
 }
 
 export interface SimRecord {
