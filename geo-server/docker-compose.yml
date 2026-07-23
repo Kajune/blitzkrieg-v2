@@ -13,5 +13,39 @@ services:
     ports:
       - "5432:5432"
 
+  # tile-server:
+  #   image: maplibre/martin:latest
+  #   container_name: osm-tile-server
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  #     POSTGRES_DB: ${POSTGRES_DB}
+  #   volumes:
+  #     - ./martin.yml:/etc/martin.yml
+  #   command:
+  #     - "--config"
+  #     - "/etc/martin.yml"
+  #   depends_on:
+  #     - db
+
+  tile-server:
+    image: maptiler/tileserver-gl:latest
+    container_name: tileserver-gl
+    ports:
+      - "7878:8080"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - db
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
 volumes:
   pgdata:

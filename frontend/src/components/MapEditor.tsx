@@ -474,6 +474,7 @@ export const MapEditor = ({
 	const [showLabels, setShowLabels] = useState(true);
 	const [showDetectionPolygons, setShowDetectionPolygons] = useState(true);
 	const [showMobilityMap, setShowMobilityMap] = useState(false);
+	const tileserverURL = import.meta.env.VITE_TILESERVER_URL;
 
 	return (
 		<div
@@ -486,7 +487,7 @@ export const MapEditor = ({
 				zoom={13} 
 				doubleClickZoom={false}
 			>
-				<TileLayer url="https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png" />
+				<TileLayer url={tileserverURL}	maxZoom={20} />
 				<MapDropHandler placeUnit={placeUnit} />
 				<MapController 
 					shouldFocus={shouldFocusAfterLoad} 

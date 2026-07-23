@@ -1,4 +1,8 @@
 dem/*
 osm/*
 water/*
+data/*
+!data/config.json
+!data/fonts/
+!data/styles/
 .env

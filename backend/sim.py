@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any
 import numpy as np
-import ray
 from shapely.geometry import GeometryCollection
 import scipy.optimize
 from models import *

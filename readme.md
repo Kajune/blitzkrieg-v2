@@ -34,15 +34,36 @@ chmod +x *.sh
 ./import_water.sh   # 数十分かかる
 ```
 
-2. フロントエンドのビルド (省略可)
+2. タイルサーバのビルド (省略可)
+```
+cd geo-server
+./make_mbtiles.sh   # 丸一日かかる
+docker compose restart
+cd ..
+
+cd frontend
+cp .env-sample-local .env
+cd ..
+```
+
+省略する場合は、
+
+```
+cd frontend
+cp .env-sample .env
+cd ..
+```
+
+3. フロントエンドのビルド (省略可)
 ```
 cd frontend
 npm run build
 cd ..
 ```
 
-3. サーバの立ち上げ
+4. サーバの立ち上げ
 ```
+# geo-server/.env があることを確認
 docker compose up -d
 ```
 
@@ -55,6 +76,7 @@ docker compose up -d
 - [x] 海追加
 - [x] 性能改善
 - [x] ネットワーク対戦機能
+- [x] 自前タイルサーバ
 - [ ] 係数調整
 
 ## ライセンスについて
