@@ -7,18 +7,18 @@ https://github.com/user-attachments/assets/fe986bc5-286b-4a9a-887e-b98b919510d5
 戦術レベルの陸上戦闘のシミュレーション
 
 ## 構築手順
-1. PostGISサーバの構築 (省略すると一応地図情報なしで動く)
+### 1. PostGISサーバの構築 (省略すると一応地図情報なしで動く)
 
-### ALOS
+**ALOS**
 - ダウンロード元: ALOS (https://www.eorc.jaxa.jp/ALOS/jp/index_j.htm)
 - 配置先: `geo-server/dem`
 - zipを解凍して、`geo-server/dem/N020E120_N025E125/ALPSMLC30_N020E121_DSM.tif`のようになっていることを期待
 
-### OSM
+**OSM**
 - ダウンロード元: OSM (https://download.geofabrik.de/asia.html)
 - 配置先: `geo-server/osm`
 
-### Water polygons
+**Water polygons**
 - ダウンロード元: Water polygons (https://osmdata.openstreetmap.de/data/water-polygons.html)
 - ダウンロードファイル: water-polygons-split-3857.zip
 - 配置先: `geo-server/water`
@@ -34,7 +34,7 @@ chmod +x *.sh
 ./import_water.sh   # 数十分かかる
 ```
 
-2. タイルサーバのビルド (省略可)
+### 2. タイルサーバのビルド (省略可)
 ```
 cd geo-server
 ./make_mbtiles.sh   # 丸一日かかる
@@ -54,14 +54,14 @@ cp .env-sample .env
 cd ..
 ```
 
-3. フロントエンドのビルド (省略可)
+### 3. フロントエンドのビルド (省略可)
 ```
 cd frontend
 npm run build
 cd ..
 ```
 
-4. サーバの立ち上げ
+### 4. サーバの立ち上げ
 ```
 # geo-server/.env があることを確認
 docker compose up -d

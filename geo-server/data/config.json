@@ -53,21 +53,6 @@
           45.5
         ]
       }
-    },
-    "hillshade":
-    {
-      "style": "hillshade/style.json",
-      "tilejson":
-      {
-        "type": "overlay",
-        "bounds":
-        [
-          128.0,
-          30.0,
-          147.0,
-          45.5
-        ]
-      }
     }
   },
   "data":
