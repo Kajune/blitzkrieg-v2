@@ -42,8 +42,19 @@ class Simulation:
 
 		# Unit
 		for unit in remove_duplicated_units(self._sim_setting.placedUnits):
-			for eq_name in get_current_equipments(unit):
+			current_eqs = get_current_equipments(unit)
+			for eq_name in current_eqs:
 				assert eq_name in self.equipments, f"Unknown equipment: {eq_name}"
+
+			total_capacity = 0
+			current_personnel = get_current_personnel(unit)
+			
+			for eq_name, eq_num in current_eqs.items():
+				if eq_name in self.vehicles:
+					total_capacity += self.vehicles[eq_name].personnel_capacity * eq_num
+
+			if current_personnel > total_capacity:
+				print(f"Error: Unit '{unit.id}' (Name: {getattr(unit, 'name', '')}) has {current_personnel} personnel, which exceeds the total vehicle capacity of {total_capacity}.")
 
 		# Map
 		self.map = Map(self._sim_setting, self.vehicles, self.coeffs, debug=debug)

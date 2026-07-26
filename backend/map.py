@@ -54,19 +54,17 @@ class Map:
 		pts: (N, 2) の numpy 配列 (easting, northing)
 		戻り値: (N,) の numpy 配列 (各点の標高)
 		"""
-		# UTMLocationのリストに変換してから to_image_coord を利用
-		# pts は np.array なので、各行を UTMLocation に変換する
 		utm_locations = [UTMLocation(easting=p[0], northing=p[1]) for p in pts]
 		
-		# 画像座標 (pixel_x, pixel_y) に変換
+		# BaseMeshの仕様により、戻り値は [y, x] ([row, col]) の順
 		px_coords = self.alt_mesh.to_image_coord(utm_locations)
 		
-		# 整数化して範囲内にクリップ（画像外参照を防ぐ）
-		px_x = np.clip(np.round(px_coords[:, 0]).astype(int), 0, self.alt_mesh.data.shape[0] - 1)
-		px_y = np.clip(np.round(px_coords[:, 1]).astype(int), 0, self.alt_mesh.data.shape[1] - 1)
+		# 変数名を実態 (row/y, col/x) に合わせる
+		px_y = np.clip(np.round(px_coords[:, 0]).astype(int), 0, self.alt_mesh.data.shape[0] - 1)
+		px_x = np.clip(np.round(px_coords[:, 1]).astype(int), 0, self.alt_mesh.data.shape[1] - 1)
 		
-		# 標高を取得
-		elevations = self.alt_mesh.data[px_x, px_y]
+		# NumPyの配列アクセスは [row, col] = [y, x] の順
+		elevations = self.alt_mesh.data[px_y, px_x]
 		
 		return elevations
 
@@ -109,20 +107,32 @@ class Map:
 		max_dist_px = (speed * self._sim_setting.simConfig.tickInterval) / mobility_map.resolution[0]
 
 		if path is None or len(path) <= 2:
-			dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)
-			
+			dist_px = np.sqrt((tpos_px[0] - upos_px[0])**2 + (tpos_px[1] - upos_px[1])**2)			
 			target_px = tpos_px
+
+			"""
+			# 不具合あり、無くても速度面で問題ないと思われる
 			if dist_px > max_dist_px:
 				scale = dist_px / max_dist_px
 				new_shape = (int(mobility_map.data.shape[1] / scale), int(mobility_map.data.shape[0] / scale))
 				low_res_map = cv2.resize(mobility_map.data, new_shape, interpolation=cv2.INTER_LINEAR)
 				cost_map = low_res_map * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1			
 
+				h_low, w_low = cost_map.shape
+				ustart_low = (
+					int(np.clip(upos_px[0] / scale, 0, h_low - 1)),
+					int(np.clip(upos_px[1] / scale, 0, w_low - 1)),
+				)
+				tgoal_low = (
+					int(np.clip(tpos_px[0] / scale, 0, h_low - 1)),
+					int(np.clip(tpos_px[1] / scale, 0, w_low - 1)),
+				)
+
 				low_res_path = pyastar2d.astar_path(
 					cost_map,
-					(int(upos_px[0] / scale), int(upos_px[1] / scale)),
-					(int(tpos_px[0] / scale), int(tpos_px[1] / scale)),
-					allow_diagonal=True
+					ustart_low,
+					tgoal_low,
+					allow_diagonal=False
 				)
 				
 				for p in low_res_path:
@@ -130,14 +140,47 @@ class Map:
 					if np.sqrt((p_orig[0] - upos_px[0])**2 + (p_orig[1] - upos_px[1])**2) > max_dist_px:
 						target_px = (int(p_orig[0]), int(p_orig[1]))
 						break
+			"""
 
 			cost_map = mobility_map.data * self.coeffs.mobility.cost_scale[action.moveSpeed] + 1
+			h_orig, w_orig = cost_map.shape
+			ustart_orig = (
+				int(np.clip(round(upos_px[0]), 0, h_orig - 1)),
+				int(np.clip(round(upos_px[1]), 0, w_orig - 1)), 
+			)
+			tgoal_orig = (
+				int(np.clip(round(target_px[0]), 0, h_orig - 1)),
+				int(np.clip(round(target_px[1]), 0, w_orig - 1)),
+			)
+
 			path_px = pyastar2d.astar_path(
 				cost_map,
-				(int(round(upos_px[0])), int(round(upos_px[1]))),
-				(int(round(target_px[0])), int(round(target_px[1]))),
-				allow_diagonal=True
+				ustart_orig,
+				tgoal_orig,
+				allow_diagonal=False
 			)
+
+			"""
+			norm_map = (cost_map / cost_map.max() * 255).astype(np.uint8)
+			debug_img = cv2.cvtColor(norm_map, cv2.COLOR_GRAY2BGR)
+
+			if path_px is not None and len(path_px) > 0:
+				pts = np.array([[int(p[1]), int(p[0])] for p in path_px], dtype=np.int32)
+				pts = pts.reshape((-1, 1, 2))
+				cv2.polylines(debug_img, [pts], isClosed=False, color=(0, 0, 255), thickness=1)
+
+			if len(path_px) > 0:
+				start_pt = (int(path_px[0][1]), int(path_px[0][0]))
+				goal_pt = (int(path_px[-1][1]), int(path_px[-1][0]))
+				cv2.circle(debug_img, start_pt, 4, (255, 0, 0), -1) # スタート: 青
+				cv2.circle(debug_img, goal_pt, 4, (0, 255, 0), -1)  # ゴール: 緑
+
+			unit_name = unit.name
+			safe_unit_name = "".join(c for c in str(unit_name) if c.isalnum() or c in ('_', '-'))
+			filename = f"debug_path_{safe_unit_name}_{action.moveSpeed}_{self.coeffs.mobility.cost_scale[action.moveSpeed]}.png"
+			
+			cv2.imwrite(filename, debug_img)
+			"""
 
 			if len(path_px) <= 1:
 				return self.geo_transformer.to_geo([tpos]), True, self.geo_transformer.to_geo([tpos])
@@ -298,12 +341,12 @@ class Map:
 
 				if geometries[force][geom_name]["type"] == "polyline":
 					if geom_name == "road":
-						road_costs = {
-							'motorway': 0.0,
-							'primary': 0.0,
-							'secondary': 0.1,
-							'tertiary': 0.2,
-							'residential': 0.3,
+						road_width_scales = {
+							'motorway': 4.0,
+							'primary': 3.0,
+							'secondary': 2.0,
+							'tertiary': 1.5,
+							'residential': 1.0,
 							'default': 1.0
 						}
 
@@ -315,13 +358,13 @@ class Map:
 							road_groups[fclass].append(geom)
 
 						for fclass, geoms in road_groups.items():
-							cost = road_costs.get(fclass, road_costs['default'])
+							width_scale = road_width_scales.get(fclass, road_width_scales['default'])
 							
 							for g in geoms:
 								geom_pixel = terrain.to_image_geom(g)
 								geom_coords = get_geometry_coords(geom_pixel)
-								cv2.polylines(img, geom_coords, isClosed=False, color=cost, 
-									thickness=max(1, int(geometries[force][geom_name]["width"] / map_resolution)))
+								cv2.polylines(img, geom_coords, isClosed=False, color=1, 
+									thickness=max(1, int(geometries[force][geom_name]["width"] * width_scale / map_resolution)))
 					else:
 						cv2.polylines(img, geom_coords_list, isClosed=False, color=1, 
 							thickness=max(1, int(geometries[force][geom_name]["width"] / map_resolution)))
@@ -386,8 +429,8 @@ class Map:
 		
 		for eq_name, eq_num in get_current_equipments(unit).items():
 			if eq_name in self.vehicles:
-				speeds += [self.vehicles[eq_name].max_speed] * eq_num
-		
+				speeds += [self.vehicles[eq_name].max_speed] * eq_num * self.vehicles[eq_name].personnel_capacity
+
 		personnel_in_vehicles = sum(self.vehicles[e].personnel_capacity * n 
 									for e, n in get_current_equipments(unit).items() 
 									if e in self.vehicles)
@@ -438,7 +481,7 @@ class Map:
 
 		# vegetation, fortificationは加算
 		for k in ["vegetation", "fortification"]:
-			mobility_map.data += self.cached_map_geometries[k]["mesh"].data
+			mobility_map.data += self.cached_map_geometries[k]["mesh"].data * 0.25
 
 		# water, waterway, sea, buildingは大きい方で上書き
 		for k in ["water", "waterway", "sea", "building"]:
