@@ -11,7 +11,7 @@
       {
         "マカロフ PM": 20,
         "AK-12": 30,
-        "GAZ-2330 ティーグル": 5
+        "GAZ-2330 ティーグル": 6
       },
       "lower_units":
       {
@@ -28,10 +28,10 @@
       "name": "旅団司令部付隊",
       "sidc": "10061000001211020000",
       "type": "combined",
-      "personnel": 30,
+      "personnel": 27,
       "equipments":
       {
-        "AK-12": 30,
+        "AK-12": 27,
         "GAZ-2330 ティーグル": 3
       },
       "lower_units":
@@ -78,7 +78,8 @@
       "equipments":
       {
         "AK-12": 20,
-        "BRDM-2M 偵察車両": 2
+        "BRDM-2M 偵察車両": 2,
+        "GAZ-2330 ティーグル": 2
       },
       "lower_units":
       {}
@@ -88,12 +89,12 @@
       "name": "機械化大隊",
       "sidc": "10061000161211020000",
       "type": "infantry",
-      "personnel": 60,
+      "personnel": 54,
       "equipments":
       {
         "マカロフ PM": 15,
-        "AK-12": 45,
-        "GAZ-2330 ティーグル": 4
+        "AK-12": 54,
+        "GAZ-2330 ティーグル": 6
       },
       "lower_units":
       {
@@ -125,10 +126,10 @@
       "name": "大隊本部班",
       "sidc": "10061000000000000000",
       "type": "infantry",
-      "personnel": 30,
+      "personnel": 20,
       "equipments":
       {
-        "AK-74M": 30,
+        "AK-74M": 20,
         "BTR-82A 装輪装甲車": 2
       },
       "lower_units":
@@ -160,7 +161,7 @@
       "personnel": 30,
       "equipments":
       {
-        "AK-12": 24,
+        "AK-12": 30,
         "PKM 機関銃": 3,
         "BMP-3 歩兵戦闘車": 3
       },
@@ -177,7 +178,8 @@
       {
         "AK-74M": 20,
         "RPG-7": 4,
-        "コルネット搭載GAZ-2975": 1
+        "コルネット搭載GAZ-2975": 2,
+        "BMP-3 歩兵戦闘車": 2
       },
       "lower_units":
       {}
@@ -207,7 +209,7 @@
       "personnel": 20,
       "equipments":
       {
-        "AK-12": 10,
+        "AK-12": 20,
         "BTR-82A 装輪装甲車": 2,
         "2B11 120mm迫撃砲": 2
       },
@@ -219,11 +221,11 @@
       "name": "戦車大隊",
       "sidc": "10061000161205000000",
       "type": "tank",
-      "personnel": 20,
+      "personnel": 18,
       "equipments":
       {
         "マカロフ PM": 5,
-        "AK-74M": 15,
+        "AK-74M": 18,
         "GAZ-2330 ティーグル": 2
       },
       "lower_units":
@@ -258,9 +260,10 @@
       "personnel": 30,
       "equipments":
       {
-        "AK-12": 24,
+        "AK-12": 30,
         "PKM 機関銃": 3,
-        "T-90A 戦車": 2
+        "T-90A 戦車": 2,
+        "GAZ-2330 ティーグル": 3
       },
       "lower_units":
       {
@@ -272,10 +275,10 @@
       "name": "戦車小隊",
       "sidc": "10061000141205000000",
       "type": "tank",
-      "personnel": 30,
+      "personnel": 12,
       "equipments":
       {
-        "AK-12": 24,
+        "AK-12": 12,
         "PKM 機関銃": 3,
         "T-90A 戦車": 4
       },
@@ -318,11 +321,11 @@
       "name": "防空大隊",
       "sidc": "10061000161301000000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 18,
       "equipments":
       {
         "マカロフ PM": 5,
-        "AK-74M": 15,
+        "AK-74M": 18,
         "GAZ-2330 ティーグル": 2
       },
       "lower_units":
@@ -338,11 +341,11 @@
       "name": "防空大隊本部管理中隊",
       "sidc": "10061000151301000000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 18,
       "equipments":
       {
         "マカロフ PM": 5,
-        "AK-74M": 15,
+        "AK-74M": 18,
         "GAZ-2330 ティーグル": 2,
         "対空射撃統制レーダー": 2
       },
@@ -354,10 +357,10 @@
       "name": "自走防空機関砲中隊",
       "sidc": "10061000151301010000",
       "type": "anti_air",
-      "personnel": 10,
+      "personnel": 9,
       "equipments":
       {
-        "AK-74M": 5,
+        "AK-74M": 9,
         "GAZ-2330 ティーグル": 1
       },
       "lower_units":
@@ -370,10 +373,10 @@
       "name": "自走防空機関砲小隊",
       "sidc": "10061000141301010000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 8,
       "equipments":
       {
-        "AK-74M": 10,
+        "AK-74M": 8,
         "2K22 ツングスカ": 2
       },
       "lower_units":
@@ -384,10 +387,10 @@
       "name": "防空ミサイル中隊(トール)",
       "sidc": "10061000151301020000",
       "type": "anti_air",
-      "personnel": 10,
+      "personnel": 9,
       "equipments":
       {
-        "AK-74M": 5,
+        "AK-74M": 9,
         "GAZ-2330 ティーグル": 1
       },
       "lower_units":
@@ -400,10 +403,10 @@
       "name": "防空ミサイル小隊(トール)",
       "sidc": "10061000141301020000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 8,
       "equipments":
       {
-        "AK-74M": 10,
+        "AK-74M": 8,
         "9K330 トール": 2
       },
       "lower_units":
@@ -414,10 +417,10 @@
       "name": "防空ミサイル中隊(オーサ)",
       "sidc": "10061000151301020000",
       "type": "anti_air",
-      "personnel": 10,
+      "personnel": 9,
       "equipments":
       {
-        "AK-74M": 5,
+        "AK-74M": 9,
         "GAZ-2330 ティーグル": 1
       },
       "lower_units":
@@ -430,10 +433,10 @@
       "name": "防空ミサイル小隊(オーサ)",
       "sidc": "10061000141301020000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 8,
       "equipments":
       {
-        "AK-74M": 10,
+        "AK-74M": 8,
         "9K33 オーサ": 2
       },
       "lower_units":
@@ -444,7 +447,7 @@
       "name": "直轄航空飛行隊",
       "sidc": "10061000151206000000",
       "type": "air",
-      "personnel": 15,
+      "personnel": 0,
       "equipments":
       {},
       "lower_units":
@@ -457,10 +460,11 @@
       "name": "攻撃ヘリコプター小隊",
       "sidc": "10061000141206000000",
       "type": "air",
-      "personnel": 10,
+      "personnel": 8,
       "equipments":
       {
-        "Mi-28N ナイトハンター": 4
+        "Mi-28N ナイトハンター": 4,
+        "PKM 機関銃": 8
       },
       "lower_units":
       {}
@@ -546,7 +550,8 @@
       "equipments":
       {
         "20式小銃": 20,
-        "軽装甲機動車(LAV)": 2
+        "軽装甲機動車(LAV)": 2,
+        "高機動車": 2
       },
       "lower_units":
       {}
@@ -561,7 +566,8 @@
       {
         "9mm拳銃": 15,
         "20式小銃": 45,
-        "高機動車": 4
+        "高機動車": 4,
+        "96式装輪装甲車": 2
       },
       "lower_units":
       {
@@ -593,10 +599,10 @@
       "name": "連隊本部班",
       "sidc": "10031000000000000000",
       "type": "infantry",
-      "personnel": 30,
+      "personnel": 8,
       "equipments":
       {
-        "89式小銃": 30,
+        "89式小銃": 8,
         "82式指揮通信車": 2
       },
       "lower_units":
@@ -628,7 +634,7 @@
       "personnel": 30,
       "equipments":
       {
-        "20式小銃": 24,
+        "20式小銃": 30,
         "MINIMI 5.56mm機関銃": 3,
         "軽装甲機動車(LAV)": 2,
         "高機動車": 3
@@ -645,7 +651,8 @@
       "equipments":
       {
         "89式小銃": 20,
-        "01式軽対戦車誘導弾": 4
+        "01式軽対戦車誘導弾": 4,
+        "高機動車": 3
       },
       "lower_units":
       {}
@@ -675,7 +682,7 @@
       "personnel": 20,
       "equipments":
       {
-        "20式小銃": 10,
+        "20式小銃": 20,
         "高機動車": 2,
         "120mm迫撃砲": 2
       },
@@ -687,12 +694,13 @@
       "name": "即応機動連隊",
       "sidc": "10031000171211020000",
       "type": "infantry",
-      "personnel": 60,
+      "personnel": 56,
       "equipments":
       {
         "9mm拳銃": 15,
-        "20式小銃": 45,
-        "軽装甲機動車(LAV)": 4
+        "20式小銃": 56,
+        "軽装甲機動車(LAV)": 4,
+        "96式装輪装甲車": 4
       },
       "lower_units":
       {
@@ -728,7 +736,7 @@
       "personnel": 30,
       "equipments":
       {
-        "20式小銃": 24,
+        "20式小銃": 30,
         "MINIMI 5.56mm機関銃": 3,
         "96式装輪装甲車": 4
       },
@@ -740,12 +748,13 @@
       "name": "機動戦闘車中隊",
       "sidc": "10031000151205000051",
       "type": "tank",
-      "personnel": 30,
+      "personnel": 20,
       "equipments":
       {
-        "20式小銃": 24,
-        "MINIMI 5.56mm機関銃": 3,
-        "16式機動戦闘車": 2
+        "20式小銃": 20,
+        "16式機動戦闘車": 2,
+        "82式指揮通信車": 1,
+        "軽装甲機動車(LAV)": 3
       },
       "lower_units":
       {
@@ -760,7 +769,7 @@
       "personnel": 12,
       "equipments":
       {
-        "20式小銃": 9,
+        "20式小銃": 12,
         "16式機動戦闘車": 4
       },
       "lower_units":
@@ -789,12 +798,13 @@
       "name": "戦車中隊",
       "sidc": "10031000151205000000",
       "type": "tank",
-      "personnel": 30,
+      "personnel": 26,
       "equipments":
       {
-        "20式小銃": 24,
+        "20式小銃": 26,
         "MINIMI 5.56mm機関銃": 3,
-        "10式戦車": 2
+        "10式戦車": 2,
+        "96式装輪装甲車": 2
       },
       "lower_units":
       {
@@ -809,7 +819,7 @@
       "personnel": 12,
       "equipments":
       {
-        "20式小銃": 9,
+        "20式小銃": 12,
         "10式戦車": 4
       },
       "lower_units":
@@ -857,11 +867,12 @@
       "name": "特科大隊本部管理中隊",
       "sidc": "10031000151303000000",
       "type": "artillery",
-      "personnel": 30,
+      "personnel": 28,
       "equipments":
       {
-        "89式小銃": 30,
-        "82式指揮通信車": 2
+        "89式小銃": 28,
+        "82式指揮通信車": 2,
+        "高機動車": 2
       },
       "lower_units":
       {}
@@ -871,10 +882,12 @@
       "name": "特科大隊情報中隊",
       "sidc": "10031000151303000000",
       "type": "artillery",
-      "personnel": 30,
+      "personnel": 28,
       "equipments":
       {
-        "89式小銃": 30
+        "89式小銃": 28,
+        "軽装甲機動車(LAV)": 2,
+        "高機動車": 2
       },
       "lower_units":
       {
@@ -886,11 +899,12 @@
       "name": "特科大隊情報中隊情報小隊",
       "sidc": "10031000141303000000",
       "type": "artillery",
-      "personnel": 20,
+      "personnel": 10,
       "equipments":
       {
-        "89式小銃": 20,
-        "対砲兵レーダー": 1
+        "89式小銃": 10,
+        "対砲兵レーダー": 1,
+        "高機動車": 2
       },
       "lower_units":
       {}
@@ -970,7 +984,7 @@
       "personnel": 10,
       "equipments":
       {
-        "89式小銃": 5,
+        "89式小銃": 10,
         "高機動車": 1
       },
       "lower_units":
@@ -983,10 +997,10 @@
       "name": "自走高射機関砲小隊",
       "sidc": "10031000141301010000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 6,
       "equipments":
       {
-        "89式小銃": 10,
+        "89式小銃": 6,
         "87式自走高射機関砲": 2
       },
       "lower_units":
@@ -1000,7 +1014,7 @@
       "personnel": 10,
       "equipments":
       {
-        "89式小銃": 5,
+        "89式小銃": 10,
         "高機動車": 1
       },
       "lower_units":
@@ -1013,10 +1027,10 @@
       "name": "近距離地対空誘導弾小隊",
       "sidc": "10031000141301020000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 6,
       "equipments":
       {
-        "89式小銃": 10,
+        "89式小銃": 6,
         "11式短距離地対空誘導弾(近SAM)": 2
       },
       "lower_units":
@@ -1030,7 +1044,7 @@
       "personnel": 10,
       "equipments":
       {
-        "89式小銃": 5,
+        "89式小銃": 10,
         "高機動車": 1
       },
       "lower_units":
@@ -1043,10 +1057,10 @@
       "name": "短距離地対空誘導弾中隊",
       "sidc": "10031000141301020000",
       "type": "anti_air",
-      "personnel": 20,
+      "personnel": 6,
       "equipments":
       {
-        "89式小銃": 10,
+        "89式小銃": 6,
         "81式短距離地対空誘導弾(短SAM)": 2
       },
       "lower_units":
@@ -1057,7 +1071,7 @@
       "name": "航空飛行隊",
       "sidc": "10031000151206000000",
       "type": "air",
-      "personnel": 15,
+      "personnel": 0,
       "equipments":
       {},
       "lower_units":
@@ -1070,7 +1084,7 @@
       "name": "対戦車ヘリ小隊",
       "sidc": "10031000141206000000",
       "type": "air",
-      "personnel": 10,
+      "personnel": 8,
       "equipments":
       {
         "AH-64D アパッチ・ロングボウ": 4
